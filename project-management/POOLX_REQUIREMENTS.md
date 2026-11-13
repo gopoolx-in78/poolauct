@@ -1,9 +1,10 @@
 # PoolX Requirements
 
 Source: Master prompt §5 + `POOLX_REBUILD_PROMPT.md`. Last updated: 2026-11-13.
-Status: ◐ catalogue, join/pay (sandbox), withdraw/refunds, requests, account and admin **built**; lifecycle after the
-deadline (negotiation, lock, price-adjustment refunds, orders, shipments, delivery, disputes), product images, private pools
-and seller-verification UI **pending** — see PENDING_TASKS.md 3.7–3.13. Contribution model: DECISION_LOG TD-29 (pending OD-03/OD-10).
+Status: ◐ catalogue, join/pay (sandbox), withdraw/refunds, requests, full lifecycle (close → negotiate → lock with
+price-adjustment refunds → orders → shipments → delivery/disputes → completion), account and admin **built**; product images,
+private pools, seller-verification UI, seller payouts and notifications **pending** — see PENDING_TASKS.md. Contribution model:
+DECISION_LOG TD-29 (pending OD-03/OD-10); lock pricing TD-39.
 
 ## Positioning & voice
 Tagline "Power of People. Power of Pooling." · "Join buying pools, combine purchasing power and negotiate like a corporation."

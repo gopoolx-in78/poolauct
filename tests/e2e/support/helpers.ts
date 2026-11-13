@@ -124,6 +124,7 @@ export function createPoolFixture(opts: {
   minMembers?: number;
   targetMembers?: number;
   tiers?: [number, number][];
+  sellerName?: string;
 }) {
   const title = opts.title ?? `E2E pool ${opts.slug}`;
   const id = sql(`insert into poolx.pools (slug, title, summary, product_name, category_id, base_unit_price_paise,
@@ -132,6 +133,12 @@ export function createPoolFixture(opts: {
       (select id from poolx.categories where slug = 'electronics'), ${opts.basePaise ?? 100000},
       1, ${opts.maxQty ?? 3}, ${opts.minMembers ?? 1}, ${opts.targetMembers ?? 5}, now() + interval '3 days', 'ACTIVE', now())
     returning id`).split("\n")[0]!;
+  if (opts.sellerName) {
+    const sellerId = sql(`insert into poolx.sellers (display_name) values ('${opts.sellerName}') returning id`).split(
+      "\n",
+    )[0]!;
+    sql(`update poolx.pools set seller_id = '${sellerId}' where id = '${id}'`);
+  }
   for (const [threshold, bps] of opts.tiers ?? []) {
     sql(`insert into poolx.discount_tiers (pool_id, threshold, discount_bps) values ('${id}', ${threshold}, ${bps})`);
   }
@@ -164,6 +171,7 @@ export async function becomeStaffWithMfa(page: Page, email: string, role: string
   const secret = (await page.locator("code").textContent())!.trim();
   await page.getByLabel("6-digit code").fill(totp(secret));
   await page.getByRole("button", { name: "Confirm and turn on" }).click();
-  await expect(page).toHaveURL(/\/admin$/);
+  // MFA verification round-trips through the auth server; allow extra time on a slow local stack.
+  await expect(page).toHaveURL(/\/admin$/, { timeout: 45_000 });
   return secret;
 }

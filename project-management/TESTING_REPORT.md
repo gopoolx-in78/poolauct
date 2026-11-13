@@ -15,6 +15,20 @@ Last updated: 2026-11-13
 
 ## Run log
 
+### 2026-11-13 — Phase 3.7 (PoolX lifecycle)
+| Command | Result |
+|---|---|
+| `pnpm lint` / `typecheck` / `format:check` | ✔ |
+| `pnpm test` | ✔ 47/47 |
+| `pnpm test:db` | ✔ 4 files, 148 assertions — new `0004_poolx_lifecycle.test.sql` (36): fee maths; customers cannot close/lock/ship; cannot lock while open; lock needs an ACCEPTED offer; negotiation log append-only (even for owner); final price = min(tier, offer); one order per member; exact price-adjustment amounts (₹202 / ₹404); lock idempotent (no extra orders/refunds); order journals balance; fee revenue = 1% of ₹3,200; **deferred integrity checks pass when fired as a non-finance staff user**; order RLS; cross-user delivery confirmation denied; fulfilment status; manager cannot refund a dispute; refund above refundable rejected; finance partial refund; dispute refund debits `seller_payable`; staff delivery needs evidence; pool auto-completes. (One run hit the known post-reset connection race; two immediate reruns passed.) |
+| `pnpm build` | ✔ |
+| `playwright test --workers=1` | 46 passed, 1 failed (test bug: `getByRole("button", { name: "Refund" })` substring-matched "Resolve without refund" and the dispute text was reused across runs) → fixed (exact name + unique text) → `poolx-lifecycle.spec.ts` rerun ✔. Net: **47 passed, 21 skipped by design, 0 failed.** |
+
+Bugs found during 3.7 and fixed: tracking-URL CHECK regex exceeded Postgres' 255 repetition limit (every shipment rejected);
+deferred ledger/refund integrity triggers evaluated under the committing user's RLS (staff lock failed as "unbalanced"; refund
+cap could under-count) → SECURITY DEFINER (TD-40); members could be charged above what they paid if withdrawals dropped the tier
+at lock → per-member price capped (TD-39); misleading admin fallback error text.
+
 ### 2026-11-13 — Phase 3 (payments core + PoolX)
 | Command | Result |
 |---|---|

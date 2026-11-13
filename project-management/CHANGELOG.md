@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-11-13 — Session 1 (Phase 3.7: PoolX lifecycle) — branch `phase-3-poolx`
+- Migration 0009: final price/lock columns; negotiations (append-only), orders, shipments, disputes; lock with price-adjustment
+  refunds and seller-payable/fee journals; shipping, delivery confirmation, disputes, auto-completion; member activity and
+  public pool JSON extended; integrity triggers switched to SECURITY DEFINER (TD-40).
+- Admin: Fulfilment section on `/admin/poolx/[id]` (close joining, negotiation log/form, lock, ship / mark delivered per order),
+  `/admin/poolx/disputes`; dashboard link. Member: order panel in `/account/poolx` (tracking, confirm delivery, report a problem).
+- Public pool page shows "Deal locked at …".
+- Tests: pgTAP `0004_poolx_lifecycle.test.sql` (36); Playwright `poolx-lifecycle.spec.ts` (full journey).
+- Fixes found by tests: tracking-URL CHECK used a regex repetition count above Postgres' 255 limit; deferred ledger/refund
+  integrity triggers ran under RLS at COMMIT (false "unbalanced" when staff locked a pool); members could be under-charged if
+  withdrawals dropped the tier (orders now capped at the price paid); admin fallback error message clarified.
+
 ## 2026-11-13 — Session 1 (Phase 3: payments core + PoolX) — branch `phase-3-poolx`
 - Migrations 0006–0008: payment attempts / webhook events / provider refunds; double-entry ledger with balance,
   insert-only and domain-isolation triggers; PoolX schema (categories, sellers, pools, tiers, requests, members,

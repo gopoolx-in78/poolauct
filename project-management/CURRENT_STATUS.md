@@ -1,8 +1,8 @@
 # Current Status
 
 **Date:** 2026-11-13
-**Phase:** 3 — PoolX module + payments core (5a) — **core journeys built and verified locally**; lifecycle after the deadline (negotiation → lock → orders → delivery) not yet built.
-**Git:** branch `phase-3-poolx` (from `master` @ `eddb372`); Phase 3 work **not committed yet**. No remote.
+**Phase:** 3 — PoolX module + payments core (5a) — **full pool lifecycle built and verified locally** (join → pay → close → negotiate → lock → orders → ship → deliver/dispute → complete). Remaining Phase 3 items are extras (images, private pools, seller-verification UI, payouts).
+**Git:** branch `phase-3-poolx`: core committed as `16ca7af`; the 3.7 lifecycle work is **not committed yet**. No remote.
 
 ## What exists and is verified
 ### Earlier phases
@@ -25,14 +25,18 @@ Foundation (Phase 1) and accounts/RBAC/staff MFA (Phase 2) — see CHANGELOG and
 - **Account:** `/account/poolx` (memberships, contributions, refunds, requests, two-step withdraw); menu entry added.
 - **Admin:** `/admin/poolx` list, create/edit draft, tier editor, publish, cancel-with-refunds, add seller, request review.
 - **Jobs:** `GET /api/cron/poolx` (Bearer `CRON_SECRET`).
+- **Lifecycle (3.7):** close joining early; append-only negotiation log; lock with seller confirmation (final price TD-39,
+  price-adjustment refunds, one order per member, seller-payable + fee journals, idempotent); shipping with tracking; member
+  delivery confirmation / staff delivery with evidence; disputes (no-action by PoolX staff, refunds by finance only); pool
+  auto-completes; public page shows the locked price. Integrity triggers now SECURITY DEFINER (TD-40, bug found by e2e).
 
 ## Verification (local, 2026-11-13)
-lint ✔ · typecheck ✔ · format ✔ · unit ✔ 47/47 · pgTAP ✔ 112/112 · build ✔ · full e2e (1 worker) ✔ 46 passed, 20 skipped by design, 0 failed ·
+lint ✔ · typecheck ✔ · format ✔ · unit ✔ 47/47 · pgTAP ✔ 148/148 · build ✔ · full e2e (1 worker) ✔ 47 passed, 21 skipped by design, 0 failed ·
 local parallel runs can flake on the shared Docker VM (TD-38).
 
 ## Not built yet / known gaps (Phase 3 remainder)
-- 3.7 lifecycle after deadline: seller negotiation records, lock, PRICE_ADJUSTMENT refunds, per-member orders, shipments,
-  delivery confirmation, disputes.
+- Seller payouts/settlements for `poolx:seller_payable` (Phase 6 finance).
+- Notifications for lock/adjustment/shipment/dispute (Phase 8).
 - Seller verification UI (SQL function exists; `sellers.manage` UI comes with Phase 6 seller management).
 - Product images (needs storage + upload pipeline).
 - Private pools (schema supports `kind`; no invite flow).

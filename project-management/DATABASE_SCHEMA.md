@@ -1,6 +1,6 @@
 # Database Schema
 
-> Status: migrations **0001–0008 applied and tested** (pgTAP 112/112); the rest of this document is the plan.
+> Status: migrations **0001–0009 applied and tested** (pgTAP 148/148); the rest of this document is the plan.
 > Last updated: 2026-11-13.
 > Engine: Supabase Postgres 17. Schemas: `core`, `poolx`, `auction`, `ledger`, `cms`, plus `api` (HTTP surface, functions only — TD-22).
 
@@ -17,7 +17,9 @@
 | `20261113000007_poolx_schema.sql` | `poolx.categories` (12 seeded), `poolx.sellers` (VERIFIED requires verifier + time), `poolx.pools` (lifecycle status, bigint paise, reference price requires source, qty/member/deadline CHECKs, FTS index), `poolx.discount_tiers` (deferred trigger: discount strictly increases), `poolx.requests`, `poolx.members` (UNIQUE pool+user), `poolx.contributions` (amount = qty×unit+fee; one live PENDING/CONFIRMED per member; no delete), `poolx.refunds` (one full refund per contribution; refunds ≤ paid; no delete); RLS: own rows or PoolX/finance staff; no end-user writes |
 | `20261113000008_poolx_functions.sql` | Pricing (`discounted_price`, `fee_for`, `discount_bps_at`, `current_discount_bps`), `pool_json`; domain reactions (`on_contribution_captured`/`failed`, `create_full_refund`, `apply_refund_result`); service-role API (`payments_attach_order`, `payments_process_event`, `poolx_claim_refunds`, `poolx_record_refund_result`, `poolx_close_due_pools`); public API (`poolx_list_categories`, `poolx_list_pools`, `poolx_get_pool`, `poolx_public_stats`); member API (`poolx_start_contribution`, `poolx_withdraw`, `poolx_my_membership`, `poolx_my_activity`, `payments_get_my_attempt`, `poolx_submit_request`); staff API (`poolx_admin_*`); `core.require_permission()` |
 
-Tests: `supabase/tests/0001_schemas.test.sql` (12), `0002_identity_rbac.test.sql` (46), `0003_payments_poolx.test.sql` (54).
+| `20261113000009_poolx_lifecycle.sql` | `poolx.pools` + `final_unit_price_paise`, `locked_at` (consistency CHECK); `poolx.negotiations` (append-only), `poolx.orders` (one per member, amount formula, no delete), `poolx.shipments` (one per order; https tracking URL), `poolx.disputes` (one open per order; resolution consistency); RLS own/staff; `apply_refund_result` v2 (post-order MANUAL refunds debit `seller_payable`); `maybe_complete_pool`; staff API `poolx_admin_close_joining`, `_record_negotiation`, `_lock`, `_ship_order`, `_mark_delivered`, `_resolve_dispute`, `_lifecycle`, `_list_disputes`; member API `poolx_confirm_delivery`, `poolx_open_dispute`; `poolx_my_activity` v2 (order/shipment/dispute); `poolx_get_pool` v2 (final price); integrity triggers → SECURITY DEFINER (TD-40) |
+
+Tests: `supabase/tests/0001_schemas.test.sql` (12), `0002_identity_rbac.test.sql` (46), `0003_payments_poolx.test.sql` (54), `0004_poolx_lifecycle.test.sql` (36).
 
 Note: migration numbering below was the original plan; actual files use timestamps and Phase 2 split identity/audit/API
 differently. Later phases continue with `20261113000006+` / dated prefixes.

@@ -38,3 +38,6 @@
 | 2026-11-13 | 3 | 3.5 Withdraw → full refund via worker; late capture refund; cancel → refunds; deadline job | pgTAP + e2e (withdraw) |
 | 2026-11-13 | 3 | 3.6 Pool requests + review | e2e |
 | 2026-11-13 | 3 | 3.8 `/account/poolx`, `/admin/poolx/*` (create, tiers, publish, cancel, sellers, requests) | e2e (admin create→publish) |
+| 2026-11-13 | 3 | Phase 3 core committed (`16ca7af`) | git |
+| 2026-11-13 | 3 | 3.7 lifecycle: close joining, negotiation, lock (TD-39), orders, shipments, delivery, disputes, completion | pgTAP 36 + e2e lifecycle journey |
+| 2026-11-13 | 3 | TD-40 integrity triggers SECURITY DEFINER (staff commit regression test) | pgTAP |

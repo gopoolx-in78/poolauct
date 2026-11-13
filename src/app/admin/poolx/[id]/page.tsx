@@ -12,10 +12,19 @@ import { publishPoolAction } from "../actions";
 import { loadFormOptions, poolToValues } from "../form-data";
 import { PoolForm } from "../pool-form";
 import { CancelPoolForm, SellerForm, TiersForm } from "./forms";
+import { LifecycleSection } from "./lifecycle";
 
 export const metadata = { title: "Edit pool" };
 
+const NOTICES: Record<string, string> = {
+  "joining-closed": "Joining closed. Record the seller negotiation, then lock the pool.",
+  locked: "Pool locked: orders created and price-adjustment refunds queued.",
+  shipped: "Order marked as shipped.",
+  delivered: "Order marked as delivered.",
+};
+
 type AdminPool = PoolDetail & {
+  finalUnitPricePaise?: string | null;
   sellerId: string | null;
   closeReason: string | null;
   pendingMembers: number;
@@ -32,7 +41,7 @@ export default function AdminPoolPage({ params, searchParams }: PageProps<"/admi
 
 async function AdminPool({ params, searchParams }: PageProps<"/admin/poolx/[id]">) {
   const { id } = await params;
-  await requireStaff(`/admin/poolx/${id}`, "poolx.pools.manage");
+  const account = await requireStaff(`/admin/poolx/${id}`, "poolx.pools.manage");
   if (!/^[0-9a-f-]{36}$/.test(id)) notFound();
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase.schema("api").rpc("poolx_admin_get_pool", { p_pool: id });
@@ -60,6 +69,11 @@ async function AdminPool({ params, searchParams }: PageProps<"/admin/poolx/[id]"
         {sp.notice === "saved" ? (
           <p role="status" className="border-success bg-success/5 mt-4 border-l-4 px-4 py-2 text-sm">
             Saved.
+          </p>
+        ) : null}
+        {typeof sp.notice === "string" && NOTICES[sp.notice] ? (
+          <p role="status" className="border-success bg-success/5 mt-4 border-l-4 px-4 py-2 text-sm">
+            {NOTICES[sp.notice]}
           </p>
         ) : null}
         {sp.notice === "published" ? (
@@ -164,6 +178,10 @@ async function AdminPool({ params, searchParams }: PageProps<"/admin/poolx/[id]"
           </ul>
         </section>
       )}
+
+      {!isDraft && !["CANCELLED", "EXPIRED"].includes(pool.status) ? (
+        <LifecycleSection pool={pool} canShip={account.permissions.includes("poolx.orders.manage")} />
+      ) : null}
 
       {["DRAFT", "ACTIVE", "THRESHOLD_MET", "NEGOTIATING"].includes(pool.status) ? (
         <section aria-labelledby="cancel-h" className="border-danger border-t pt-6">

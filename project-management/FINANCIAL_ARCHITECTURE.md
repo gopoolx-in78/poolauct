@@ -5,7 +5,10 @@
 > provider are not built. Last updated: 2026-11-13.
 >
 > Implemented journals: `CONTRIBUTION_CAPTURED` (Dr `poolx:gateway_clearing` / Cr `poolx:contribution_liability`, key
-> `poolx:capture:<attempt>`), `CONTRIBUTION_REFUNDED` (reverse, key `poolx:refund:<refund>`). PoolX contribution model: TD-29.
+> `poolx:capture:<attempt>`), `CONTRIBUTION_REFUNDED` (Dr `poolx:contribution_liability` — or `poolx:seller_payable` for a
+> post-order dispute refund — / Cr `poolx:gateway_clearing`, key `poolx:refund:<refund>`), `ORDER_CREATED` at lock (Dr
+> `poolx:contribution_liability` / Cr `poolx:seller_payable` + `poolx:platform_fee_revenue`, key `poolx:order:<order>`).
+> PoolX contribution model: TD-29; lock pricing: TD-39; dispute accounting: TD-41. Seller settlement payouts are not built.
 > **Legal notice:** nothing here makes the platform an escrow agent or authorises it to hold
 > customer funds. The legally suitable fund-flow structure (payment aggregator marketplace /
 > split settlement / escrow arrangement with a regulated entity) must be confirmed by the owner's

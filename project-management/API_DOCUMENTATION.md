@@ -45,6 +45,22 @@ Not exposed over HTTP: `core.operator_grant_role(email, role, reason)` — opera
 | `poolx_admin_verify_seller(seller, note)` | `sellers.manage` | Documented manual verification |
 | `payments_attach_order`, `payments_process_event`, `poolx_claim_refunds`, `poolx_record_refund_result`, `poolx_close_due_pools` | **service_role only** | Payment orchestration and jobs |
 
+**Lifecycle RPC (migration 0009)**
+
+| Function | Caller | Behaviour |
+|---|---|---|
+| `poolx_admin_close_joining(pool)` | `poolx.pools.manage` | ACTIVE → THRESHOLD_MET once min members confirmed |
+| `poolx_admin_record_negotiation(pool, offered_unit_price_paise, terms, outcome)` | `poolx.pools.manage` | append-only log; needs a seller; → NEGOTIATING |
+| `poolx_admin_lock(pool)` | `poolx.pools.manage` | needs ACCEPTED offer; final price (TD-39); orders + PRICE_ADJUSTMENT refunds + ledger; idempotent (`alreadyLocked`) |
+| `poolx_admin_ship_order(order, carrier, tracking, tracking_url)` / `poolx_admin_mark_delivered(order, note)` | `poolx.orders.manage` | CREATED → SHIPPED → DELIVERED (staff delivery needs evidence note); pool auto-completes |
+| `poolx_confirm_delivery(order)` / `poolx_open_dispute(order, reason)` | order owner | SHIPPED → DELIVERED; one open dispute per order |
+| `poolx_admin_resolve_dispute(dispute, 'REFUND' \| 'NO_ACTION', refund_paise, note)` | REFUND: `poolx.refunds.manual`; NO_ACTION: `poolx.orders.manage` | refund ≤ remaining refundable; audited |
+| `poolx_admin_lifecycle(pool)`, `poolx_admin_list_disputes()` | staff | reads |
+
+Pages: `/admin/poolx/[id]` Fulfilment section (close joining, negotiation log/form, lock, ship/deliver per order), `/admin/poolx/disputes`;
+member order panel in `/account/poolx` (confirm delivery, report a problem). Actions: `closeJoiningAction`, `recordNegotiationAction`,
+`lockPoolAction`, `shipOrderAction`, `markDeliveredAction`, `resolveDisputeAction`, `confirmDeliveryAction`, `openDisputeAction`.
+
 **HTTP**
 
 | Method | Path | Auth | Notes |

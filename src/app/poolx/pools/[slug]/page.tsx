@@ -231,6 +231,11 @@ async function Pool({ params, searchParams }: PageProps<"/poolx/pools/[slug]">) 
                 <>
                   <strong>{timeLeft(pool.deadlineAt, now)}</strong> · closes {formatIST(pool.deadlineAt)}
                 </>
+              ) : pool.finalUnitPricePaise ? (
+                <>
+                  Deal locked at <strong className="font-mono">{formatINR(paise(pool.finalUnitPricePaise))}</strong> per{" "}
+                  {pool.unitLabel}.
+                </>
               ) : (
                 "This pool is no longer accepting members."
               )}

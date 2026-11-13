@@ -7,7 +7,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireStaff } from "@/modules/core/server/auth";
 import { fieldErrors, type FormState } from "@/modules/core/validation";
 import { validateTiers } from "@/modules/poolx/pricing";
-import { adminPoolSchema } from "@/modules/poolx/validation";
+import { adminPoolSchema, rupeesToPaise } from "@/modules/poolx/validation";
 
 const POOL_FIELDS = [
   "slug",
@@ -46,7 +46,9 @@ function sqlError(message: string | undefined) {
   if (message?.includes("pools_slug_key")) return "That slug is already used by another pool.";
   if (code === "NOT_EDITABLE") return "Only draft pools can be edited.";
   if (code === "FORBIDDEN") return "You don’t have permission to do that.";
-  return message?.includes(":") ? message.split(":").slice(1).join(":").trim() : "The pool could not be saved.";
+  return message?.includes(":")
+    ? message.split(":").slice(1).join(":").trim()
+    : "That action could not be completed. Please try again.";
 }
 
 export async function savePoolAction(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -180,4 +182,107 @@ export async function reviewRequestAction(formData: FormData) {
   redirect(
     `/admin/poolx/requests?${error ? `error=${encodeURIComponent(sqlError(error.message))}` : "notice=reviewed"}`,
   );
+}
+
+// ---------------------------------------------------------------------------
+// Lifecycle after joining closes
+// ---------------------------------------------------------------------------
+function back(poolId: string, error?: { message?: string }, notice?: string) {
+  return `/admin/poolx/${poolId}?${error ? `error=${encodeURIComponent(sqlError(error.message))}` : `notice=${notice}`}`;
+}
+
+export async function closeJoiningAction(formData: FormData) {
+  const poolId = z.uuid().parse(str(formData, "poolId"));
+  await requireStaff(`/admin/poolx/${poolId}`, "poolx.pools.manage");
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.schema("api").rpc("poolx_admin_close_joining", { p_pool: poolId });
+  redirect(back(poolId, error ?? undefined, "joining-closed"));
+}
+
+export async function recordNegotiationAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  const poolId = z.uuid().parse(str(formData, "poolId"));
+  await requireStaff(`/admin/poolx/${poolId}`, "poolx.pools.manage");
+  const values = { offer: str(formData, "offer"), terms: str(formData, "terms"), outcome: str(formData, "outcome") };
+  const offer = rupeesToPaise.safeParse(values.offer);
+  const outcome = z.enum(["PROPOSED", "ACCEPTED", "REJECTED"]).safeParse(values.outcome);
+  const terms = values.terms.trim();
+  const errors: Record<string, string> = {};
+  if (!offer.success) errors.offer = offer.error.issues[0]?.message ?? "Enter an amount.";
+  if (!outcome.success) errors.outcome = "Choose an outcome.";
+  if (terms.length < 5 || terms.length > 2000) errors.terms = "Describe the terms (5–2000 characters).";
+  if (Object.keys(errors).length) return { status: "error", fieldErrors: errors, values };
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.schema("api").rpc("poolx_admin_record_negotiation", {
+    p_pool: poolId,
+    p_offered_unit_price_paise: offer.data === null ? null : (offer.data!.toString() as unknown as number),
+    p_terms: terms,
+    p_outcome: outcome.data!,
+  });
+  if (error) return { status: "error", message: sqlError(error.message), values };
+  revalidatePath(`/admin/poolx/${poolId}`);
+  return { status: "success", message: "Negotiation recorded." };
+}
+
+export async function lockPoolAction(formData: FormData) {
+  const poolId = z.uuid().parse(str(formData, "poolId"));
+  await requireStaff(`/admin/poolx/${poolId}`, "poolx.pools.manage");
+  if (str(formData, "confirm") !== "on")
+    redirect(back(poolId, { message: "CONFIRM: Tick the box to confirm the lock." }));
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.schema("api").rpc("poolx_admin_lock", { p_pool: poolId });
+  redirect(back(poolId, error ?? undefined, "locked"));
+}
+
+export async function shipOrderAction(formData: FormData) {
+  const poolId = z.uuid().parse(str(formData, "poolId"));
+  const orderId = z.uuid().parse(str(formData, "orderId"));
+  await requireStaff(`/admin/poolx/${poolId}`, "poolx.orders.manage");
+  const carrier = str(formData, "carrier").trim();
+  const tracking = str(formData, "tracking").trim();
+  const url = str(formData, "trackingUrl").trim();
+  if (carrier.length < 2 || tracking.length < 3)
+    redirect(back(poolId, { message: "SHIPMENT: Enter the carrier and tracking number." }));
+  if (url && !/^https:\/\/\S+$/.test(url))
+    redirect(back(poolId, { message: "SHIPMENT: The tracking link must start with https://" }));
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.schema("api").rpc("poolx_admin_ship_order", {
+    p_order: orderId,
+    p_carrier: carrier,
+    p_tracking: tracking,
+    p_tracking_url: url || null,
+  });
+  redirect(back(poolId, error ?? undefined, "shipped"));
+}
+
+export async function markDeliveredAction(formData: FormData) {
+  const poolId = z.uuid().parse(str(formData, "poolId"));
+  const orderId = z.uuid().parse(str(formData, "orderId"));
+  await requireStaff(`/admin/poolx/${poolId}`, "poolx.orders.manage");
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .schema("api")
+    .rpc("poolx_admin_mark_delivered", { p_order: orderId, p_note: str(formData, "note") });
+  redirect(back(poolId, error ?? undefined, "delivered"));
+}
+
+export async function resolveDisputeAction(formData: FormData) {
+  await requireStaff("/admin/poolx/disputes");
+  const disputeId = z.uuid().parse(str(formData, "disputeId"));
+  const decision = z.enum(["REFUND", "NO_ACTION"]).parse(str(formData, "decision"));
+  const amount = rupeesToPaise.safeParse(str(formData, "amount"));
+  const target = (q: string) => `/admin/poolx/disputes?${q}`;
+  if (decision === "REFUND" && (!amount.success || amount.data === null)) {
+    redirect(target(`error=${encodeURIComponent("Enter the refund amount in rupees.")}`));
+  }
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.schema("api").rpc("poolx_admin_resolve_dispute", {
+    p_dispute: disputeId,
+    p_decision: decision,
+    p_refund_paise:
+      decision === "REFUND" && amount.success && amount.data !== null
+        ? (amount.data.toString() as unknown as number)
+        : null,
+    p_note: str(formData, "note"),
+  });
+  redirect(target(error ? `error=${encodeURIComponent(sqlError(error.message))}` : "notice=resolved"));
 }

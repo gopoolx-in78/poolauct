@@ -23,7 +23,9 @@ async function AdminHome() {
         Signed in as {account.email}. PoolX, auction, finance, user and content management modules are added here in
         later phases; each is limited to the permissions below.
       </p>
-      {account.permissions.includes("poolx.pools.manage") || account.permissions.includes("poolx.requests.review") ? (
+      {["poolx.pools.manage", "poolx.requests.review", "poolx.orders.manage", "poolx.refunds.manual"].some((p) =>
+        account.permissions.includes(p),
+      ) ? (
         <nav aria-label="Admin modules" className="mt-8">
           <ul className="flex flex-wrap gap-3">
             {account.permissions.includes("poolx.pools.manage") ? (
@@ -33,6 +35,17 @@ async function AdminHome() {
                   className="border-ink hover:bg-ink/5 inline-block border px-4 py-2 font-medium"
                 >
                   PoolX pools
+                </Link>
+              </li>
+            ) : null}
+            {account.permissions.includes("poolx.orders.manage") ||
+            account.permissions.includes("poolx.refunds.manual") ? (
+              <li>
+                <Link
+                  href="/admin/poolx/disputes"
+                  className="border-ink hover:bg-ink/5 inline-block border px-4 py-2 font-medium"
+                >
+                  PoolX disputes
                 </Link>
               </li>
             ) : null}

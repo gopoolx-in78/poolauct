@@ -41,6 +41,8 @@ export type PoolDetail = PoolSummary & {
   terms: string;
   deliveryNote: string | null;
   tiers: { threshold: number; discountBps: number; unitPricePaise: string }[];
+  /** Set once the deal is locked. */
+  finalUnitPricePaise?: string | null;
 };
 
 export type PoolList = { total: number; limit: number; offset: number; items: PoolSummary[] };
@@ -86,6 +88,12 @@ export function poolxErrorMessage(raw: string | undefined): string {
       return "Withdrawals closed when the pool stopped accepting members.";
     case "WITHDRAW_UNCONFIRMED":
       return "Please tick the confirmation box to withdraw.";
+    case "ORDER_NOT_FOUND":
+      return "That order could not be found.";
+    case "INVALID_STATE":
+      return "That action isn’t available for this order right now.";
+    case "DISPUTE_REASON":
+      return "Describe the problem in at least 10 characters.";
     case "TOO_MANY_OPEN_REQUESTS":
       return "You already have 5 requests under review.";
     default:

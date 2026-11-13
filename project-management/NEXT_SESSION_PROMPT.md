@@ -1,45 +1,47 @@
 # Next Session Prompt
 
 **Project:** Dual marketplace — PoolX (group buying) + Auctions (second-hand assets, mandatory refundable deposits). Parent brand pending (OD-01); interim name "PoolX & Auctions".
-**Current phase:** Phase 3 (PoolX + payments core) — core journeys done; **lifecycle after the deadline (3.7) is next**.
-**Last completed milestone:** PoolX join/pay/withdraw/refund with signed (sandbox) webhooks, double-entry ledger, admin pool management.
-**Last completed task:** Phase 3 docs checkpoint.
-**Git:** branch `phase-3-poolx` (from `master` @ `eddb372`) — check `git status`/`git log`; may not be committed yet. No remote.
-**Files recently modified:** `supabase/migrations/2026111300000{6,7,8}_*.sql`, `supabase/tests/0003_payments_poolx.test.sql`
-(+ 0001 adjusted, TD-37), `src/modules/payments/**`, `src/modules/poolx/**`, `src/lib/{time,supabase/public}.ts`, `src/app/poolx/**`,
-`src/app/payments/**`, `src/app/api/{webhooks,cron}/**`, `src/app/account/poolx/**`, `src/app/admin/poolx/**`,
-`src/components/poolx/**`, `src/components/layout/{site-header,main-nav}.tsx`, `src/app/sitemap.ts`, `tests/**`, `.env.example`, CI.
-**Database changes:** migrations 0001–0008 (DATABASE_SCHEMA.md "Applied migrations").
-**Tests:** unit 47/47 ✔ · pgTAP 112/112 ✔ · build ✔ · full e2e (1 worker) 46 passed / 20 skipped by design / 0 failed ✔.
-**Known gaps:** Razorpay adapter (OD-02); no live payments; images; private pools; seller-verification UI; cron schedule (OD-06).
-**Environment:** local Docker disk I/O is very slow (TD-38) — use `--workers=1` for full e2e runs locally.
+**Current phase:** Phase 3 (PoolX) — full lifecycle done. **Next: Phase 4 + 5 (Auctions with the mandatory deposit & refund engine)**, starting with a shared media-upload pipeline (also closes PoolX 3.11 images).
+**Last completed milestone:** PoolX end to end — join/pay (sandbox) → close → negotiate → lock (price-adjustment refunds) → orders → ship → deliver/dispute → complete.
+**Git:** branch `phase-3-poolx` — `16ca7af` committed; 3.7 lifecycle may be uncommitted — check `git status`/`git log`. Not merged to `master`. No remote.
+**Database changes:** migrations 0001–0009 (DATABASE_SCHEMA.md "Applied migrations").
+**Tests:** unit 47 ✔ · pgTAP 148 ✔ · build ✔ · e2e 47 passed / 21 skipped by design / 0 failed (run full suite with `--workers=1` locally, TD-38).
+**Known gaps:** Razorpay adapter (OD-02) — no live payments; seller payouts; notifications (Phase 8); private pools; seller-verification UI; cron schedule (OD-06).
 
 ## Start-of-session protocol
-Read AGENTS.md (Next.js 16 docs in `node_modules/next/dist/docs/`), PROJECT_OVERVIEW, CURRENT_STATUS, PENDING_TASKS, this file
-→ `git status` → `pnpm exec supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime` →
-`pnpm test:db` (expect 112/112) → report status.
+Read AGENTS.md (Next.js 16 docs in `node_modules/next/dist/docs/`), PROJECT_OVERVIEW, CURRENT_STATUS, PENDING_TASKS, this file →
+`git status` → `pnpm exec supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime` → `pnpm test:db`
+(expect 148/148) → report status.
 
-## Next exact task: 3.7 PoolX lifecycle after the deadline
-1. Migration: `poolx.negotiations` (pool, seller, offered unit price paise, terms, status, recorded_by, created_at; RLS staff),
-   `poolx.orders` (one per ACTIVE member at lock: final unit price, quantity, amount, status `CREATED/CONFIRMED/SHIPPED/DELIVERED/
-   CANCELLED/DISPUTED`), `poolx.shipments` (order, carrier, tracking no., status, events jsonb), `poolx.disputes`.
-2. `api.poolx_admin_record_negotiation`, `api.poolx_admin_lock(pool)`: only from THRESHOLD_MET/NEGOTIATING; final price =
-   `poolx.discounted_price(base, discount at final confirmed count)`; create orders; for each member whose contribution
-   unit price > final, insert `PRICE_ADJUSTMENT` refund for `(paid_unit − final_unit) × qty` (+ fee difference); post seller
-   payable journal (Dr `poolx:contribution_liability` / Cr `poolx:seller_payable` [+ `poolx:platform_fee_revenue`]).
-3. Shipments + member delivery confirmation; disputes with admin resolution (MANUAL refund requires reason, audited).
-4. Account + admin UI for these states; e2e: pool reaches threshold → lock → adjustment refund visible → order shipped → delivered.
-5. pgTAP: lock is idempotent; adjustment refunds never exceed paid (existing trigger); ledger balanced; orders only for ACTIVE members.
+## Next exact tasks
+1. **Media pipeline (shared):** Supabase Storage buckets `public-media` (images, public read) and `private-docs` (KYC/RC/inspection,
+   owner + permitted staff via RLS on `storage.objects`); `core.media_assets` table; signed upload route that checks MIME by magic
+   bytes, size limits, re-encodes images (sharp) to WebP with width/height; alt text required. Use it for PoolX pool images (3.11).
+2. **Phase 4/5 Auctions** per AUCTION_REQUIREMENTS.md and AUCTION_DEPOSIT_RULES.md, reusing payments core:
+   - Migrations: auction categories/sellers/assets/vehicle_details (reg number encrypted + masked)/media/inspection reports;
+     `auction.auctions` with `deposit_amount_paise NOT NULL CHECK (> 0)` + publish trigger enforcing global min (system setting
+     with CHECK > 0) — **no disable switch**; participants; deposits (14-state machine, transition function + history table);
+     bids (`api.auction_place_bid` with row lock, 10 validation rules, idempotency key, anti-snipe); results (unique per auction);
+     invoices; deposit adjustments (unique deposit + invoice); auction refunds; default reviews (FORFEITED blocked until policy).
+   - Payments: purposes `AUCTION_DEPOSIT`, `AUCTION_PURCHASE` in `api.payments_process_event` → `auction.on_deposit_captured`.
+   - Ledger: `auction:*` accounts only (never poolx).
+   - Closing: `api.auction_close_due` (FOR UPDATE SKIP LOCKED, idempotent winner selection) + `/api/cron/auctions`.
+   - **All 20 acceptance tests in AUCTION_REQUIREMENTS.md must be automated** (pgTAP + Playwright), including concurrent bids
+     (parallel connections) and the theme-change test once Phase 7 exists.
 
-## Patterns to follow
-- HTTP surface = `api.*` functions only, explicit grants, pgTAP `has_function_privilege` checks.
-- Errors from SQL: `raise exception 'CODE: text' using errcode = 'P0001'`; map in `poolxErrorMessage`.
-- Forms: `useActionState`; **return `values` on error** (React resets uncontrolled forms after actions).
-- Server components needing "now" for display: `await requestNow()`; never `Date.now()` in render.
-- Dynamic routes: anything using `usePathname()`/session must sit inside `<Suspense>`.
-- pgTAP: never assume an empty database — scope assertions to the test's own rows (e2e leaves data behind).
-- E2E: `createPoolFixture()`, `becomeStaffWithMfa()`, `signSandboxEvent()`, `readLocalEnv()` in `tests/e2e/support/helpers.ts`.
+## Patterns to follow (learned in Phases 2–3)
+- HTTP surface = `api.*` functions only; explicit grants; pgTAP `has_function_privilege` checks.
+- **Integrity/constraint trigger functions must be SECURITY DEFINER** (deferred triggers run as the committing user under RLS — TD-40).
+  Add a pgTAP check that fires deferred constraints *as a non-privileged role* (`set constraints … immediate`, then restore `deferred`).
+- Postgres regex repetition counts max 255; use length checks separately.
+- Errors: `raise exception 'CODE: text' using errcode = 'P0001'`; map in the module's error-message function.
+- Forms: `useActionState`; return `values` on error (React resets forms after actions).
+- Display time via `await requestNow()`; anything using `usePathname()`/session inside `<Suspense>`.
+- pgTAP: scope assertions to the test's own rows (e2e leaves data behind); watch `sum()` returning numeric.
+- E2E helpers: `createPoolFixture({ sellerName })`, `becomeStaffWithMfa()`, `signSandboxEvent()`, `readLocalEnv()`, `sql()`.
+- When editing files from `node -e`, avoid `$$` in replacement strings (JS `replace` turns `$$` into `$`) — use the Edit tool.
 
 ## Do NOT
-- Redo Phases 0–3 work. - Add `export const runtime`. - Use `middleware.ts`. - Present sandbox/test payments as real.
-- Mark refunds REFUNDED without provider confirmation. - Mix PoolX and Auction ledger accounts. - Claim tests pass without running them.
+- Allow a zero or optional auction deposit, or any setting that disables deposits. - Mix PoolX and Auction money.
+- Mark refunds REFUNDED without provider confirmation. - Present sandbox payments as real. - Use `middleware.ts` / `export const runtime`.
+- Claim tests pass without running them.

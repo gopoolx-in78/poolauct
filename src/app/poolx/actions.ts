@@ -113,3 +113,31 @@ export async function submitPoolRequestAction(_prev: FormState, formData: FormDa
   if (error) return { status: "error", message: poolxErrorMessage(error.message), values: raw };
   redirect("/account/poolx?notice=request-submitted");
 }
+
+export async function confirmDeliveryAction(formData: FormData) {
+  const orderId = z.uuid().safeParse(str(formData, "orderId"));
+  await requireAccount("/account/poolx");
+  if (!orderId.success) redirect("/account/poolx?error=ORDER_NOT_FOUND");
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.schema("api").rpc("poolx_confirm_delivery", { p_order: orderId.data });
+  redirect(
+    error
+      ? `/account/poolx?error=${encodeURIComponent(error.message.split(":")[0] ?? "ERROR")}`
+      : "/account/poolx?notice=delivered",
+  );
+}
+
+export async function openDisputeAction(formData: FormData) {
+  const orderId = z.uuid().safeParse(str(formData, "orderId"));
+  await requireAccount("/account/poolx");
+  const reason = str(formData, "reason").trim();
+  if (!orderId.success) redirect("/account/poolx?error=ORDER_NOT_FOUND");
+  if (reason.length < 10 || reason.length > 2000) redirect("/account/poolx?error=DISPUTE_REASON");
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.schema("api").rpc("poolx_open_dispute", { p_order: orderId.data, p_reason: reason });
+  redirect(
+    error
+      ? `/account/poolx?error=${encodeURIComponent(error.message.split(":")[0] ?? "ERROR")}`
+      : "/account/poolx?notice=dispute-opened",
+  );
+}

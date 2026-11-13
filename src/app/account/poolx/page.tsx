@@ -8,6 +8,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireAccount } from "@/modules/core/server/auth";
 import { POOL_STATUS_LABEL, poolxErrorMessage, type PoolStatus } from "@/modules/poolx/types";
 import { withdrawFromPoolAction } from "@/app/poolx/actions";
+import { OrderPanel, type MemberOrder } from "./order-panel";
 
 export const metadata = { title: "My PoolX activities" };
 
@@ -22,6 +23,8 @@ type Activity = {
     quantity: number;
     unitLabel: string;
     currentUnitPricePaise: string;
+    finalUnitPricePaise: string | null;
+    order: MemberOrder | null;
     contributions: {
       id: string;
       status: string;
@@ -79,6 +82,8 @@ const REFUND_REASON: Record<string, string> = {
 const NOTICES: Record<string, string> = {
   withdrawn: "You’ve left the pool. Any confirmed contribution is being refunded in full.",
   "request-submitted": "Thanks — your pool request was submitted for review.",
+  delivered: "Thanks for confirming delivery.",
+  "dispute-opened": "We’ve received your report. Our team will review it and get back to you.",
 };
 
 export default function MyPoolxPage({ searchParams }: PageProps<"/account/poolx">) {
@@ -100,6 +105,7 @@ async function Activity({ searchParams }: { searchParams: PageProps<"/account/po
   const notice = typeof sp.notice === "string" ? NOTICES[sp.notice] : undefined;
   const errorCode = typeof sp.error === "string" ? sp.error : undefined;
   const confirmPool = typeof sp.withdraw === "string" ? sp.withdraw : undefined;
+  const reportOrder = typeof sp.report === "string" ? sp.report : undefined;
 
   if (error || !data) {
     return (
@@ -167,6 +173,14 @@ async function Activity({ searchParams }: { searchParams: PageProps<"/account/po
                       {paise(latest.feePaise) > 0n ? ` + fee ${formatINR(paise(latest.feePaise))}` : ""}) —{" "}
                       {CONTRIBUTION_LABEL[latest.status] ?? latest.status}
                     </p>
+                  ) : null}
+                  {m.order ? (
+                    <OrderPanel
+                      order={m.order}
+                      unitLabel={m.unitLabel}
+                      quantity={m.quantity}
+                      reportOpen={reportOrder === m.order.id}
+                    />
                   ) : null}
                   {canWithdraw ? (
                     confirmPool === m.poolId ? (

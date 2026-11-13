@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { FormField } from "@/components/ui/form-field";
 import { FormMessage, SubmitButton, TextField } from "@/components/ui/form-kit";
 import { idleState } from "@/modules/core/validation";
-import { cancelPoolAction, createSellerAction, saveTiersAction } from "../actions";
+import { cancelPoolAction, createSellerAction, recordNegotiationAction, saveTiersAction } from "../actions";
 
 export function TiersForm({ poolId, tiers }: { poolId: string; tiers: { threshold: number; discountBps: number }[] }) {
   const [state, action] = useActionState(saveTiersAction, idleState);
@@ -111,5 +111,50 @@ export function SellerForm() {
         </SubmitButton>
       </form>
     </details>
+  );
+}
+
+export function NegotiationForm({ poolId }: { poolId: string }) {
+  const [state, action] = useActionState(recordNegotiationAction, idleState);
+  const v = state.values ?? {};
+  return (
+    <form action={action} className="flex flex-col gap-3">
+      <FormMessage state={state} />
+      <input type="hidden" name="poolId" value={poolId} />
+      <TextField name="offer" label="Seller's offered price per unit (₹, optional)" inputMode="decimal" state={state} />
+      <FormField
+        label="Terms"
+        required
+        error={state.fieldErrors?.terms}
+        hint="What the seller agreed or proposed (delivery, warranty, payment terms)."
+      >
+        {(a11y) => (
+          <textarea
+            name="terms"
+            rows={3}
+            defaultValue={v.terms}
+            className="border-rule bg-surface w-full rounded border px-3 py-2"
+            {...a11y}
+          />
+        )}
+      </FormField>
+      <FormField label="Outcome" required error={state.fieldErrors?.outcome}>
+        {(a11y) => (
+          <select
+            name="outcome"
+            defaultValue={v.outcome ?? "PROPOSED"}
+            className="border-rule bg-surface h-11 w-full rounded border px-3"
+            {...a11y}
+          >
+            <option value="PROPOSED">Proposed</option>
+            <option value="ACCEPTED">Accepted by seller</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
+        )}
+      </FormField>
+      <SubmitButton variant="secondary" className="self-start">
+        Record negotiation
+      </SubmitButton>
+    </form>
   );
 }

@@ -36,12 +36,14 @@ OD-01 … OD-15 (DECISION_LOG.md). Live payments need OD-02/OD-03; the PoolX con
 - [x] 3.4 Join → sandbox payment → verified webhook → ACTIVE membership; pending attempt reuse; failed → retry
 - [x] 3.5 Withdraw (ACTIVE while pool open → full refund; PENDING → cancel); refund worker + cron route
 - [x] 3.6 Pool requests + admin review (approve / under review / reject with note)
-- [ ] 3.7 Lifecycle after deadline — **next**:
-  - [ ] 3.7a negotiation records (`poolx.negotiations`) + `NEGOTIATING` state
-  - [ ] 3.7b lock: final price from tiers at lock; `PRICE_ADJUSTMENT` partial refunds for members who paid more (TD-29)
-  - [ ] 3.7c per-member orders (`poolx.orders`) with seller settlement payable ledger entries
-  - [ ] 3.7d shipments (`poolx.shipments`, tracking number/carrier/status), delivery confirmation by member
-  - [ ] 3.7e disputes (`poolx.disputes`) + admin resolution (refund via MANUAL refund with reason)
+- [x] 3.7 Lifecycle after joining closes (migration 0009, pgTAP 36, e2e journey):
+  - [x] 3.7a close joining early (≥ min members); negotiation log (append-only) + NEGOTIATING
+  - [x] 3.7b lock (needs ACCEPTED offer): final price TD-39; PRICE_ADJUSTMENT refunds; idempotent
+  - [x] 3.7c per-member orders + ORDER_CREATED journals (seller payable + fee revenue)
+  - [x] 3.7d shipments with carrier/tracking/https link; member confirms delivery; staff delivery with evidence; auto-complete
+  - [x] 3.7e disputes: member reports; NO_ACTION (orders.manage) or REFUND (refunds.manual, ≤ refundable)
+- [ ] 3.14 Seller settlement payouts (pay `poolx:seller_payable` to sellers; settlement records) — with Phase 6 finance
+- [ ] 3.15 Member notifications for lock/adjustment/shipment/dispute outcomes — Phase 8 notification service
 - [x] 3.8 `/account/poolx` + menu entry; `/admin/poolx/*` gated by `poolx.*` permissions
 - [x] 3.9 Tests: pgTAP 54 new; unit 18 new; PoolX e2e 8 journeys
 - [ ] 3.10 Seller verification UI (`sellers.manage`) — fold into Phase 6 seller management

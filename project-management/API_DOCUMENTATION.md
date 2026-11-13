@@ -1,6 +1,38 @@
 # API Documentation
 
-> Status: **planned contracts — none implemented.** Last updated: 2026-11-13.
+> Status: Phase 2 account/auth surface **implemented** (section "Implemented"); everything else is a planned contract.
+> Last updated: 2026-11-13.
+
+## Implemented (Phase 2)
+
+### Database RPC — PostgREST schema `api` (call with `supabase.schema("api").rpc(...)`)
+| Function | Caller | Behaviour |
+|---|---|---|
+| `get_my_account()` → jsonb | authenticated | `{id,email,displayName,phone,city,state,status,deletionRequestedAt,createdAt,aal,isStaff,roles[],permissions[]}`; staff permissions listed only at aal2 |
+| `update_my_profile(p_display_name, p_city, p_state)` → jsonb | authenticated, active | Trims, blanks→null; constraint-checked; audited when changed |
+| `list_my_sessions()` → table | authenticated, active | `id, created_at, last_active_at, user_agent, ip_hint (coarse), aal, is_current` — own sessions only |
+| `revoke_my_session(p_session_id uuid)` → boolean | authenticated, active | Deletes own non-current session; `false` if not found/not owned; audited + security event |
+| `request_account_deletion(p_reason text)` → jsonb | authenticated, active | Sets `DELETION_REQUESTED`; idempotent; audited |
+| `cancel_account_deletion()` → jsonb | authenticated, active | Back to `ACTIVE`; audited |
+| `rate_limit_hit(p_bucket, p_max, p_window_seconds)` → boolean | **service_role only** | Fixed-window counter |
+| `record_security_event(p_kind, p_user, p_subject_hash)` | **service_role only** | Append-only security event |
+
+Not exposed over HTTP: `core.operator_grant_role(email, role, reason)` — operator bootstrap via SQL (see DEPLOYMENT_GUIDE).
+
+### Next.js routes and server actions
+| Kind | Path / action | Notes |
+|---|---|---|
+| Page | `/login`, `/register`, `/verify-email`, `/forgot-password`, `/reset-password` | noindex; forms post to server actions (built-in Origin check) |
+| Route | `GET /auth/confirm?token_hash&type&next` | `type ∈ signup|email|recovery|email_change`; server-side `verifyOtp`; `next` sanitised by `safeNextPath`; failure → `/login?error=link` |
+| Action | `signInAction`, `signUpAction`, `forgotPasswordAction`, `resetPasswordAction`, `signOutAction` | zod-validated; rate-limited (TD-28); generic errors (no account enumeration) |
+| Page | `/account`, `/account/profile`, `/account/security`, `/account/sessions`, `/account/delete` | noindex; data loaded behind Suspense via DAL |
+| Action | `updateProfileAction`, `changeEmailAction`, `revokeSessionAction`, `signOutOtherSessionsAction`, `requestDeletionAction`, `cancelDeletionAction`, `startTotpEnrollmentAction`, `verifyTotpAction` | each re-checks the session (`requireAccount`) |
+| Page | `/admin` (staff + aal2 + `admin.dashboard.view`), `/admin/mfa` (staff only) | non-staff see 404 UI (TD-23) |
+| Proxy | `src/proxy.ts` | refreshes session cookies; 307 to `/login?next=` for signed-out access to `/account`, `/admin`, `/seller` |
+
+---
+
+## Planned contracts
 > All endpoints: JSON, zod-validated, typed responses `{ data } | { error: { code, message } }`, no internal details in errors.
 > Mutations: authenticated, Origin-checked, rate-limited, `Idempotency-Key` header required for payment/bid/refund mutations.
 > Pagination: cursor-based `?cursor=&limit=` (limit ≤ 50). Times ISO-8601 UTC. Money as integer paise strings (`"500000"`).

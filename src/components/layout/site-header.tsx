@@ -3,7 +3,9 @@ import { mainNav, site } from "@/config/site";
 import { Container } from "@/components/ui/primitives";
 import { MainNav } from "./main-nav";
 import { MobileNav } from "./mobile-nav";
+import { Suspense } from "react";
 import { ThemeToggle } from "./theme-toggle";
+import { UserMenu, UserMenuFallback } from "./user-menu";
 
 export function SiteHeader() {
   return (
@@ -14,8 +16,11 @@ export function SiteHeader() {
         </Link>
         <MainNav items={mainNav} />
         <div className="flex items-center gap-1">
-          {/* Account menu (My Account, My PoolX Activities, …) arrives with authentication in Phase 2. */}
           <ThemeToggle />
+          {/* Reads the session: streams in behind Suspense so the rest of the header stays in the static shell. */}
+          <Suspense fallback={<UserMenuFallback />}>
+            <UserMenu />
+          </Suspense>
           <MobileNav items={mainNav} />
         </div>
       </Container>

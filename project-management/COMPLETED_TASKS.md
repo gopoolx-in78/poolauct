@@ -21,3 +21,13 @@
 | 2026-11-13 | 1 | 1.11 robots, sitemap, manifest, icons, OG image | e2e |
 | 2026-11-13 | 1 | 1.12 Vitest (11 tests), Playwright (26 tests), axe | all pass |
 | 2026-11-13 | 1 | 1.13 GitHub Actions CI workflow written | ⚠ not run (no remote) |
+| 2026-11-13 | 2 | 2.1 Supabase server/service-role clients (`server-only`), proxy session refresh + optimistic protected-route redirect | e2e protected redirect |
+| 2026-11-13 | 2 | 2.2 Migration 0002 identity/RBAC + permission-matrix seed; `has_permission` requires aal2 for staff | pgTAP |
+| 2026-11-13 | 2 | 2.3 Migration 0003 audit (append-only), security events, verifications, rate limiter | pgTAP |
+| 2026-11-13 | 2 | 2.4 RLS policies + 46 identity pgTAP assertions (58 total) | `pnpm test:db` ✔, also after clean reset |
+| 2026-11-13 | 2 | 2.5 Register / confirm / sign in / sign out / forgot + reset / email change; `/auth/confirm` token_hash | e2e |
+| 2026-11-13 | 2 | 2.7 Account area: overview, profile, security, sessions, delete; header user menu | e2e |
+| 2026-11-13 | 2 | 2.8 Staff TOTP enrolment + aal2 admin gate; `/admin`, `/admin/mfa` | e2e (incl. step-up on new session) |
+| 2026-11-13 | 2 | 2.9 App rate limits (fail closed) on sign-in/sign-up/reset | exercised in e2e (fail-closed observed when RPC missing) |
+| 2026-11-13 | 2 | 2.11 Unit 29, pgTAP 58, e2e 37 (+11 intentionally skipped) | all pass |
+| 2026-11-13 | 2 | CI workflow split into static + integration (Supabase + Mailpit + e2e) | ⚠ not run (no remote) |

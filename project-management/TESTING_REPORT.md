@@ -6,14 +6,25 @@ Last updated: 2026-11-13
 | Suite | Tool | Location | Status |
 |---|---|---|---|
 | Unit | Vitest 5.1 | `tests/unit` | ✔ active |
-| DB / RLS / invariants | pgTAP via `supabase test db` | `supabase/tests` | written, **not yet run** (Docker) |
-| Integration / API | Vitest + local Supabase + sandbox provider | `tests/integration` | from Phase 2 |
-| E2E + a11y + SEO + headers | Playwright 1.65 + @axe-core/playwright 4.14 | `tests/e2e` | ✔ active (Chromium desktop 1440 + Pixel 7) |
+| DB / RLS / invariants | pgTAP via `supabase test db` | `supabase/tests` | ✔ active (58 assertions) |
+| Integration / API | Vitest + local Supabase + sandbox provider | `tests/integration` | from Phase 3/5a (payments) |
+| E2E + a11y + SEO + headers + auth | Playwright 1.65 + @axe-core/playwright 4.14; Mailpit for email links; RFC 6238 TOTP helper for MFA | `tests/e2e` | ✔ active (Chromium desktop 1440 + Pixel 7; auth journeys desktop-only) |
 | Security | OWASP ZAP baseline, gitleaks, pnpm audit | CI | audit run locally; gitleaks/ZAP in CI only |
 | Performance | Lighthouse CI | CI | not yet |
 | Backup | restore drill | DEPLOYMENT_GUIDE | Phase 10 |
 
 ## Run log
+
+### 2026-11-13 — Phase 2 (auth & users)
+| Command | Result |
+|---|---|
+| `pnpm lint` / `typecheck` / `format:check` | ✔ |
+| `pnpm test` | ✔ 4 files, 29 tests — adds `safe-redirect.test.ts` (open-redirect vectors) and `validation.test.ts` (password policy, sign-up, profile, TOTP) |
+| `pnpm test:db` | ✔ 2 files, 58 assertions — sign-up trigger; matrix seed (super_admin has all, admin lacks roles.manage / manual refunds, no disable/bypass permission, customers hold no admin perms); profiles/user_roles/roles RLS for own vs other user; INSERT/UPDATE/DELETE denied to end users; staff permissions only at aal2; account API; sessions (cross-user revoke denied, current session protected); deletion request; audit log private + append-only; api execute privileges; api schema has no tables. Re-run after clean `db reset` ✔ |
+| `pnpm build` | ✔ 30 routes; public pages Partial Prerender (static shell + streamed user menu) |
+| `pnpm test:e2e` | ✔ 37 passed, 11 skipped (auth on mobile by design). Auth journeys: sign-up requires confirmation; confirmation link single-use; no enumeration on duplicate sign-up; inline validation keeps values; generic wrong-password error; protected redirect + return; `next=//evil.example` ignored; profile persists; sign-out; password reset via email, old password rejected; non-staff → 404 UI with no admin content; staff MFA enrol (bad code rejected, good code → /admin), new session must step up; role grant audited; deletion request/cancel; auth pages noindex |
+
+Issues found and fixed during the run: (1) migration 0005 not yet applied → rate limiter failed closed (correct behaviour) → applied; (2) `Date.now()` during App-Shell prerender of session-reading routes → `connection()` in the DAL (TD-27); (3) non-staff `/admin` returns HTTP 200 under PPR → documented (TD-23), test asserts no content leak; (4) parallel e2e starved the small local Docker VM → 3 local workers, raised timeouts.
 
 ### 2026-11-13 — Phase 1 (Windows 11, Node 24.15, pnpm 9.15)
 | Command | Result |

@@ -3,37 +3,38 @@
 > Baseline: OWASP ASVS 5.0.0 + Appendix A/B of the universal master prompt (verbatim source:
 > `ultimate_universal_website_app_development_master_prompt.txt` — every item there applies unless marked N/A with reason here).
 > Status: ☐ planned · ◐ implemented, unverified · ☑ verified (with test ref) · ⚑ human/external action · N/A (reason)
-> Last updated: 2026-11-13 — **nothing implemented yet.** No claim of being "hack-proof" is ever made.
+> Last updated: 2026-11-13 — Phase 1 headers and Phase 2 auth/RBAC implemented; rest planned. No claim of being "hack-proof" is ever made.
 
 ## Threats (Appendix A §1)
 | Threat | Planned control | Status |
 |---|---|---|
-| SQL injection | supabase-js parameterised queries; SQL functions use params, no dynamic SQL from input (`format(%I/%L)` only where unavoidable) | ☐ |
+| SQL injection | supabase-js parameterised RPC; SQL functions take typed params, no dynamic SQL from input | ◐ Phase 2 code follows this; no dedicated injection test yet |
 | XSS | React escaping; no `dangerouslySetInnerHTML` except sanitised Markdown renderer; strict nonce CSP | ☐ |
 | CSRF | Server Actions Origin check; Origin/Sec-Fetch-Site check on route handlers; SameSite=Lax | ☐ |
 | RCE | no eval/user templates; dependency scanning; image processing in sandboxed lib | ☐ |
-| Broken access control / IDOR | RLS on every protected table; ownership checks in functions; pgTAP cross-user tests | ☐ |
+| Broken access control / IDOR | RLS on every protected table; ownership via auth.uid() in functions; pgTAP cross-user tests | ☑ core tables — `supabase/tests/0002_identity_rbac.test.sql` (own vs other, staff aal1 vs aal2, no end-user writes) |
 | SSRF | no user-supplied URLs fetched server-side; provider URLs allowlisted | ☐ |
 | Directory traversal | storage paths generated server-side (uuid), never from user input | ☐ |
-| Session hijacking | HttpOnly Secure SameSite cookies, rotation, session list/revoke | ☐ |
-| Credential stuffing / brute force | Supabase auth rate limits + app rate limits + lockout/backoff, security_events monitoring, optional CAPTCHA (OD) | ☐ |
+| Session hijacking | Supabase SSR cookies, refresh-token rotation, session list/revoke, reset signs out other sessions | ◐ list/revoke ☑ (pgTAP + e2e); cookie flags in prod unverified until deployed |
+| Credential stuffing / brute force | Supabase auth limits + app limits (TD-28, fail closed) + security_events; CAPTCHA optional (OD) | ◐ implemented; limit thresholds not load-tested |
 | Clickjacking | `frame-ancestors 'none'` + X-Frame-Options DENY | ☐ |
 | File upload attacks | signed uploads, MIME/magic sniff, size limits, image re-encode, private bucket, malware scan ⚑ OD-09 | ☐ |
-| Open redirects | `next` params restricted to same-origin relative paths | ☐ |
+| Open redirects | `safeNextPath()` on every `next` | ☑ `tests/unit/safe-redirect.test.ts` + e2e `//evil.example` |
 | API abuse | per-user/IP rate limits, pagination caps, body-size limits | ☐ |
 | Business-logic abuse | deposit bypass, fake payment confirmations, duplicate refunds, duplicate winners, bid manipulation, races, seller self-bid, unauthorised reserve edits, admin misuse → DB invariants + tests (acceptance 1–20) + audit | ☐ |
 
 ## Auth & accounts
-Password hashing by Supabase Auth (bcrypt) ☐ · single-use expiring reset tokens ☐ · email verify ☐ · OTP expiry & attempt limits ☐ ·
-TOTP MFA required for staff (AAL2 enforced server + RLS) ☐ · server-side logout invalidation ☐ · view/revoke sessions ☐ · RBAC + resource authz ☐
+Password hashing by Supabase Auth (bcrypt) ◐ (provider) · password policy ≥10 chars + upper/lower/digit ☑ (config + zod + e2e) · single-use expiring reset & confirm tokens ☑ (e2e: link reuse rejected) · email verification required ☑ (e2e) ·
+OTP expiry (3600 s) ◐ · TOTP MFA required for staff, enforced in `core.has_permission` + admin gate ☑ (pgTAP + e2e) · logout ☑ (e2e) · view/revoke sessions ☑ · RBAC seeded from matrix ☑ · no account enumeration on sign-up/reset/sign-in ☑ (e2e) ·
+phone OTP ⚑ OD-07 (SMS provider) · reauthentication UI for in-place password change: not built (TD-25)
 
 ## API & backend
-zod validation all inputs ☐ · ownership checks ☐ · rate limiting ☐ · request size limits ☐ · method validation ☐ · CORS restricted (same-origin only) ☐ ·
+zod validation on all Phase 2 inputs ☑ (`tests/unit/validation.test.ts`) · ownership checks ☑ · rate limiting ◐ · request size limits ☐ · method validation ☐ · CORS restricted (same-origin only) ☐ ·
 webhook HMAC + replay protection ☐ · timeouts (HTTP 10s, DB statement_timeout) ☐ · validate third-party responses ☐ · never trust client prices/roles/status ☐
 
 ## Data protection
-Service-role key server-only + build guard ☐ · secrets via env, `.env*` gitignored ☐ · secret scanning in CI (gitleaks) ☐ ·
-PII minimisation; reg numbers & ID numbers encrypted/masked ☐ · logs redact tokens/OTP/passwords/payment data ☐ · DPDP Act review ⚑ · append-only audit log ☐
+Service-role key server-only (`server-only` import + ESLint restricted import) ◐ · secrets via env, `.env*` gitignored ☑ · secret scanning in CI (gitleaks) ☐ ·
+PII minimisation; reg numbers & ID numbers encrypted/masked ☐ · logs redact tokens/OTP/passwords/payment data ☐ · DPDP Act review ⚑ · append-only audit log ☑ (UPDATE/DELETE/TRUNCATE blocked; pgTAP)
 
 ## Headers
 CSP ◐ verified present (`tests/e2e/foundation.spec.ts`) — `script-src 'unsafe-inline'` accepted risk TD-16, no third-party script origins, `object-src 'none'`, `frame-ancestors 'none'`, `base-uri`/`form-action 'self'` ·

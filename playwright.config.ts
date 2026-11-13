@@ -5,7 +5,13 @@ const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: "tests/e2e",
+  globalSetup: "./tests/e2e/support/global-setup.ts",
   fullyParallel: true,
+  // The local Supabase stack shares a small Docker VM; too many parallel browsers starve the auth service.
+  workers: process.env.CI ? 2 : 3,
+  // Auth journeys round-trip through the auth server and mailbox; allow for a cold server.
+  timeout: 60_000,
+  expect: { timeout: 15_000 },
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",

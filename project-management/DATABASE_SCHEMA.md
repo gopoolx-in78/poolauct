@@ -1,13 +1,29 @@
 # Database Schema
 
-> Status: **PROPOSED — no migrations exist yet.** Last updated: 2026-11-13.
-> Engine: Supabase Postgres. Schemas: `core`, `poolx`, `auction`, `ledger`, `cms`.
+> Status: migrations **0001–0005 applied and tested** (pgTAP 58/58); the rest of this document is the plan.
+> Last updated: 2026-11-13.
+> Engine: Supabase Postgres 17. Schemas: `core`, `poolx`, `auction`, `ledger`, `cms`, plus `api` (HTTP surface, functions only — TD-22).
+
+## Applied migrations
+
+| File (`supabase/migrations/`) | Contents |
+|---|---|
+| `20261113000001_core_extensions_and_schemas.sql` | citext, pgcrypto; schemas core/poolx/auction/ledger/cms; default-deny privileges; `core.set_updated_at`, `core.forbid_mutation`, `core.forbid_delete` |
+| `20261113000002_core_identity_rbac.sql` | `api` schema; `core.profiles` (FK auth.users, ON DELETE RESTRICT; status ACTIVE/SUSPENDED/DELETION_REQUESTED/DELETED; phone E.164 check); `core.roles` (11), `core.permissions` (35), `core.role_permissions` (matrix), `core.user_roles` (partial unique active role, revocation fields); `core.current_aal()`, `core.is_staff()`, `core.has_permission()` (staff perms only at aal2); auth triggers: new user → profile + `customer` role, email change → profile sync; RLS: SELECT own-or-`users.read`; reference tables readable; no end-user writes |
+| `20261113000003_core_audit_security.sql` | `core.audit_logs` (append-only: UPDATE/DELETE/TRUNCATE blocked; SELECT needs `audit.read`); `core.write_audit()`; `core.security_events` (append-only; own or `audit.read`); `core.user_verifications` (EMAIL/PHONE/BIDDER_KYC/SELLER_KYC; one open per level); `core.rate_limits` + `core.rate_limit_hit()`; `core.record_security_event()` |
+| `20261113000004_api_account.sql` | `core.require_active_user()`; `api.get_my_account`, `api.update_my_profile`, `api.list_my_sessions`, `api.revoke_my_session`, `api.request_account_deletion`, `api.cancel_account_deletion`; `core.operator_grant_role()` (service_role/SQL only) |
+| `20261113000005_api_server_helpers.sql` | `api.rate_limit_hit`, `api.record_security_event` (service_role only) |
+
+Tests: `supabase/tests/0001_schemas.test.sql` (12), `supabase/tests/0002_identity_rbac.test.sql` (46).
+
+Note: migration numbering below was the original plan; actual files use timestamps and Phase 2 split identity/audit/API
+differently. Later phases continue with `20261113000006+` / dated prefixes.
 > Conventions: `uuid` PKs (`gen_random_uuid()`), `timestamptz` in UTC, money = `bigint` paise with
 > `CHECK (x >= 0)` (or `> 0` where required), currency `char(3) DEFAULT 'INR' CHECK (currency='INR')`
 > until multi-currency is approved, `created_at/updated_at` on every table, soft status columns
 > instead of deletes for anything financial.
 
-## Migrations (planned order)
+## Migrations (original plan)
 
 | # | File | Contents |
 |---|---|---|

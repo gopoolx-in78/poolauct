@@ -23,7 +23,14 @@ const eslintConfig = defineConfig([
   },
   {
     // Allowed in server-side code.
-    files: ["src/app/api/**", "src/modules/**/server/**", "src/lib/**/*.server.ts", "src/app/**/actions.ts"],
+    files: [
+      "src/app/api/**",
+      "src/modules/**/server/**",
+      "src/lib/**/*.server.ts",
+      "src/lib/supabase/**",
+      "src/app/**/actions.ts",
+      "src/app/**/route.ts",
+    ],
     rules: { "no-restricted-imports": "off" },
   },
   globalIgnores([

@@ -4,6 +4,8 @@
 > `core.role_permissions`. Enforcement: server (route/action) **and** SQL function **and** RLS.
 > All staff roles require TOTP MFA (AAL2). Last updated: 2026-11-13.
 
+**Implemented** as seed data in `supabase/migrations/20261113000002_core_identity_rbac.sql` (2026-11-13) — keep both in sync; pgTAP checks key rows.
+
 Legend: ● granted by default · ○ not granted · S = sensitive (reason + audit; some require 2nd approver)
 
 | Permission | Super Admin | Admin | PoolX Mgr | Auction Mgr | Finance Mgr | Seller Mgr | Support | Content Mgr |
@@ -17,7 +19,8 @@ Legend: ● granted by default · ○ not granted · S = sensitive (reason + aud
 | `poolx.pools.manage` | ● | ● | ● | ○ | ○ | ○ | ○ | ○ |
 | `poolx.requests.review` | ● | ● | ● | ○ | ○ | ○ | ○ | ○ |
 | `poolx.tiers.manage` | ● | ● | ● | ○ | ○ | ○ | ○ | ○ |
-| `poolx.orders.manage` | ● | ● | ● | ○ | ○ | ○ | ● (read) | ○ |
+| `poolx.orders.manage` | ● | ● | ● | ○ | ○ | ○ | ○ | ○ |
+| `poolx.orders.read` | ● | ● | ● | ○ | ○ | ○ | ● | ○ |
 | `poolx.refunds.manual` (S) | ● | ○ | ○ | ○ | ● | ○ | ○ | ○ |
 | `auction.listings.manage` | ● | ● | ○ | ● | ○ | ○ | ○ | ○ |
 | `auction.listings.approve` | ● | ● | ○ | ● | ○ | ○ | ○ | ○ |

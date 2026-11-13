@@ -23,13 +23,21 @@
 | TD-17 | 2026-11-13 | Next.js **16.4.6** with `cacheComponents` + `partialPrefetching` (scaffold defaults; future defaults). Middleware is now `proxy.ts`. Request-time handlers must call `await connection()` (e.g. `/api/health`). Error boundaries receive `{ error: unknown, retry }`. | Bundled docs in `node_modules/next/dist/docs` |
 | TD-18 | 2026-11-13 | Interim display name "PoolX & Auctions" (`NEXT_PUBLIC_BRAND_NAME` overrides); interim neutral icon mark | OD-01 pending; descriptive, invents no company facts |
 | TD-19 | 2026-11-13 | Tailwind v4 via `@tailwindcss/turbopack` loader in `next.config.ts` + tokens in `globals.css` `@theme inline` | Proper build-time config (no CDN) |
-| TD-21 | 2026-11-13 | Local Supabase ports 563xx; start without studio/imgproxy/edge-runtime/logflare/vector/supavisor/mailpit until needed | Other local Supabase projects occupy default ports; limited free space on C: |
-| TD-20 | 2026-11-13 | Domain schemas are not exposed via PostgREST; only `public`/`graphql_public` are exposed for now | Least privilege; exposure is decided per function in later phases |
+| TD-20 | 2026-11-13 | Domain schemas are not exposed via PostgREST. *(Superseded in part by TD-22.)* | Least privilege |
+| TD-21 | 2026-11-13 | Local Supabase ports 563xx; lean start excludes studio/imgproxy/edge-runtime/logflare/vector/supavisor/realtime (mailpit now **included** for auth email tests) | Other local Supabase projects occupy default ports; limited free space on C:; small Docker VM |
+| TD-22 | 2026-11-13 | New `api` schema is the **only** schema PostgREST exposes besides public/graphql_public. It contains functions only (pgTAP asserts no tables/views). `core` tables get narrow SELECT grants so RLS is the real guard even for direct SQL; no end-user INSERT/UPDATE/DELETE grants or policies. Server-only helpers (`api.rate_limit_hit`, `api.record_security_event`) are executable by `service_role` only. | Single, auditable HTTP surface; defence in depth |
+| TD-23 | 2026-11-13 | Under Partial Prerendering, a `notFound()`/`redirect()` raised inside a streamed `<Suspense>` boundary renders the 404 UI / client redirect but the HTTP status of the already-sent shell stays 200. Accepted for private areas (`/admin`, `/account`): no protected content is rendered or sent; areas are noindex. The proxy also redirects signed-out users with a real 307. | Next.js 16 PPR streaming semantics |
+| TD-24 | 2026-11-13 | Email links (confirm, recovery, email change) use `token_hash` + server-side `verifyOtp` at `/auth/confirm` instead of PKCE code exchange; custom templates in `supabase/templates/` | Works across browsers/devices; tokens single-use and expiring |
+| TD-25 | 2026-11-13 | Password changes from the account area go through the emailed one-time reset link (no in-place change form for now); a successful reset signs out all other sessions | `secure_password_change` + `require_current_password` without building a reauthentication UI yet |
+| TD-26 | 2026-11-13 | Staff permissions are effective only in an aal2 (TOTP-verified) session — enforced in `core.has_permission()` (and therefore RLS), the admin page gate and `get_my_account()` | MFA for privileged accounts (§11.6, §17) enforced in the database, not just the UI |
+| TD-27 | 2026-11-13 | Session reads go through the Data Access Layer (`getAccount`), which calls `connection()` first so auth work never runs during prerendering or App-Shell prefetching | Supabase token checks use the current time; Next.js 16 rejects that in prerenders |
+| TD-28 | 2026-11-13 | App-level rate limits (Postgres fixed-window, fail closed): sign-in 30/15 min per IP + 8/15 min per email; sign-up 10/h per IP; reset 10/h per IP + 3/h per email. Keys are SHA-256 hashes, never raw emails/IPs. | Brute-force / credential-stuffing protection on top of Supabase Auth's own limits |
 
 ## Approvals
 | Date | Item | By |
 |---|---|---|
 | 2026-11-13 | Phase 0 architecture & roadmap approved; Phase 1 started | Owner (chat: "Approve, start Phase 1") |
+| 2026-11-13 | Phase 2 started | Owner (chat: "Start Phase 2") |
 
 ## Pending owner decisions (do not invent — sensible configurable defaults used meanwhile)
 

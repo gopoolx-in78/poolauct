@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-11-13 — Session 1 (Phase 2: authentication & users) — branch `phase-2-auth`
+- Migrations 0002–0005: profiles, RBAC + permission matrix seed, append-only audit log, security events, verifications,
+  rate limiter, `api` schema with account RPCs and service-role-only helpers.
+- pgTAP: `supabase/tests/0002_identity_rbac.test.sql` (46 assertions).
+- `@supabase/ssr` 0.12.7 + `@supabase/supabase-js` 2.119.0; server and service-role clients; `src/proxy.ts`.
+- Auth pages and server actions (register, sign in/out, confirm, forgot/reset, email change); `/auth/confirm` route.
+- Account area (overview, profile, security + TOTP, sessions, deletion) and header user menu.
+- Staff admin shell `/admin` + `/admin/mfa` with aal2 gate.
+- `supabase/config.toml`: stricter auth settings, email templates (`supabase/templates/`), `api` schema exposed.
+- Tests: unit (safe redirects, validation), Playwright auth journeys with Mailpit + TOTP helpers, global setup.
+- Playwright: 3 local workers, 60 s test / 15 s expect timeouts. CI split into static + integration jobs.
+
 ## 2026-11-13 — Session 1 (Phase 1: database verification)
 - Moved this project's local Supabase ports from 543xx to 563xx (`supabase/config.toml`, `.env.example`) to avoid clashing with other local Supabase projects.
 - Applied migration 0001 locally; pgTAP 12/12 pass. Generated gitignored `.env.local` from the local stack.

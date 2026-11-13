@@ -1,30 +1,39 @@
 # Current Status
 
 **Date:** 2026-11-13
-**Phase:** 1 — Design system & foundation (**complete and verified locally**, incl. database)
-**Git:** initial commit `b70ea1c` on `master`; no remote yet.
+**Phase:** 2 — Authentication & users (**complete and verified locally**; phone OTP deferred to OD-07)
+**Git:** branch `phase-2-auth` (from `master` @ `b5e73c4`); Phase 2 work **not committed yet**. No remote.
 
 ## What exists and is verified
-- Next.js 16.4.6 app (App Router, TS strict + `noUncheckedIndexedAccess`, Tailwind v4, Cache Components) at the repo root.
-- Design tokens (light/dark, PoolX/Auction accent scoping), fonts (Fraunces / IBM Plex Sans / IBM Plex Mono).
-- Layout shell: sticky header with main menu, theme toggle, mobile `<dialog>` drawer, footer, skip link.
-- Public pages: `/`, `/poolx`, `/auctions`, `/how-it-works`, `/about`, `/contact` — honest empty states, no fake data; tier and deposit examples are labelled "Illustration".
-- 404, error and global-error pages; `/api/health` (dynamic, no internals).
-- SEO: per-page title/description/canonical/OG/Twitter, BreadcrumbList + WebSite JSON-LD, robots.txt, sitemap.xml, web manifest, icons (svg, 180/192/512 png), OG image.
-- Security headers (CSP, XFO, nosniff, Referrer-Policy, Permissions-Policy, COOP, HSTS in prod), `X-Robots-Tag: noindex` on private prefixes and `/api`.
-- Env validation (sandbox payment provider refused in production).
-- Money utilities (bigint paise, INR formatting, bps, rounding) + tests.
-- Supabase CLI config (TOTP MFA enabled); **this project's local ports are 563xx** (API 56321, DB 56322) because other local
-  Supabase projects on this machine use 543xx/544xx/545xx/553xx. Start with
-  `pnpm exec supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,mailpit` (C: has limited free space).
-- Migration 0001 applied via `supabase db reset`; pgTAP 12/12 pass.
-- `.env.local` (gitignored) generated from `supabase status`; `/api/health` returns `database: ok` against the local stack.
-- CI workflow (lint, typecheck, unit, build, e2e, audit, gitleaks, database job).
+### Phase 1 (unchanged)
+Next.js 16.4.6 app (Cache Components), design tokens, layout shell, six public pages, error pages, `/api/health`, SEO routes,
+security headers, env validation, money utils. See git history / CHANGELOG.
+
+### Phase 2
+- **Database** (migrations 0002–0005): profiles (auto-created on sign-up), 11 roles, 35 permissions seeded from
+  ADMIN_PERMISSION_MATRIX.md, user_roles, `core.has_permission()` (staff permissions only at aal2), append-only audit log,
+  security events, verifications table, Postgres rate limiter, account API in the `api` schema (only HTTP-exposed schema).
+- **Auth flows**: register (email confirmation required, no enumeration), sign in (rate-limited, generic errors), sign out,
+  email-link confirmation via `/auth/confirm` (token_hash, single-use), forgot/reset password (signs out other sessions),
+  email change (double-confirmed).
+- **Account area** (`/account`, `/profile`, `/security`, `/sessions`, `/delete`): profile edit, TOTP enrolment/verification,
+  session list + revoke + sign out others, deletion request/cancel.
+- **Staff**: `/admin` requires staff role + aal2 + `admin.dashboard.view`; `/admin/mfa` enrol/verify; non-staff see 404 UI.
+- **Header user menu** (only sections that exist), streamed behind Suspense.
+- **Proxy** (`src/proxy.ts`): session refresh + optimistic redirect for `/account`, `/admin`, `/seller`.
+- **Local auth config** (`supabase/config.toml`): confirmations on, password ≥10 with upper/lower/digit, secure password change,
+  TOTP on, custom email templates, `api` schema exposed, mailpit enabled.
 
 ## Verification results (local, 2026-11-13)
-`pnpm lint` ✔ · `pnpm typecheck` ✔ · `pnpm test` ✔ 11/11 · `pnpm build` ✔ · `pnpm test:e2e` ✔ 26/26 (desktop + mobile Chromium, re-run with DB connected) · `pnpm test:db` ✔ 12/12 · `pnpm format:check` ✔ · `pnpm audit --audit-level high` ✔ (1 moderate, dev-only).
+`pnpm lint` ✔ · `pnpm typecheck` ✔ · `pnpm format:check` ✔ · `pnpm test` ✔ 29/29 · `pnpm test:db` ✔ 58/58 (also after a clean
+`db reset`) · `pnpm build` ✔ · `pnpm test:e2e` ✔ 37 passed, 11 skipped (auth journeys run on desktop only, by design).
 
-## Not verified / blocked
-- CI workflow has not run (no remote repository / no commits).
-- No visual review by screenshot (browser pane hidden); structure, a11y (axe) and overflow verified by tests only.
-- Lighthouse / Core Web Vitals not yet measured.
+## Not verified / known gaps
+- CI workflow updated but never run (no remote).
+- Phone OTP verification not built (needs SMS provider, OD-07).
+- In-place password change needs a reauthentication UI — currently via emailed reset link (TD-25).
+- Protected pages return HTTP 200 with 404 UI under PPR (TD-23) — no data leak, documented.
+- CSP still `'unsafe-inline'` for scripts (TD-16) — revisit before launch.
+- Hosted Supabase auth settings must mirror `config.toml` (DEPLOYMENT_GUIDE) — not applicable until staging exists.
+- Lighthouse not measured; no visual screenshot review.
+- Local Docker VM is small (3.8 GB, ~49 containers across projects): Playwright limited to 3 workers.

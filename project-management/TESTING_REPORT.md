@@ -6,7 +6,7 @@ Last updated: 2026-11-13
 | Suite | Tool | Location | Status |
 |---|---|---|---|
 | Unit | Vitest 5.1 | `tests/unit` | ✔ active |
-| DB / RLS / invariants | pgTAP via `supabase test db` | `supabase/tests` | ✔ active (238 assertions) |
+| DB / RLS / invariants | pgTAP via `supabase test db` | `supabase/tests` | ✔ active (292 assertions) |
 | Integration / API | Vitest integration suite against the local stack (`pnpm test:integration`): concurrent bidding with 8 real users (acceptance 8); webhooks covered in Playwright + pgTAP | `tests/integration`, `tests/e2e`, `supabase/tests` | ✔ active |
 | E2E + a11y + SEO + headers + auth | Playwright 1.65 + @axe-core/playwright 4.14; Mailpit for email links; RFC 6238 TOTP helper for MFA | `tests/e2e` | ✔ active (Chromium desktop 1440 + Pixel 7; auth journeys desktop-only) |
 | Security | OWASP ZAP baseline, gitleaks, pnpm audit | CI | audit run locally; gitleaks/ZAP in CI only |
@@ -14,6 +14,18 @@ Last updated: 2026-11-13
 | Backup | restore drill | DEPLOYMENT_GUIDE | Phase 10 |
 
 ## Run log
+
+### 2026-11-13 — Phase 6 (central admin)
+| Command | Result |
+|---|---|
+| `pnpm lint` / `typecheck` | ✔ |
+| `pnpm format:check` | Reports 30 files, all line-ending only (CRLF working tree from `core.autocrlf`); `prettier --check . --end-of-line auto` ✔ (TD-50) |
+| `pnpm test` | ✔ 51/51 (new `csv.test.ts`: quoting, formula neutralisation, exact numbers, header + CRLF) |
+| `pnpm test:db` | ✔ 6 files, 292 assertions — new `0006_admin_central.test.sql` (54): permission matrix per role; aal1 staff have no permissions; suspension needs reason, deletes sessions, writes audit + security event; suspended staff lose permissions and RLS ledger access (positive control first); no self status/role changes; suspending staff needs `roles.manage`; last Super Admin guard; customer role not grantable; permission edits only for staff roles, Super Admin fixed; seller status note required; settlement figures hidden without `sellers.settlements`; ledger overview per domain only; export permission, range limit and audit row; audit list permission |
+| `pnpm test:integration` | ✔ 3/3 |
+| `pnpm build` | ✔ |
+| `playwright test tests/e2e/admin.spec.ts` | ✔ 3/3 — super admin: separated dashboard, suspend (customer signed out) / reactivate, grant / revoke role, reasons in audit log, permission matrix; finance manager: payments, refunds, balanced per-module ledger without other-module accounts, CSV export header, no roles page; support: CSV route 404, no payments page. Earlier runs failed on an ambiguous dashboard heading, an empty CSV without header, and audit reasons repeated from a previous run (all fixed). |
+| `playwright test --workers=1` (full) | 39 passed, 3 failed, 9 not run, 25 skipped by design on the first full pass; 2 failures were real test breaks from the new dashboard (fixed: permissions now in a disclosure, PoolX link renamed "Pools"), the rest were server-action stalls on the overloaded local Docker VM (TD-38). Reruns of the affected specs: every test passed at least once on current code; the last PoolX rerun still had one environmental stall ("Save tiers"). Failing GoTrue `/signup` returned 504 after 10 s (`context deadline exceeded`) — environment, not app code. |
 
 ### 2026-11-13 — Phases 4–5 (auctions, deposits, refunds)
 | Command | Result |

@@ -1,26 +1,26 @@
 # Next Session Prompt
 
 **Project:** Dual marketplace — PoolX (group buying) + Auctions (second-hand assets, mandatory refundable deposits). Parent brand pending (OD-01); interim name "PoolX & Auctions".
-**Current phase:** Phases 4–5 (Auctions + deposit & refund engine) — core built and verified locally.
-**Last completed milestone:** auction end to end — staff publish (deposit frozen) → sandbox deposit → bid / outbid → cron close → loser refunded in full (provider-confirmed) → winner invoice with deposit credited once → paid.
-**Git:** branch `phase-4-auctions` — Phase 4–5 work may be uncommitted; check `git status` / `git log`. Not merged to `master`. No remote.
-**Database changes:** migrations 0001–0011 (DATABASE_SCHEMA.md "Applied migrations").
-**Tests:** unit 47 · pgTAP 238 · integration 3 (`pnpm test:integration`, needs local stack + `.env.local`) · build · e2e (full suite with `--workers=1`, TD-38) — see TESTING_REPORT.
-**Known gaps:** media uploads (no images anywhere yet); inspection/RC staff UI; seller self-listing; notifications (Phase 8); acceptance test 20 (Phase 7); Razorpay (OD-02) — no live payments; cron schedule (OD-06); deposit values OD-04, bidder KYC OD-05, forfeiture policy OD-11.
+**Current phase:** Phase 6 (Central admin) — built and verified locally.
+**Last completed milestone:** central admin — separated PoolX / Auction dashboard, user suspension (sessions ended) and role management, editable permission matrix, seller management, payments / refunds / per-module ledger, audited CSV exports, audit viewer.
+**Git:** branch `phase-6-admin` (from `master` at `742819a`) — Phase 6 work may be uncommitted; check `git status` / `git log`. Not merged to `master`. No remote.
+**Database changes:** migrations 0001–0012 (DATABASE_SCHEMA.md "Applied migrations").
+**Tests:** unit 51 · pgTAP 292 · integration 3 (`pnpm test:integration`, needs local stack + `.env.local`) · build · e2e (full suite with `--workers=1`, TD-38) — see TESTING_REPORT.
+**Known gaps:** media uploads (no images anywhere yet); inspection/RC staff UI; seller self-listing; seller settlements (OD-03); notifications (Phase 8); acceptance test 20 (Phase 7); Razorpay (OD-02) — no live payments; cron schedule (OD-06); deposit values OD-04, bidder KYC OD-05, forfeiture policy OD-11.
 
 ## Start-of-session protocol
 Read AGENTS.md (Next.js 16 docs in `node_modules/next/dist/docs/`), PROJECT_OVERVIEW, CURRENT_STATUS, PENDING_TASKS, this file →
 `git status` → `pnpm exec supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime` → `pnpm test:db`
-(expect 238/238) → report status.
+(expect 292/292) → report status.
 
 ## Next exact tasks (ask the owner which first)
-1. **Media pipeline (shared, 4.8 / 3.11):** Supabase Storage buckets `public-media` (images, public read) and `private-docs`
-   (KYC/RC/inspection PDFs; owner + permitted staff via RLS on `storage.objects`); `core.media_assets`; signed upload route that
-   checks MIME by magic bytes and size, re-encodes images to WebP (sharp) with width/height; alt text required. Attach to auction
-   assets and PoolX pools; show galleries on detail pages and cards.
-2. **Inspection report + RC verification UI (4.9)** in `/admin/auctions/[id]` (tables already exist).
-3. **Phase 6 (admin & finance):** role management UI, seller management/verification, settlements for `*:seller_payable`,
-   ledger views and exports — see PROJECT_ROADMAP.md.
+1. **Phase 7 — Theme & CMS:** theme tokens as validated data (allowlisted keys/values, no raw CSS), draft / publish / versions /
+   rollback, homepage sections, banners, nav/footer, FAQ, blog, pages, SEO settings; acceptance test 20 (a theme change cannot
+   alter deposit or bid rules) plus XSS / CSS-injection tests.
+2. **Media pipeline (shared, 4.8 / 3.11):** Storage buckets `public-media` / `private-docs` with RLS on `storage.objects`,
+   `core.media_assets`, signed uploads with magic-byte MIME check, WebP re-encode, required alt text; galleries on auctions and pools.
+   Unblocks the KYC verification queue (6.10) and inspection/RC UI (4.9).
+3. **Phase 8 — Notifications** (outbox processor, in-app, email adapter; SMS/WhatsApp disabled until configured).
 
 ## Patterns to follow
 - HTTP surface = `api.*` functions only; explicit grants; pgTAP permission checks (`set local role anon` for anon assertions).
@@ -32,6 +32,9 @@ Read AGENTS.md (Next.js 16 docs in `node_modules/next/dist/docs/`), PROJECT_OVER
 - Display time via `await requestNow()`; session / `usePathname()` reads inside `<Suspense>`.
 - pgTAP: scope assertions to the test's own rows; tests that need a "clean" setting may disable its no-delete trigger inside the
   rolled-back transaction.
+- Admin pages: `requireStaff(path, permission)` inside `<Suspense>`; simple forms post to a server action that redirects with
+  `?notice=` / `?error=` (`action-kit.ts` `outcome()`, `sqlMessage()`); shared UI in `src/app/admin/admin-kit.tsx`.
+- E2E: make any text you assert in shared lists (audit log, tables) unique per run.
 - E2E helpers: `becomeStaffWithMfa(page, email, "auction_manager")`, `registerAndConfirm`, `sql()`, `readLocalEnv("CRON_SECRET")`.
 - Editing: prefer the Edit tool or a Python script file over shell heredocs containing quotes; files may be CRLF (`core.autocrlf=true`).
 

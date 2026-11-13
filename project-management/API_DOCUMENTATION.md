@@ -96,6 +96,32 @@ member order panel in `/account/poolx` (confirm delivery, report a problem). Act
 `/admin/auctions` (+ `new`, `[id]`, `deposits`, `defaults`, `policy`), `GET /api/cron/auctions` (Bearer `CRON_SECRET`: close due
 auctions, flag overdue invoices, run refunds). Server actions: `src/app/auctions/actions.ts`, `src/app/admin/auctions/actions.ts`.
 
+### Phase 6 — central admin (implemented)
+All are `api.*` SECURITY DEFINER functions, callable by `authenticated` only, checked with `core.require_permission` (staff
+permissions need aal2 and an active profile). Every write takes a reason / note and writes `core.audit_logs`.
+
+| Function | Permission | Notes |
+|---|---|---|
+| `admin_metrics()` | `admin.dashboard.view` | `{users?, poolx, auction}`; users only with `users.read`; money fields null without `finance.ledger.read` |
+| `admin_list_users(p_search, p_status, p_role, p_limit, p_offset)` | `users.read` | `{total, items}` |
+| `admin_get_user(p_user)` | `users.read` | profile, roles history, verifications, activeSessions, mfaFactors, securityEvents, activity counts |
+| `admin_set_user_status(p_user, p_status ACTIVE/SUSPENDED, p_reason)` | `users.suspend` (+ `roles.manage` for staff) | reason ≥ 10; not self; suspension ends all sessions |
+| `admin_revoke_user_sessions(p_user, p_reason)` | `users.sessions.revoke` | returns count |
+| `admin_list_roles()` | `roles.manage` | roles + permissions + member counts, all permissions, staff list |
+| `admin_grant_role` / `admin_revoke_role(p_user, p_role, p_reason)` | `roles.manage` | not self; not `customer`; `ALREADY_GRANTED` / `NOT_GRANTED` / `LAST_SUPER_ADMIN` |
+| `admin_set_role_permission(p_role, p_permission, p_granted, p_reason)` | `roles.manage` | staff roles only; Super Admin fixed |
+| `admin_list_sellers()` | `sellers.manage` | `{poolx, auction, settlementsVisible}`; gross figures only with `sellers.settlements` |
+| `admin_set_seller_status(p_domain, p_seller, p_status, p_note)` | `sellers.manage` | note ≥ 10; sets verifier on VERIFIED |
+| `admin_list_payments(p_domain, p_status, p_search, p_limit, p_offset)` | `finance.ledger.read` | |
+| `admin_list_refunds(p_domain, p_status, p_limit, p_offset)` | `finance.ledger.read` | PoolX + auction refunds |
+| `admin_ledger_overview(p_domain, p_limit, p_offset)` | `finance.ledger.read` | trial balance + journals for one domain; `INVALID_REQUEST` otherwise |
+| `admin_export(p_kind payments/refunds/ledger, p_domain, p_from, p_to)` | `finance.reports.export` | ≤ 366 days; audited `finance.export` |
+| `admin_list_audit(p_action_prefix, p_actor_email, p_entity_id, p_limit, p_offset)` | `audit.read` | |
+
+Routes: `/admin`, `/admin/users`, `/admin/users/[id]`, `/admin/roles`, `/admin/sellers`, `/admin/finance/{payments,refunds,ledger,exports}`,
+`/admin/audit` (server actions in each folder's `actions.ts`, redirecting with `?notice=` / `?error=`);
+`GET /admin/finance/exports/csv?kind=&domain=&from=YYYY-MM-DD&to=YYYY-MM-DD` → `text/csv` (404 without permission, 400 invalid).
+
 ## Planned contracts
 > All endpoints: JSON, zod-validated, typed responses `{ data } | { error: { code, message } }`, no internal details in errors.
 > Mutations: authenticated, Origin-checked, rate-limited, `Idempotency-Key` header required for payment/bid/refund mutations.

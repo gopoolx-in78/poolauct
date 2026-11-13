@@ -5,6 +5,7 @@
 > All staff roles require TOTP MFA (AAL2). Last updated: 2026-11-13.
 
 **Implemented** as seed data in `supabase/migrations/20261113000002_core_identity_rbac.sql` (2026-11-13) — keep both in sync; pgTAP checks key rows.
+**Editable** by a Super Admin at `/admin/roles` since Phase 6 (staff roles only; Super Admin always keeps every permission; each change needs a reason and is audited — TD-49). The table below is the shipped default.
 
 Legend: ● granted by default · ○ not granted · S = sensitive (reason + audit; some require 2nd approver)
 

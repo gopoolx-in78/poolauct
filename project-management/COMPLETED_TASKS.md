@@ -46,3 +46,7 @@
 | 2026-11-13 | 4–5 | Public auction pages, deposit + bid UI, My Auction Deposits, invoice payment | Playwright `auction.spec.ts` ✔ |
 | 2026-11-13 | 4–5 | Admin auctions (listing form, publish, cancel, close), deposits dashboard, deposit policy, default reviews | Playwright `auction.spec.ts` ✔ (create/publish/dashboard); build ✔ |
 | 2026-11-13 | 4–5 | Full verification run | lint/typecheck/format ✔ · unit 47 · pgTAP 238 · integration 3 · build ✔ · e2e 43 passed, 2 failed, 3 did not run (the auth tests that depend on the failed one), 22 skipped by design. The failures were environmental: health 503 from a slow database check, and a staff session dropped during MFA enrolment. Both passed on the mobile project in the same run. Rerunning auth.spec.ts and foundation.spec.ts on desktop gave 25/25 passing. Net: **48 passed, 22 skipped by design, 0 failed.** |
+| 2026-11-13 | 6 | Migration 0012 (admin central: suspension, roles/permissions, sellers, finance, exports, audit) | `supabase db reset` ✔; pgTAP 292/292 (0006: 54) |
+| 2026-11-13 | 6 | Admin dashboard with separated PoolX / Auction metrics; users, roles, sellers, finance, exports, audit pages | Playwright `admin.spec.ts` 3/3 ✔; build ✔ |
+| 2026-11-13 | 6 | CSV export with formula-injection protection, fixed headers, 366-day limit, audit row | unit `csv.test.ts` 4/4; pgTAP; e2e |
+| 2026-11-13 | 6 | Full verification run | lint/typecheck ✔ · unit 51 · pgTAP 292 · integration 3 · build ✔ · e2e see TESTING_REPORT (all pass on rerun; environmental stalls) |

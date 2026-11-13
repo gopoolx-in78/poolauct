@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-11-13 — Session 1 (Phase 6: central admin) — branch `phase-6-admin`
+- Migration 0012: `has_permission` checks profile status; suspension columns + CHECK; `user_roles.revoke_reason`; new security
+  event kinds; `ledger.account_balance`; `api.admin_metrics`, `admin_list_users`, `admin_get_user`, `admin_set_user_status`,
+  `admin_revoke_user_sessions`, `admin_list_roles`, `admin_grant_role`, `admin_revoke_role`, `admin_set_role_permission`,
+  `admin_list_sellers`, `admin_set_seller_status`, `admin_list_payments`, `admin_list_refunds`, `admin_ledger_overview`,
+  `admin_export`, `admin_list_audit`.
+- Pages: `/admin` (rewritten), `/admin/users`, `/admin/users/[id]`, `/admin/roles`, `/admin/sellers`,
+  `/admin/finance/{payments,refunds,ledger,exports}`, `/admin/audit`; route `/admin/finance/exports/csv`; shared
+  `admin-kit.tsx` / `action-kit.ts`; `src/lib/csv.ts`.
+- Tests: pgTAP `0006_admin_central.test.sql` (54); unit `csv.test.ts` (4); Playwright `admin.spec.ts` (3).
+- Fixes found by tests: last-Super-Admin guard counted the target user; empty CSV exports had no header row; dashboard nav
+  headings duplicated section headings; audit e2e matched rows from earlier runs.
+
 ## 2026-11-13 — Session 1 (Phases 4–5: auctions, deposits, refunds) — branch `phase-4-auctions`
 - Migrations 0010–0011: deposit policy settings (no switch, no default), auction catalogue, auctions with mandatory frozen
   deposits, deposit state machine + history, bids (trigger + row-locked API, idempotent, anti-snipe), results, invoices,

@@ -180,7 +180,7 @@ test("staff create a draft pool, set tiers and publish it; it then appears publi
   await registerAndConfirm(page, baseURL!, email);
   await becomeStaffWithMfa(page, email, "poolx_manager");
 
-  await page.getByRole("link", { name: "PoolX pools" }).click();
+  await page.getByRole("link", { name: "Pools", exact: true }).click();
   await page.getByRole("link", { name: "New pool" }).click();
   const slug = `e2e-admin-${suffix}`;
   await page.getByLabel(/^Title/).fill("Admin-made cement pool");

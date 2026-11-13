@@ -164,6 +164,7 @@ test("staff must enrol and verify an authenticator app before the admin area ope
   await page.getByRole("button", { name: "Confirm and turn on" }).click();
   await expect(page).toHaveURL(/\/admin$/);
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+  await page.getByText(/^Effective permissions/).click();
   await expect(page.getByText("users.read")).toBeVisible();
   await expect(page.getByText("roles.manage")).toHaveCount(0);
 

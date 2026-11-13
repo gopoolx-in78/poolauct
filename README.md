@@ -5,9 +5,9 @@ One website, two independent business modules, one central Super Admin:
 - **PoolX** — community group buying. _Power of People. Power of Pooling._
 - **Auctions** — online auctions of second-hand cars and other approved assets, with a **mandatory refundable participation deposit** per auction.
 
-> **Status:** Phases 4–5 (Auctions) — accounts, RBAC, staff MFA, the full PoolX lifecycle, and auctions with the mandatory
-> refundable deposit, server-validated bidding, automatic closing, full refunds and winner invoices — all using a
-> **test-only payment provider** (no real money). Live payments are not built yet.
+> **Status:** Phase 6 (Central admin) — accounts, RBAC, staff MFA, the full PoolX lifecycle, auctions with the mandatory
+> refundable deposit and refund engine, and the central admin (users, roles, sellers, finance, exports, audit) are built and
+> tested locally. Payments run on the dev-only sandbox adapter; no live payments are possible yet.
 > See [`project-management/CURRENT_STATUS.md`](project-management/CURRENT_STATUS.md).
 
 ## Stack

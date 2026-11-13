@@ -36,6 +36,11 @@ webhook HMAC (timing-safe) + 300 s replay window + event-id de-duplication ☑ (
 Service-role key server-only (`server-only` import + ESLint restricted import) ◐ · secrets via env, `.env*` gitignored ☑ · secret scanning in CI (gitleaks) ☐ ·
 PII minimisation; vehicle registration stored masked only (CHECK requires •) ◐; ID numbers ☐; bidders shown publicly as "Bidder N" ☑ (pgTAP) · logs redact tokens/OTP/passwords/payment data ☐ · DPDP Act review ⚑ · append-only audit log ☑ (UPDATE/DELETE/TRUNCATE blocked; pgTAP)
 
+## Admin (Phase 6)
+Suspension ends all sessions and removes every staff permission incl. RLS reads ☑ (pgTAP + e2e) · no self status/role changes ☑ (pgTAP) ·
+last Super Admin protected ☑ (pgTAP) · permission edits audited with reason ☑ (pgTAP) · CSV exports: permission + aal2 + 404 otherwise ☑ (e2e),
+formula injection neutralised ☑ (unit), range-limited and audited ☑ (pgTAP) · admin routes server-checked per permission ☑ (e2e)
+
 ## Headers
 CSP ◐ verified present (`tests/e2e/foundation.spec.ts`) — `script-src 'unsafe-inline'` accepted risk TD-16, no third-party script origins, `object-src 'none'`, `frame-ancestors 'none'`, `base-uri`/`form-action 'self'` ·
 X-Frame-Options DENY ☑ · X-Content-Type-Options ☑ · Referrer-Policy ☑ · Permissions-Policy ☑ (header set) · COOP ◐ · HSTS ◐ (prod only, unverified until deployed) · `X-Powered-By` removed ☑ ·

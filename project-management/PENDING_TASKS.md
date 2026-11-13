@@ -66,5 +66,17 @@ OD-01 … OD-15 (DECISION_LOG.md). Live payments need OD-02/OD-03; the PoolX con
 - [ ] 4.12 Outbid / won / refund notifications — Phase 8
 - [ ] 4.13 Schedule `/api/cron/auctions` every minute once hosting is chosen (OD-06)
 
+## Phase 6 — Central admin
+- [x] 6.1 Migration 0012: suspension, role/permission management, sellers, finance lists, ledger overview, exports, audit list
+- [x] 6.2 `/admin` dashboard with separated PoolX / Auction metrics and permission-filtered module nav
+- [x] 6.3 Users: search, detail, suspend / reactivate (sessions ended), end sessions, grant / revoke roles
+- [x] 6.4 Roles: staff list, editable permission matrix (staff roles; Super Admin fixed)
+- [x] 6.5 Sellers (both modules): status changes with note
+- [x] 6.6 Finance: payments, refunds, per-module ledger, CSV exports (audited); audit viewer
+- [x] 6.7 Tests: pgTAP 0006 (54), unit csv (4), Playwright `admin.spec.ts` (3)
+- [ ] 6.8 Seller settlements / payouts (needs OD-03)
+- [ ] 6.9 Reconciliation report against provider settlement files (needs Razorpay adapter, OD-02)
+- [ ] 6.10 Verification queue UI for BIDDER_KYC / SELLER_KYC documents (needs media pipeline 4.8 and OD-05)
+
 ## Later phases
-See PROJECT_ROADMAP.md phases 4–10.
+See PROJECT_ROADMAP.md phases 7–10.

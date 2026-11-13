@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-13
 **Phase:** 1 — Design system & foundation (**complete and verified locally**, incl. database)
-**Git:** repository initialised, **no commits yet** (owner has not asked for a commit).
+**Git:** initial commit `b70ea1c` on `master`; no remote yet.
 
 ## What exists and is verified
 - Next.js 16.4.6 app (App Router, TS strict + `noUncheckedIndexedAccess`, Tailwind v4, Cache Components) at the repo root.

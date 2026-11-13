@@ -8,7 +8,7 @@
 **Database changes:** migration 0001 (schemas core/poolx/auction/ledger/cms, default-privilege lockdown, helper trigger functions) — applied locally, pgTAP 12/12 ✔.
 **Tests executed:** unit 11/11 ✔, e2e 26/26 ✔, build ✔, pgTAP 12/12 ✔, health reports database ok.
 **Known bugs:** none.
-**Unresolved:** no commits/remote (CI unverified); Lighthouse not measured; OD-01…OD-15.
+**Unresolved:** no remote (CI unverified); Lighthouse not measured; OD-01…OD-15.
 
 ## Start-of-session protocol
 Read AGENTS.md (note the Next.js 16 block: read `node_modules/next/dist/docs/` before using unfamiliar APIs), PROJECT_OVERVIEW, CURRENT_STATUS, PENDING_TASKS, this file → `git status` → report status.

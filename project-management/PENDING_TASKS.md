@@ -5,7 +5,7 @@ OD-01 … OD-15 (DECISION_LOG.md). None block Phase 2.
 
 ## Phase 1 leftovers
 - [x] 1.4b DB verified: migration 0001 applied, pgTAP 12/12, health reports database ok
-- [ ] 1.13b First commit + push to a private remote so CI runs (owner to provide/approve remote)
+- [ ] 1.13b Push to a private remote so CI runs (committed locally as b70ea1c; owner to provide/approve remote)
 - [ ] 1.15 Lighthouse baseline (LCP/INP/CLS) on production build; record in TESTING_REPORT
 - [ ] 1.16 Visual review of pages in light/dark at 320/768/1440
 - [ ] Toast, Tabs, Table, Pagination primitives — build when first used (Phase 2/3) rather than as unused code

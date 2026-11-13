@@ -15,50 +15,38 @@ export default function AdminHomePage() {
 
 async function AdminHome() {
   const account = await requireStaff("/admin", "admin.dashboard.view");
+  const has = (...perms: string[]) => perms.some((p) => account.permissions.includes(p));
+  const modules = [
+    { href: "/admin/poolx", label: "PoolX pools", show: has("poolx.pools.manage") },
+    {
+      href: "/admin/poolx/disputes",
+      label: "PoolX disputes",
+      show: has("poolx.orders.manage", "poolx.refunds.manual"),
+    },
+    { href: "/admin/poolx/requests", label: "Pool requests", show: has("poolx.requests.review") },
+    { href: "/admin/auctions", label: "Auctions", show: has("auction.listings.manage") },
+    { href: "/admin/auctions/deposits", label: "Auction deposits", show: has("auction.deposit.read") },
+    { href: "/admin/auctions/defaults", label: "Winner defaults", show: has("auction.default.review") },
+    { href: "/admin/auctions/policy", label: "Deposit policy", show: has("auction.deposit.config") },
+  ].filter((m) => m.show);
   return (
     <>
       <p className="text-ink-muted font-mono text-xs tracking-[0.2em] uppercase">Admin · MFA verified</p>
       <h1 className="mt-2 text-4xl">Dashboard</h1>
       <p className="text-ink-muted mt-3 max-w-2xl">
-        Signed in as {account.email}. PoolX, auction, finance, user and content management modules are added here in
-        later phases; each is limited to the permissions below.
+        Signed in as {account.email}. Finance, user and content management modules are added here in later phases; each
+        is limited to the permissions below.
       </p>
-      {["poolx.pools.manage", "poolx.requests.review", "poolx.orders.manage", "poolx.refunds.manual"].some((p) =>
-        account.permissions.includes(p),
-      ) ? (
+      {modules.length > 0 ? (
         <nav aria-label="Admin modules" className="mt-8">
           <ul className="flex flex-wrap gap-3">
-            {account.permissions.includes("poolx.pools.manage") ? (
-              <li>
-                <Link
-                  href="/admin/poolx"
-                  className="border-ink hover:bg-ink/5 inline-block border px-4 py-2 font-medium"
-                >
-                  PoolX pools
+            {modules.map((m) => (
+              <li key={m.href}>
+                <Link href={m.href} className="border-ink hover:bg-ink/5 inline-block border px-4 py-2 font-medium">
+                  {m.label}
                 </Link>
               </li>
-            ) : null}
-            {account.permissions.includes("poolx.orders.manage") ||
-            account.permissions.includes("poolx.refunds.manual") ? (
-              <li>
-                <Link
-                  href="/admin/poolx/disputes"
-                  className="border-ink hover:bg-ink/5 inline-block border px-4 py-2 font-medium"
-                >
-                  PoolX disputes
-                </Link>
-              </li>
-            ) : null}
-            {account.permissions.includes("poolx.requests.review") ? (
-              <li>
-                <Link
-                  href="/admin/poolx/requests"
-                  className="border-ink hover:bg-ink/5 inline-block border px-4 py-2 font-medium"
-                >
-                  Pool requests
-                </Link>
-              </li>
-            ) : null}
+            ))}
           </ul>
         </nav>
       ) : null}

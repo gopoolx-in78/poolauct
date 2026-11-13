@@ -1,47 +1,45 @@
 # Current Status
 
 **Date:** 2026-11-13
-**Phase:** 3 — PoolX module + payments core (5a) — **full pool lifecycle built and verified locally** (join → pay → close → negotiate → lock → orders → ship → deliver/dispute → complete). Remaining Phase 3 items are extras (images, private pools, seller-verification UI, payouts).
-**Git:** branch `phase-3-poolx`: core committed as `16ca7af`; the 3.7 lifecycle work is **not committed yet**. No remote.
+**Phase:** 4–5 — Auctions + mandatory deposit & refund engine — **built and verified locally** (publish with frozen deposit →
+deposit via sandbox → bid → anti-snipe → close → full refunds to non-winners → winner invoice with deposit credited once →
+default review). Remaining items: media uploads, inspection-report entry UI, seller self-listing, notifications, theme test #20.
+**Git:** branch `phase-4-auctions` (from `master` after Phase 3 merge). All Phase 4–5 work is **uncommitted**. No remote.
 
 ## What exists and is verified
 ### Earlier phases
-Foundation (Phase 1) and accounts/RBAC/staff MFA (Phase 2) — see CHANGELOG and git history.
+Foundation (1), accounts/RBAC/staff MFA (2), payments core + ledger + full PoolX lifecycle (3) — see CHANGELOG and git history.
 
-### Phase 3 (this session)
-- **Payments core:** provider-agnostic payment attempts (provider set by server only), webhook event store (de-duplicated),
-  provider refunds mirror; `api.payments_process_event` single entry point (idempotent, amount-checked, domain-routed).
-- **Ledger:** double-entry, insert-only, balanced and domain-isolated by triggers; capture and refund journals posted idempotently.
-- **Sandbox provider (test only):** signed HMAC webhooks with replay window; test checkout page clearly labelled; refused in
-  production. Razorpay adapter **not built** (OD-02).
-- **PoolX database:** categories, sellers, pools, tiers, requests, members, contributions, refunds with CHECKs/triggers
-  (amount formula, monotonic tiers, refunds ≤ paid, one membership per user, one live contribution per membership).
-- **PoolX behaviour:** server-priced join from confirmed members; reuse of pending attempt; verified capture → membership;
-  failed payment → retry; withdraw → full refund; late capture → automatic refund; admin cancel → refunds; deadline job →
-  THRESHOLD_MET or EXPIRED (+ refunds); refund worker with retry/backoff.
-- **Public pages:** `/poolx` (live hero card + real stats, illustration only when no pool is open), `/poolx/pools`
-  (search/filter/sort/paginate), `/poolx/pools/[slug]` (tiers, rules, fee disclosure, join panel, share links, Product JSON-LD),
-  `/poolx/categories/[slug]`, `/poolx/request`; sitemap includes categories and pools.
-- **Account:** `/account/poolx` (memberships, contributions, refunds, requests, two-step withdraw); menu entry added.
-- **Admin:** `/admin/poolx` list, create/edit draft, tier editor, publish, cancel-with-refunds, add seller, request review.
-- **Jobs:** `GET /api/cron/poolx` (Bearer `CRON_SECRET`).
-- **Lifecycle (3.7):** close joining early; append-only negotiation log; lock with seller confirmation (final price TD-39,
-  price-adjustment refunds, one order per member, seller-payable + fee journals, idempotent); shipping with tracking; member
-  delivery confirmation / staff delivery with evidence; disputes (no-action by PoolX staff, refunds by finance only); pool
-  auto-completes; public page shows the locked price. Integrity triggers now SECURITY DEFINER (TD-40, bug found by e2e).
+### Phases 4–5 (this session)
+- **Database (migrations 0010–0011):** deposit policy in `core.system_settings` (positive-only, no on/off switch, no delete,
+  no shipped default — TD-42); auction catalogue (categories, sellers, assets, masked vehicle details, inspections); auctions with
+  `deposit_amount_paise > 0` for every non-DRAFT auction and frozen terms after publish; 14-state deposit machine with
+  transition table + append-only history; bids validated by trigger and by the row-locked `api.auction_place_bid`; results,
+  invoices (total formula CHECK), single deposit adjustment per deposit/invoice, full-amount-only refunds, default reviews with
+  FORFEIT blocked (needs approved policy + two approvers).
+- **Money:** `auction:*` ledger journals only (never PoolX); capture, refund (provider-confirmed only), invoice, adjustment,
+  purchase, invoice cancellation. Late/duplicate deposit captures refunded automatically.
+- **Jobs:** `GET /api/cron/auctions` (Bearer `CRON_SECRET`) — LIVE flip, close ended auctions, flag overdue invoices, refund worker.
+- **Public:** `/auctions` (live rows, stats, deposit explainer), `/auctions/browse`, `/auctions/category/[slug]`, `/auctions/sell`,
+  `/auctions/[slug]` (vehicle/inspection/charges/terms, bid history as "Bidder N", deposit box, deposit + bid forms, Product JSON-LD,
+  10 s polling refresh — TD-44); sitemap includes auctions and categories.
+- **Account:** `/account/auctions` — won invoices + pay, My Auction Deposits (amount, paid, reference, auction status, deposit
+  status, refund status/reason/dates/reference or credit), bids, refunds; menu entries.
+- **Admin:** `/admin/auctions` list, create/edit draft (item, vehicle, bidding, mandatory deposit), publish, cancel (platform /
+  seller withdrew, refunds all), close-now for ended auctions; `/admin/auctions/deposits` dashboard (liability, by-state counts,
+  failed-refund retry); `/admin/auctions/defaults` (extend / refund / forfeit proposal); `/admin/auctions/policy` (min/max with reason).
 
 ## Verification (local, 2026-11-13)
-lint ✔ · typecheck ✔ · format ✔ · unit ✔ 47/47 · pgTAP ✔ 148/148 · build ✔ · full e2e (1 worker) ✔ 47 passed, 21 skipped by design, 0 failed ·
-local parallel runs can flake on the shared Docker VM (TD-38).
+lint ✔ · typecheck ✔ · format ✔ · unit ✔ 47/47 · pgTAP ✔ 238/238 (auction acceptance file 90) · integration ✔ 3/3 (concurrent bids) ·
+build ✔ · full e2e (1 worker) 43 passed, 2 failed, 3 did not run (the auth tests that depend on the failed one), 22 skipped by design. The failures were environmental: health 503 from a slow database check, and a staff session dropped during MFA enrolment. Both passed on the mobile project in the same run. Rerunning auth.spec.ts and foundation.spec.ts on desktop gave 25/25 passing. Net: **48 passed, 22 skipped by design, 0 failed.**. Acceptance tests 1–19 automated; #20 (theme change) waits for Phase 7.
 
-## Not built yet / known gaps (Phase 3 remainder)
-- Seller payouts/settlements for `poolx:seller_payable` (Phase 6 finance).
-- Notifications for lock/adjustment/shipment/dispute (Phase 8).
-- Seller verification UI (SQL function exists; `sellers.manage` UI comes with Phase 6 seller management).
-- Product images (needs storage + upload pipeline).
-- Private pools (schema supports `kind`; no invite flow).
-- Razorpay adapter and real fund-flow (OD-02/OD-03) — **no live payments possible**.
-- Cron scheduler wiring (hosting, OD-06).
+## Not built yet / known gaps
+- Media upload pipeline (asset photos, inspection PDFs, RC documents) — no images on auctions or pools yet.
+- Inspection-report entry UI and RC verification UI (tables exist; staff can only add via SQL).
+- Seller self-listing (`/auctions/sell` explains the process; third-party sellers OD-13).
+- Notifications (outbid, won, refund) — Phase 8. Realtime push (polling for now).
+- Razorpay adapter / real fund flow (OD-02/OD-03) — **no live payments possible**. Cron scheduler wiring (OD-06).
+- Deposit policy values (OD-04), bidder KYC level (OD-05), forfeiture policy (OD-11) — owner decisions.
 
 ## Environment notes
-- Local Docker VM is intermittently slow (e.g. a 1.8 s Supabase Auth user lookup); consider moving Docker’s disk image off C: (≈12 GB free) and stopping other projects’ stacks when running the full suite.
+- Local Docker VM is intermittently slow; run the full e2e suite with `--workers=1` (TD-38).

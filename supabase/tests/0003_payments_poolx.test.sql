@@ -173,7 +173,7 @@ reset role;
 select is((select count(*)::int from ledger.journals where kind = 'CONTRIBUTION_REFUNDED'
            and reference_id = (select v::uuid from t where k = 'refund')), 1, 'exactly one refund journal');
 select throws_ok($$ insert into poolx.refunds (contribution_id, pool_id, user_id, amount_paise, reason)
-  select contribution_id, pool_id, user_id, amount_paise, 'MANUAL' from poolx.refunds limit 1 $$,
+  select contribution_id, pool_id, user_id, amount_paise, 'MANUAL' from poolx.refunds where id = (select v::uuid from t where k = 'refund') $$,
   '23505', null, 'a contribution cannot be fully refunded twice');
 
 -- ---------------------------------------------------------------------------

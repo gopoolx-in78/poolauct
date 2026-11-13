@@ -10,7 +10,8 @@ export default defineConfig({
     },
   },
   test: {
-    include: ["tests/unit/**/*.test.ts", "tests/integration/**/*.test.ts"],
+    // DB-backed integration tests run separately: pnpm test:integration
+    include: ["tests/unit/**/*.test.ts"],
     environment: "node",
     coverage: { provider: "v8", include: ["src/lib/**", "src/modules/**"] },
   },

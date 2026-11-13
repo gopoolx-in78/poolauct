@@ -76,6 +76,26 @@ member order panel in `/account/poolx` (confirm delivery, report a problem). Act
 
 ---
 
+### Phases 4–5 — auctions, deposits and refunds (implemented)
+
+**RPC (schema `api`)** — money as strings (paise); errors `CODE: message` (P0001)
+
+| Function | Caller | Behaviour |
+|---|---|---|
+| `auction_list(view, category, search, limit, offset)`, `auction_get(slug)`, `auction_bid_history(slug)`, `auction_list_categories()`, `auction_public_stats()` | anon, authenticated | Published auctions only; bidders shown as "Bidder N"; reserve shown as met/not met or hidden, never the amount |
+| `auction_start_deposit(auction, terms_version)` | authenticated | Requires the current terms version and bidder verification; server-computed deposit; reuses a pending attempt |
+| `auction_place_bid(auction, amount_paise, idempotency_key)` | authenticated | Row-locked; live window; PAID deposit for this auction; ≥ minimum next bid; not the seller; idempotent; anti-snipe extension |
+| `auction_start_invoice_payment(invoice)`, `auction_my_status(auction)`, `auction_my_activity()`, `payments_get_my_attempt(id)` | authenticated | Own data only |
+| `auction_admin_save_listing / publish / cancel / close / list / get` | `auction.listings.manage` / `.approve`, `auction.cancel`, `auction.close.force` (staff, aal2) | Drafts editable only; publish freezes deposit + terms version (`DEPOSIT_REQUIRED`, `DEPOSIT_POLICY_NOT_CONFIGURED`, `ENDS_TOO_SOON`); cancel refunds every paid deposit |
+| `auction_admin_deposits_overview()`, `auction_admin_retry_refund(refund, reason)` | `auction.deposit.read` / `auction.deposit.refund.retry` | Counts/amounts by state, ledger liability, recent deposits; retry only REFUND_FAILED |
+| `auction_admin_get_deposit_policy()`, `auction_admin_set_deposit_policy(min, max, reason)` | `auction.deposit.config` | min > 0 required; audited |
+| `auction_admin_list_default_reviews()`, `auction_admin_decide_default(review, decision, reason, hours)` | `auction.default.review` (+ `auction.default.forfeit`) | EXTEND / REFUND; FORFEIT blocked without an approved policy and needs two approvers |
+| `auction_claim_refunds(limit)`, `auction_record_refund_result(...)`, `auction_close_due()` | service_role | Refund worker and scheduled closing |
+
+**Routes:** `/auctions`, `/auctions/browse`, `/auctions/category/[slug]`, `/auctions/sell`, `/auctions/[slug]`, `/account/auctions`,
+`/admin/auctions` (+ `new`, `[id]`, `deposits`, `defaults`, `policy`), `GET /api/cron/auctions` (Bearer `CRON_SECRET`: close due
+auctions, flag overdue invoices, run refunds). Server actions: `src/app/auctions/actions.ts`, `src/app/admin/auctions/actions.ts`.
+
 ## Planned contracts
 > All endpoints: JSON, zod-validated, typed responses `{ data } | { error: { code, message } }`, no internal details in errors.
 > Mutations: authenticated, Origin-checked, rate-limited, `Idempotency-Key` header required for payment/bid/refund mutations.

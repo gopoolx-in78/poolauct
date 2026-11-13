@@ -51,5 +51,20 @@ OD-01 … OD-15 (DECISION_LOG.md). Live payments need OD-02/OD-03; the PoolX con
 - [ ] 3.12 Private pools (invite link / allow-list) — schema has `kind`, no flow yet
 - [ ] 3.13 Schedule `/api/cron/poolx` (every 5 min) once hosting is chosen (OD-06)
 
+## Phases 4–5 — Auctions + deposit & refund engine
+- [x] 4.1 Migration 0010: settings/deposit policy, catalogue, auctions, participants, deposits + state machine, bids, results, invoices, adjustments, refunds, default reviews; RLS
+- [x] 4.2 Migration 0011: deposit computation, payment routing, refund engine, closing, member/public/admin API
+- [x] 4.3 Public pages (`/auctions`, browse, category, sell, detail) + sitemap
+- [x] 4.4 Deposit → sandbox payment → bid; anti-snipe; idempotent bids; bid history aliases
+- [x] 4.5 `/account/auctions` (My Auction Deposits, invoices + pay, bids, refunds)
+- [x] 4.6 Admin: listings, publish, cancel, close; deposits dashboard + refund retry; deposit policy; default reviews
+- [x] 4.7 Tests: pgTAP 90 (acceptance 1–7, 9–19 + defaults + ledger); integration (acceptance 8, concurrency); Playwright auction journey
+- [ ] 4.8 Media pipeline (Storage buckets, signed uploads, re-encode) — images for auctions and pools (also 3.11)
+- [ ] 4.9 Inspection report + RC verification staff UI
+- [ ] 4.10 Seller self-listing flow (needs OD-13 and seller KYC OD-05)
+- [ ] 4.11 Acceptance test 20 (theme change cannot alter deposit/bid rules) — with Phase 7 theme engine
+- [ ] 4.12 Outbid / won / refund notifications — Phase 8
+- [ ] 4.13 Schedule `/api/cron/auctions` every minute once hosting is chosen (OD-06)
+
 ## Later phases
 See PROJECT_ROADMAP.md phases 4–10.

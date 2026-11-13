@@ -56,6 +56,10 @@ domain-prefixed and a trigger rejects journals mixing domains. Dashboards never 
 | Contribution captured | poolx:gateway_clearing | poolx:contribution_liability |
 | Pool refund confirmed | poolx:contribution_liability | poolx:gateway_clearing |
 
+Implemented auction journal types (Phases 4–5): `DEPOSIT_CAPTURED`, `DEPOSIT_REFUNDED` (only on a provider-confirmed refund),
+`INVOICE_ISSUED` (hammer + charges → `seller_payable`; no commission until OD-10), `DEPOSIT_ADJUSTED` (once per deposit, DB-unique),
+`PURCHASE_CAPTURED`, `INVOICE_CANCELLED` (reversal when a default is resolved by refund). Deposits are never revenue.
+
 Every journal has a unique idempotency key derived from its business event id → replaying a webhook
 or job cannot double-post.
 

@@ -18,6 +18,7 @@ type Attempt = {
   provider: string | null;
   expiresAt: string;
   pool: { slug: string; title: string; quantity: number; unitLabel: string } | null;
+  auction: { slug: string; title: string; kind: "deposit" | "purchase" } | null;
 };
 
 export default function SandboxCheckoutPage({ params }: PageProps<"/payments/sandbox/[attemptId]">) {
@@ -55,7 +56,9 @@ async function Checkout({ params }: { params: PageProps<"/payments/sandbox/[atte
           <dd className="text-right">
             {attempt.pool
               ? `${attempt.pool.title} · ${attempt.pool.quantity} ${attempt.pool.unitLabel}`
-              : attempt.purpose}
+              : attempt.auction
+                ? `${attempt.auction.title} · ${attempt.auction.kind === "deposit" ? "refundable participation deposit" : "invoice balance"}`
+                : attempt.purpose}
           </dd>
         </div>
         <div className="flex justify-between gap-4 py-3">

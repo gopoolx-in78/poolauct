@@ -45,6 +45,12 @@
 | TD-40 | 2026-11-13 | Integrity trigger functions (`ledger.check_journal_balanced`, `ledger.check_entry_domain`, `poolx.check_refund_total`, `poolx.check_tiers_monotonic`) run as SECURITY DEFINER. Deferred constraint triggers fire at COMMIT as the calling user, where RLS hid ledger rows (false "unbalanced" — found when staff locked a pool) and could hide other users' refunds (a false pass). | Checks must see every row regardless of who commits |
 | TD-41 | 2026-11-13 | After a pool locks, money moves `contribution_liability → seller_payable (+ platform_fee_revenue)`. A dispute refund (`MANUAL`) after an order exists debits `seller_payable`; price-adjustment and pre-order refunds debit `contribution_liability`. Dispute refunds need `poolx.refunds.manual` (finance); "no action" needs `poolx.orders.manage`; both need a note and are audited. | Correct accounting; separation of duties |
 | TD-38 | 2026-11-13 | Local Playwright runs with 2 workers (1 for a full verification run): the shared local Docker VM showed 69 s checkpoints (I/O starvation), causing 3 s anon statement timeouts under load. Not a code issue; CI runners are unaffected. | Reliable local verification |
+| TD-42 | 2026-11-13 | **Deposit policy lives in `core.system_settings`** (`auction.deposit.global_min_paise` / `global_max_paise`), CHECK-constrained to positive integers; keys that look like a deposit on/off switch are rejected by a CHECK; settings can never be deleted. **No default is shipped** — publishing fails with `DEPOSIT_POLICY_NOT_CONFIGURED` until staff set a minimum. The local seed inserts a DEMO ₹500 minimum (dev only, OD-04). "No maximum" is stored as a very high cap, never as null/delete. | D-1/D-2; never invent deposit values |
+| TD-43 | 2026-11-13 | Winner invoice = hammer + disclosed charges − deposit credit (DB CHECK). Charges are a jsonb list on the asset, shown before bidding; at invoicing they are credited to `auction:seller_payable` with the hammer price (no commission/tax lines until OD-10/OD-12). | Honest totals; no invented fees |
+| TD-44 | 2026-11-13 | Live auction pages refresh by polling (`router.refresh()` every 10 s while visible and LIVE), not Supabase Realtime. Bid acceptance and timing are always server-side. | Simpler and correct; Realtime can replace polling later without changing rules |
+| TD-45 | 2026-11-13 | Auction slugs `browse`, `sell`, `category` are reserved (DB CHECK + zod) because they would collide with static `/auctions/*` routes. | Routing correctness |
+| TD-46 | 2026-11-13 | Bidder eligibility uses `auction.bidder_verification_level` (EMAIL or BIDDER_KYC); default EMAIL (confirmed email) until OD-05 decides the KYC level. | Unblocks testing without inventing a KYC policy |
+| TD-47 | 2026-11-13 | A deposit capture after the auction closed/cancelled, or a second capture for the same deposit, is refunded automatically in full (`LATE_CAPTURE` / `DUPLICATE_PAYMENT`). Every refund is the full amount of that payment (DB trigger). Winner default: EXTEND or REFUND by `auction.default.review`; FORFEIT requires `auction.default.forfeit`, an approved policy version setting and a second, different approver — no policy is configured, so forfeiture is blocked (OD-11). | §7 deposit rules |
 
 ## Approvals
 | Date | Item | By |
@@ -52,6 +58,7 @@
 | 2026-11-13 | Phase 0 architecture & roadmap approved; Phase 1 started | Owner (chat: "Approve, start Phase 1") |
 | 2026-11-13 | Phase 2 started | Owner (chat: "Start Phase 2") |
 | 2026-11-13 | Phase 2 merged to master; Phase 3 started | Owner (chat: "Merge into master", "Start Phase 3") |
+| 2026-11-13 | Phase 3 merged; Phases 4–5 (auctions + deposit/refund engine) started | Owner (chat: "Merge into master", "Start Phase 4–5") |
 
 ## Pending owner decisions (do not invent — sensible configurable defaults used meanwhile)
 

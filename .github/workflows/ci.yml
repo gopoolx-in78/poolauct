@@ -66,6 +66,8 @@ jobs:
             echo "SANDBOX_WEBHOOK_SECRET=$(openssl rand -hex 32)"
             echo "CRON_SECRET=$(openssl rand -hex 32)"
           } > .env.local
+      - name: Integration tests (concurrency)
+        run: pnpm test:integration
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e

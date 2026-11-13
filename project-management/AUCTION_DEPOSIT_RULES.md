@@ -1,6 +1,6 @@
 # Auction Participation Deposit Rules (NON-NEGOTIABLE)
 
-> Status: rules approved by master prompt §7; implementation **not started**. Last updated: 2026-11-13.
+> Status: rules approved by master prompt §7; **implemented** in migrations 0010–0011 and verified locally by pgTAP `0005_auction_acceptance.test.sql`, `tests/integration/auction-concurrency.test.ts` and Playwright `auction.spec.ts` (sandbox payments only). Forfeiture stays blocked pending OD-11. Last updated: 2026-11-13.
 
 ## 1. Invariants
 

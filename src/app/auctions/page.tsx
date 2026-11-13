@@ -1,7 +1,18 @@
-import { Breadcrumbs, Container, EmptyState, SectionHeading } from "@/components/ui/primitives";
+import Link from "next/link";
+import { Suspense } from "react";
+import { AuctionCard } from "@/components/auction/auction-card";
+import { ButtonLink } from "@/components/ui/button";
+import { Breadcrumbs, Container, EmptyState, SectionHeading, Skeleton } from "@/components/ui/primitives";
 import { site } from "@/config/site";
 import { formatINR, rupees, subPaise } from "@/lib/money";
 import { pageMetadata } from "@/lib/seo";
+import { requestNow } from "@/lib/time";
+import {
+  getAuctionStats,
+  listAuctionCategories,
+  listAuctions,
+  type AuctionView,
+} from "@/modules/auction/server/queries";
 
 export const metadata = pageMetadata({
   title: "Online auctions for used cars and second-hand assets",
@@ -10,21 +21,7 @@ export const metadata = pageMetadata({
   path: "/auctions",
 });
 
-const categories = [
-  "Used Cars",
-  "Motorcycles",
-  "Scooters",
-  "Commercial Vehicles",
-  "Electronics",
-  "Laptops",
-  "Smartphones",
-  "Furniture",
-  "Industrial Machinery",
-  "Commercial Equipment",
-  "Other Assets",
-];
-
-// Worked example taken from the published deposit rules. Illustrative — not a live auction.
+// Worked example from the published deposit rules. Illustrative — not a live auction.
 const example = {
   startingBid: rupees(500_000),
   deposit: rupees(2_000),
@@ -37,7 +34,7 @@ const steps = [
     "Review the auction",
     "Check the asset details, inspection information, charges, terms, deposit amount and refund conditions.",
   ],
-  ["Register & verify", "Log in, complete bidder verification and accept the auction’s participation terms."],
+  ["Register & verify", "Sign in, complete bidder verification and accept the auction’s participation terms."],
   [
     "Pay the deposit",
     "Pay the refundable participation deposit for that auction. Bidding opens only after our servers confirm the payment.",
@@ -69,18 +66,44 @@ export default function AuctionsPage() {
             Timed online auctions with server-verified bids, clear charges and a refundable participation deposit on
             every auction.
           </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <ButtonLink href="/auctions/browse?view=live" variant="accent" size="lg">
+              See live auctions
+            </ButtonLink>
+            <ButtonLink href="/register" variant="secondary" size="lg">
+              Register as a bidder
+            </ButtonLink>
+            <ButtonLink href="/auctions/sell" variant="ghost" size="lg">
+              Sell an asset
+            </ButtonLink>
+          </div>
+          <Suspense fallback={<Skeleton className="mt-8 h-6 w-64" />}>
+            <Stats />
+          </Suspense>
         </Container>
       </section>
 
-      <section aria-labelledby="live-title" className="mt-16">
-        <Container>
-          <SectionHeading eyebrow="Live & upcoming" title="Auctions" id="live-title" />
-          <EmptyState className="mt-8" title="No auctions are scheduled yet">
-            Live, upcoming and ending-soon auctions will appear here with their real bids and countdowns once listings
-            are published.
-          </EmptyState>
-        </Container>
-      </section>
+      {(
+        [
+          ["live", "Live now", "Bidding open"],
+          ["ending", "Ending soon", "Closing within 24 hours"],
+          ["upcoming", "Upcoming", "Register and pay your deposit early"],
+        ] as [AuctionView, string, string][]
+      ).map(([view, title, eyebrow]) => (
+        <section key={view} aria-labelledby={`${view}-title`} className="mt-16">
+          <Container>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <SectionHeading eyebrow={eyebrow} title={title} id={`${view}-title`} />
+              <Link href={`/auctions/browse?view=${view}`} className="font-medium underline underline-offset-4">
+                See all
+              </Link>
+            </div>
+            <Suspense fallback={<Skeleton className="mt-8 h-72" />}>
+              <Row view={view} />
+            </Suspense>
+          </Container>
+        </section>
+      ))}
 
       <section aria-labelledby="deposit-title" className="mt-20">
         <Container className="grid gap-10 lg:grid-cols-2">
@@ -90,7 +113,8 @@ export default function AuctionsPage() {
             id="deposit-title"
           >
             Every auction requires a refundable deposit before you can bid. It keeps bidding serious and is never kept
-            as a fee.
+            as a fee: if you don&rsquo;t win, the full amount is refunded; if you win, it&rsquo;s credited to your
+            invoice.
           </SectionHeading>
           <figure className="border-ink bg-surface border p-5">
             <figcaption className="flex items-center justify-between gap-2">
@@ -106,7 +130,7 @@ export default function AuctionsPage() {
                 ["Minimum increment", formatINR(example.increment)],
                 ["If you don’t win", `${formatINR(example.deposit)} refunded in full`],
                 [
-                  "If you win at " + formatINR(example.winningBid),
+                  `If you win at ${formatINR(example.winningBid)}`,
                   `${formatINR(example.deposit)} credited → ${formatINR(subPaise(example.winningBid, example.deposit))} remaining`,
                 ],
               ].map(([k, v]) => (
@@ -142,15 +166,61 @@ export default function AuctionsPage() {
       <section aria-labelledby="auction-cats" className="mt-20">
         <Container>
           <SectionHeading eyebrow="What’s auctioned" title="Categories" id="auction-cats" />
-          <ul className="mt-8 flex flex-wrap gap-2">
-            {categories.map((c) => (
-              <li key={c} className="border-rule rounded-full border px-4 py-2 text-sm">
-                {c}
-              </li>
-            ))}
-          </ul>
+          <Suspense fallback={<Skeleton className="mt-8 h-24" />}>
+            <Categories />
+          </Suspense>
         </Container>
       </section>
     </div>
+  );
+}
+
+async function Stats() {
+  await requestNow();
+  const s = await getAuctionStats();
+  if (s.live + s.upcoming === 0) return null;
+  return (
+    <p className="mt-8 text-sm">
+      <strong className="font-mono">{s.live}</strong> live · <strong className="font-mono">{s.upcoming}</strong>{" "}
+      upcoming right now
+    </p>
+  );
+}
+
+async function Row({ view }: { view: AuctionView }) {
+  const now = await requestNow();
+  const { items } = await listAuctions({ view, limit: 3 });
+  if (items.length === 0) {
+    return (
+      <EmptyState className="mt-8" title={view === "upcoming" ? "No upcoming auctions yet" : "Nothing here right now"}>
+        Auctions appear here with their real bids and countdowns once they are published.
+      </EmptyState>
+    );
+  }
+  return (
+    <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {items.map((a) => (
+        <AuctionCard key={a.id} a={a} now={now} />
+      ))}
+    </div>
+  );
+}
+
+async function Categories() {
+  await requestNow();
+  const categories = await listAuctionCategories();
+  return (
+    <ul className="mt-8 flex flex-wrap gap-2">
+      {categories.map((c) => (
+        <li key={c.slug}>
+          <Link
+            href={`/auctions/category/${c.slug}`}
+            className="border-rule hover:border-ink inline-block rounded-full border px-4 py-2 text-sm"
+          >
+            {c.name}
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }

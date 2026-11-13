@@ -30,11 +30,11 @@ phone OTP ⚑ OD-07 (SMS provider) · reauthentication UI for in-place password 
 
 ## API & backend
 zod validation on all Phase 2 inputs ☑ (`tests/unit/validation.test.ts`) · ownership checks ☑ · rate limiting ◐ · request size limits ☐ · method validation ☐ · CORS restricted (same-origin only) ☐ ·
-webhook HMAC (timing-safe) + 300 s replay window + event-id de-duplication ☑ (unit + pgTAP + e2e) · timeouts (HTTP 10s, DB statement_timeout) ☐ · validate third-party responses ☐ · never trust client prices/roles/status ☑ for PoolX (amounts computed in SQL; status only via verified webhook)
+webhook HMAC (timing-safe) + 300 s replay window + event-id de-duplication ☑ (unit + pgTAP + e2e) · timeouts (HTTP 10s, DB statement_timeout) ☐ · validate third-party responses ☐ · never trust client prices/roles/status ☑ for PoolX and auctions (deposit, bid validity and invoice totals computed in SQL; status only via verified webhook; bids row-locked + idempotent — pgTAP + concurrency integration test) · cron route Bearer secret, timing-safe ☑ (e2e)
 
 ## Data protection
 Service-role key server-only (`server-only` import + ESLint restricted import) ◐ · secrets via env, `.env*` gitignored ☑ · secret scanning in CI (gitleaks) ☐ ·
-PII minimisation; reg numbers & ID numbers encrypted/masked ☐ · logs redact tokens/OTP/passwords/payment data ☐ · DPDP Act review ⚑ · append-only audit log ☑ (UPDATE/DELETE/TRUNCATE blocked; pgTAP)
+PII minimisation; vehicle registration stored masked only (CHECK requires •) ◐; ID numbers ☐; bidders shown publicly as "Bidder N" ☑ (pgTAP) · logs redact tokens/OTP/passwords/payment data ☐ · DPDP Act review ⚑ · append-only audit log ☑ (UPDATE/DELETE/TRUNCATE blocked; pgTAP)
 
 ## Headers
 CSP ◐ verified present (`tests/e2e/foundation.spec.ts`) — `script-src 'unsafe-inline'` accepted risk TD-16, no third-party script origins, `object-src 'none'`, `frame-ancestors 'none'`, `base-uri`/`form-action 'self'` ·

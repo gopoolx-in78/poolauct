@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-11-13 — Session 1 (Phases 4–5: auctions, deposits, refunds) — branch `phase-4-auctions`
+- Migrations 0010–0011: deposit policy settings (no switch, no default), auction catalogue, auctions with mandatory frozen
+  deposits, deposit state machine + history, bids (trigger + row-locked API, idempotent, anti-snipe), results, invoices,
+  deposit adjustments, full-amount refunds, default reviews (forfeit blocked); payment routing for AUCTION_DEPOSIT /
+  AUCTION_PURCHASE; refund engine; idempotent closing; public, member and admin API; reserved slugs.
+- Pages: `/auctions` (live data), `/auctions/browse`, `/auctions/category/[slug]`, `/auctions/sell`, `/auctions/[slug]`,
+  `/account/auctions`, `/admin/auctions` (+ new, [id], deposits, defaults, policy); `/api/cron/auctions`; sitemap entries;
+  sandbox checkout handles auction deposits and invoices.
+- Tests: pgTAP `0005_auction_acceptance.test.sql` (90); Vitest integration suite `tests/integration` (concurrent bidding) +
+  CI step; Playwright `auction.spec.ts` (full journey).
+- Fixes found by tests: forfeit guard fired before the transition check (trigger renamed to sort later); refund claim returned
+  rows claimed by other runs; PoolX duplicate-refund test picked an arbitrary row; bid history needed the anon client.
+
 ## 2026-11-13 — Session 1 (Phase 3.7: PoolX lifecycle) — branch `phase-3-poolx`
 - Migration 0009: final price/lock columns; negotiations (append-only), orders, shipments, disputes; lock with price-adjustment
   refunds and seller-payable/fee journals; shipping, delivery confirmation, disputes, auto-completion; member activity and

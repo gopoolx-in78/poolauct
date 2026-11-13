@@ -26,6 +26,7 @@ export async function sandboxCompleteAction(formData: FormData) {
     providerOrderId: string | null;
     status: string;
     pool: { slug: string } | null;
+    auction: { slug: string; kind: "deposit" | "purchase" } | null;
   } | null;
   if (!attempt?.providerOrderId) notFound();
 
@@ -34,6 +35,12 @@ export async function sandboxCompleteAction(formData: FormData) {
   const result = await handlePaymentWebhook("sandbox", body, new Headers(headers));
   if (!result.ok) console.error("sandbox checkout processing failed", result);
 
-  const back = attempt.pool ? `/poolx/pools/${attempt.pool.slug}` : "/account";
+  const back = attempt.pool
+    ? `/poolx/pools/${attempt.pool.slug}`
+    : attempt.auction?.kind === "deposit"
+      ? `/auctions/${attempt.auction.slug}`
+      : attempt.auction
+        ? "/account/auctions"
+        : "/account";
   redirect(`${back}?payment=${outcome === "captured" ? "success" : "failed"}`);
 }

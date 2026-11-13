@@ -1,6 +1,6 @@
 # Auction Requirements
 
-Source: Master prompt §6–§8, §24. Last updated: 2026-11-13. Status: ☐ not started.
+Source: Master prompt §6–§8, §24. Last updated: 2026-11-13. Status: ◐ Phases 4–5 built and verified locally (acceptance tests 1–19 automated; #20 theme change waits for Phase 7). Not built: media uploads, inspection-report entry UI, seller self-listing, Realtime (polling, TD-44), notifications.
 Deposit/refund specifics: `AUCTION_DEPOSIT_RULES.md`, `REFUND_WORKFLOW.md`.
 
 ## Pages

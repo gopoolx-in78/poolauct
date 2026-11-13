@@ -1,0 +1,134 @@
+# Database Schema
+
+> Status: **PROPOSED — no migrations exist yet.** Last updated: 2026-11-13.
+> Engine: Supabase Postgres. Schemas: `core`, `poolx`, `auction`, `ledger`, `cms`.
+> Conventions: `uuid` PKs (`gen_random_uuid()`), `timestamptz` in UTC, money = `bigint` paise with
+> `CHECK (x >= 0)` (or `> 0` where required), currency `char(3) DEFAULT 'INR' CHECK (currency='INR')`
+> until multi-currency is approved, `created_at/updated_at` on every table, soft status columns
+> instead of deletes for anything financial.
+
+## Migrations (planned order)
+
+| # | File | Contents |
+|---|---|---|
+| 0001 | `core_extensions_and_schemas.sql` | pgcrypto, citext, pg_cron, schemas, grants baseline (revoke all from anon/authenticated) |
+| 0002 | `core_identity_rbac.sql` | profiles, roles, permissions, role_permissions, user_roles, `has_permission()`, `is_staff()` |
+| 0003 | `core_verification_sessions.sql` | user_verifications, session registry, security events |
+| 0004 | `core_audit_notifications.sql` | audit_logs (append-only), notifications, notification_preferences, deliveries, outbox |
+| 0005 | `core_payments.sql` | payment_attempts, payment_webhook_events, provider refunds mirror |
+| 0006 | `ledger.sql` | accounts, journals, entries, balance trigger |
+| 0007 | `cms_theme.sql` | theme_versions, cms_pages, banners, nav, homepage_sections, seo_settings, system_settings |
+| 0008 | `poolx_core.sql` | categories, sellers, pools, products, tiers, requests |
+| 0009 | `poolx_participation.sql` | members, contributions, orders, items, shipments, refunds, disputes, negotiations |
+| 0010 | `auction_catalog.sql` | categories, sellers, assets, vehicle details, media, inspection reports |
+| 0011 | `auction_core.sql` | auctions (+ deposit invariants), participants, deposits, bids |
+| 0012 | `auction_settlement.sql` | results, invoices, payments, refunds, settlements, disputes, default reviews |
+| 0013 | `rpc_functions.sql` | all business SQL functions (split per module as needed) |
+| 0014 | `rls_policies.sql` | RLS for every table (SELECT/INSERT/UPDATE/DELETE separately) |
+| 0015 | `cron_jobs.sql` | pg_cron schedules |
+
+## `core` schema
+
+| Table | Key columns | Constraints / notes |
+|---|---|---|
+| profiles | id (=auth.users.id), display_name, phone_e164, email (citext), city, state, status (`ACTIVE`,`SUSPENDED`,`DELETION_REQUESTED`,`DELETED`) | unique email/phone; PII minimal |
+| roles | key (`super_admin`,`admin`,`poolx_manager`,`auction_manager`,`finance_manager`,`seller_manager`,`customer_support`,`content_manager`,`seller`,`customer`,`bidder`), is_staff | seeded |
+| permissions | key (e.g. `auction.deposit.refund.manual`), description, is_sensitive | seeded |
+| role_permissions | role_key, permission_key | PK both |
+| user_roles | user_id, role_key, granted_by, granted_at, revoked_at | partial unique (user_id, role_key) where revoked_at is null |
+| user_verifications | user_id, level (`EMAIL`,`PHONE`,`BIDDER_KYC`,`SELLER_KYC`), status (`PENDING`,`APPROVED`,`REJECTED`,`EXPIRED`), doc refs (private storage paths), reviewed_by, reviewed_at, reason | doc numbers stored masked + hashed, never raw in logs |
+| security_events | user_id, kind, ip_hash, ua, created_at | brute force / login monitoring |
+| audit_logs | id bigserial, actor_id, actor_role, action, entity_schema, entity_table, entity_id, before jsonb, after jsonb, reason, ip_hash, created_at | **append-only**: trigger raises on UPDATE/DELETE; no grants |
+| notifications | user_id, domain (`core`,`poolx`,`auction`), event_key, title, body, link, read_at | no payment details in body |
+| notification_preferences | user_id, event_key, channel, enabled | |
+| notification_deliveries | notification_id, channel, provider, status, attempts, last_error | |
+| outbox | id, topic, payload jsonb, available_at, processed_at, attempts | transactional outbox for realtime/notifications/refund jobs |
+| payment_attempts | id, domain (`poolx`,`auction`), purpose (`POOL_CONTRIBUTION`,`POOL_ORDER_BALANCE`,`AUCTION_DEPOSIT`,`AUCTION_PURCHASE`), reference_id, user_id, amount_paise >0, currency, provider, provider_order_id, provider_payment_id, status (`CREATED`,`PENDING`,`CAPTURED`,`FAILED`,`EXPIRED`,`REVERSED`), idempotency_key, expires_at | UNIQUE(idempotency_key); UNIQUE(provider, provider_order_id); UNIQUE(provider, provider_payment_id); CHECK domain/purpose pairing |
+| payment_webhook_events | id, provider, provider_event_id, signature_valid, received_at, payload jsonb (redacted), processed_at, result | UNIQUE(provider, provider_event_id) → replay/duplicate protection |
+| provider_refunds | id, payment_attempt_id, provider_refund_id, amount_paise, status, raw_status, updated_at | mirror of provider refund objects |
+| rate_limits | key, window_start, count | token bucket |
+
+## `ledger` schema (double entry)
+
+| Table | Notes |
+|---|---|
+| accounts | code (e.g. `auction:deposit_liability`, `auction:gateway_clearing`, `poolx:contribution_liability`), domain, type (`ASSET`,`LIABILITY`,`REVENUE`,`EXPENSE`,`EQUITY`), normal side |
+| journals | id, domain, kind, reference_type, reference_id, idempotency_key UNIQUE, posted_at, posted_by, memo |
+| entries | journal_id, account_code, user_id NULL, debit_paise ≥0, credit_paise ≥0, CHECK exactly one side >0 |
+| (trigger) | deferred constraint trigger: Σdebit = Σcredit per journal; every entry's account domain = journal domain (prevents cross-module posting) |
+
+Ledger rows are insert-only (no UPDATE/DELETE grants; corrections via reversing journals).
+
+## `cms` schema
+
+| Table | Notes |
+|---|---|
+| theme_versions | id, version_no, status (`DRAFT`,`PUBLISHED`,`ARCHIVED`), tokens jsonb (validated: allowlisted keys, colour regex, font enum), created_by, published_by, published_at | partial unique: one `PUBLISHED`; rollback = publish copy of old version |
+| homepage_layouts | version, sections jsonb (ordered list of `{type, enabled, props}` from allowlisted section types) |
+| banners, nav_items, footer_blocks, faqs, pages, posts, seo_settings | structured fields only (Markdown rendered with sanitising renderer; no raw HTML/JS) |
+| system_settings | key, value jsonb, validated per key (e.g. `auction.deposit.global_min_paise` CHECK > 0) |
+
+## `poolx` schema
+
+| Table | Key columns / constraints |
+|---|---|
+| pool_categories | slug UNIQUE, name, parent_id, sort, is_active |
+| pool_sellers | profile_id / org name, verification status, gstin (masked) |
+| pools | slug UNIQUE, title, category_id, seller_id, kind (`PUBLIC`,`PRIVATE`), status (`DRAFT`,`PENDING_APPROVAL`,`ACTIVE`,`THRESHOLD_MET`,`NEGOTIATING`,`LOCKED`,`ORDERING`,`COMPLETED`,`CANCELLED`,`EXPIRED`), reference_price_paise, base_unit_price_paise >0, min_members, target_members ≥ min_members, min_qty, max_qty, platform_fee_bps 0..10000, contribution_mode (`FULL`,`FIXED`,`PERCENT`) + value, starts_at, deadline_at > starts_at, completion_rule jsonb |
+| pool_products | pool_id, name, specs jsonb, media |
+| pool_discount_tiers | pool_id, threshold_type (`MEMBERS`,`QUANTITY`), threshold ≥1, discount_bps 1..9000 | UNIQUE(pool_id, threshold_type, threshold); discount strictly increasing (trigger) |
+| pool_requests | requester_id, all request fields, status (`SUBMITTED`,`UNDER_REVIEW`,`APPROVED`,`REJECTED`), resulting_pool_id |
+| pool_members | pool_id, user_id, quantity, status (`PENDING_PAYMENT`,`ACTIVE`,`WITHDRAWN`,`REMOVED`,`FULFILLED`) | UNIQUE(pool_id,user_id) |
+| pool_contributions | member_id, payment_attempt_id, amount_paise >0, status (`PENDING`,`CONFIRMED`,`FAILED`,`REFUND_PENDING`,`REFUNDED`,`APPLIED`) | UNIQUE(payment_attempt_id) |
+| pool_negotiations | pool_id, seller_id, offered_unit_price_paise, terms, status, recorded_by |
+| pool_orders / pool_order_items | per-member order after lock; final price snapshot, balance due, status lifecycle |
+| pool_shipments | order_id, carrier, tracking_no, status, events jsonb |
+| pool_refunds | contribution_id UNIQUE per reason, amount, status (same refund states as auction), provider_refund_id |
+| pool_disputes | order_id, raised_by, status, resolution |
+
+## `auction` schema
+
+| Table | Key columns / constraints |
+|---|---|
+| auction_categories | slug UNIQUE, name, parent_id, is_vehicle bool, is_active |
+| auction_sellers | profile_id, kind (`PLATFORM`,`THIRD_PARTY`), verification status |
+| auction_assets | seller_id, category_id, name, brand, model, year, condition, description, location (city/state/pincode), pickup_terms, charges jsonb |
+| vehicle_details | asset_id PK, manufacturer, variant, reg_state, reg_number_enc (encrypted) + reg_number_masked, fuel, transmission, odometer_km, owners_count, insurance_valid_until, rc_status (`NOT_VERIFIED`,`MANUALLY_VERIFIED`,`PROVIDER_VERIFIED`), rc_verified_by/at/evidence, puc_status, accident_disclosure, damage_disclosure, service_history |
+| auction_asset_media | asset_id, storage_path, kind (`IMAGE`,`VIDEO`,`DOCUMENT`), visibility (`PUBLIC`,`PRIVATE`), alt_text, sort |
+| auction_inspection_reports | asset_id, inspector, inspected_at, location, summary, report_path (private), is_verified |
+| auctions | slug UNIQUE, asset_id, type (`TIMED_ENGLISH`,`RESERVE`), status (`DRAFT`,`PENDING_APPROVAL`,`SCHEDULED`,`LIVE`,`CLOSING`,`CLOSED`,`CANCELLED`), starting_price_paise >0, reserve_price_paise NULL or ≥ starting, reserve_disclosure (`HIDDEN`,`MET_FLAG`,`AMOUNT`), min_increment_paise >0, starts_at, ends_at > starts_at, original_ends_at, anti_snipe_window_s, anti_snipe_extend_s, max_extensions, **deposit_mode (`FIXED`,`PERCENT_OF_STARTING`) NOT NULL, deposit_value NOT NULL, deposit_amount_paise bigint NOT NULL CHECK (> 0)**, deposit_terms_version, winner_payment_deadline_h, current_bid_paise, current_leader_bid_id, bid_count, bidder_count |
+| auction_participants | auction_id, user_id, terms_accepted_at, terms_version, status (`REGISTERED`,`DEPOSIT_PENDING`,`ACTIVE`,`SUSPENDED`,`WITHDRAWN`) | UNIQUE(auction_id,user_id) |
+| auction_deposits | participant_id UNIQUE, auction_id, user_id, amount_paise >0, status (14 states — see AUCTION_DEPOSIT_RULES.md), payment_attempt_id UNIQUE, paid_at, refund_id | UNIQUE(auction_id,user_id); CHECK status='PAID' ⇒ payment_attempt_id NOT NULL AND paid_at NOT NULL; FK pair (auction_id,user_id) → participants |
+| auction_deposit_transitions | deposit_id, from_status, to_status, actor, reason, at | append-only history |
+| auction_bids | auction_id, participant_id, user_id, amount_paise >0, idempotency_key, accepted_at (= `clock_timestamp()` inside locked txn), seq bigserial, status (`ACCEPTED`,`VOIDED`) | UNIQUE(auction_id, idempotency_key); trigger: participant must be `ACTIVE` with deposit `PAID`, user ≠ asset seller, auction `LIVE` |
+| auction_results | auction_id UNIQUE, outcome (`WON`,`RESERVE_NOT_MET`,`NO_BIDS`,`CANCELLED`), winning_bid_id UNIQUE NULL, winner_user_id, final_price_paise, closed_at |
+| auction_invoices | result_id UNIQUE, winner_user_id, hammer_price_paise, deposit_credit_paise, charges jsonb (itemised), taxes jsonb, total_payable_paise, due_at, status (`ISSUED`,`PARTIALLY_PAID`,`PAID`,`OVERDUE`,`DEFAULT_REVIEW`,`CANCELLED`) | CHECK deposit_credit_paise ≤ hammer+charges; UNIQUE deposit adjustment via `deposit_adjustments` |
+| auction_deposit_adjustments | deposit_id UNIQUE, invoice_id UNIQUE, amount_paise, journal_id | guarantees deposit credited **exactly once** |
+| auction_payments | invoice_id, payment_attempt_id UNIQUE, amount_paise, status |
+| auction_refunds | deposit_id, reason (`LOST`,`NO_BID`,`CANCELLED`,`SELLER_CANCELLED`,`RESERVE_NOT_MET`,`NO_WINNER`,`MANUAL`,`DEFAULT_RESOLVED`), amount_paise (= deposit amount; CHECK equal for non-manual), status, idempotency_key UNIQUE, provider_refund_id, attempts, last_error, initiated_by, approved_by | partial UNIQUE(deposit_id) WHERE status NOT IN ('REFUND_FAILED_FINAL') — one live refund per deposit |
+| auction_settlements | auction_id, seller_id, gross, commission, fees, net, status |
+| auction_disputes | auction_id, raised_by, kind, status, resolution |
+| auction_default_reviews | invoice_id UNIQUE, opened_at, reviewer_id, decision (`EXTEND`,`REFUND`,`FORFEIT`), policy_version, reason, second_approver_id | FORFEIT requires approved policy version + reason + two distinct approvers (CHECK) |
+| auction_restrictions | user_id, scope, reason, until, created_by |
+
+## Critical invariants → enforcement map
+
+| Invariant | DB enforcement |
+|---|---|
+| One deposit per user per auction | UNIQUE(auction_id,user_id) on deposits |
+| Every published auction has positive deposit | `deposit_amount_paise NOT NULL CHECK (>0)` + trigger: status ∉ {DRAFT} requires deposit ≥ `system_settings.auction.deposit.global_min_paise` (itself CHECK >0) |
+| PAID deposit references verified payment | CHECK + trigger requiring attempt `CAPTURED`, same user, same amount, purpose `AUCTION_DEPOSIT`, reference = this deposit |
+| Bid only by authorised participant | trigger on `auction_bids` + only insert path is `auction.place_bid()` |
+| Seller cannot bid own auction | trigger compares asset seller profile with bidder |
+| No bids on CLOSED/CANCELLED | trigger + locked status check in function |
+| Single winner | UNIQUE(auction_id) on results, UNIQUE(winning_bid_id) |
+| Idempotent refunds | UNIQUE idempotency_key + partial unique per deposit |
+| Deposit adjusted once | UNIQUE(deposit_id), UNIQUE(invoice_id) on adjustments |
+| Financial rows never deleted | no DELETE grants; trigger blocks DELETE on financial tables |
+| Users can't see others' financial records | RLS `user_id = auth.uid()` OR `has_permission('finance.read')` |
+
+## Indexes (initial)
+auctions(status, ends_at), auctions(category_id, status), auction_bids(auction_id, amount_paise desc, seq),
+deposits(user_id, status), deposits(status) where status in refund states, pools(status, deadline_at),
+pool_members(user_id), payment_attempts(status, expires_at), outbox(processed_at, available_at),
+notifications(user_id, read_at), full-text GIN on pools/assets search vectors.

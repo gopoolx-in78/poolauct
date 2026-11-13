@@ -1,0 +1,167 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens — see project-management/DESIGN_SYSTEM.md.
+ * Public tokens may later be overridden by the theme manager (allowlisted keys only).
+ * Admin UI must use the fixed `--admin-*` set (added in Phase 6), never these overridable tokens.
+ */
+:root {
+  color-scheme: light;
+
+  --color-paper: #f7f5f0;
+  --color-surface: #ffffff;
+  --color-ink: #141412;
+  --color-ink-muted: #55534d;
+  --color-rule: #d9d5cc;
+  --color-brand: #141412;
+
+  --color-poolx: #0b7a57;
+  --color-poolx-ink: #ffffff;
+  --color-auction: #c2410c;
+  --color-auction-ink: #ffffff;
+
+  --color-success: #16794c;
+  --color-warning: #a15c00;
+  --color-danger: #b42318;
+  --color-info: #1f5fad;
+  --color-focus: #1f5fad;
+
+  --color-accent: var(--color-ink);
+  --color-accent-ink: var(--color-paper);
+
+  --radius: 4px;
+  --shadow-overlay: 0 8px 24px rgb(0 0 0 / 0.12);
+
+  --duration-micro: 120ms;
+  --duration-ui: 200ms;
+  --duration-reveal: 400ms;
+  --ease-standard: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --color-paper: #0e0e0c;
+    --color-surface: #181816;
+    --color-ink: #f2f0ea;
+    --color-ink-muted: #a8a59c;
+    --color-rule: #2c2b27;
+    --color-brand: #f2f0ea;
+    --color-poolx: #3ddc97;
+    --color-poolx-ink: #06281c;
+    --color-auction: #ff8a4c;
+    --color-auction-ink: #2a0e02;
+    --color-success: #4ade80;
+    --color-warning: #fbbf24;
+    --color-danger: #f87171;
+    --color-info: #7cb4ff;
+    --color-focus: #7cb4ff;
+    --shadow-overlay: 0 8px 24px rgb(0 0 0 / 0.5);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-paper: #0e0e0c;
+  --color-surface: #181816;
+  --color-ink: #f2f0ea;
+  --color-ink-muted: #a8a59c;
+  --color-rule: #2c2b27;
+  --color-brand: #f2f0ea;
+  --color-poolx: #3ddc97;
+  --color-poolx-ink: #06281c;
+  --color-auction: #ff8a4c;
+  --color-auction-ink: #2a0e02;
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-info: #7cb4ff;
+  --color-focus: #7cb4ff;
+  --shadow-overlay: 0 8px 24px rgb(0 0 0 / 0.5);
+}
+
+/* Module scoping: shared components read --color-accent. */
+[data-module="poolx"] {
+  --color-accent: var(--color-poolx);
+  --color-accent-ink: var(--color-poolx-ink);
+}
+[data-module="auction"] {
+  --color-accent: var(--color-auction);
+  --color-accent-ink: var(--color-auction-ink);
+}
+
+@theme inline {
+  --color-paper: var(--color-paper);
+  --color-surface: var(--color-surface);
+  --color-ink: var(--color-ink);
+  --color-ink-muted: var(--color-ink-muted);
+  --color-rule: var(--color-rule);
+  --color-brand: var(--color-brand);
+  --color-poolx: var(--color-poolx);
+  --color-poolx-ink: var(--color-poolx-ink);
+  --color-auction: var(--color-auction);
+  --color-auction-ink: var(--color-auction-ink);
+  --color-accent: var(--color-accent);
+  --color-accent-ink: var(--color-accent-ink);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-danger: var(--color-danger);
+  --color-info: var(--color-info);
+  --color-focus: var(--color-focus);
+
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-plex-sans), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  --radius-DEFAULT: var(--radius);
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
+
+  --breakpoint-xs: 20rem;
+  --breakpoint-sm: 30rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 90rem;
+
+  --ease-standard: var(--ease-standard);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    overflow-x: hidden;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

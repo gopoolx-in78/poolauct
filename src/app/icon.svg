@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Interim neutral mark until the parent brand logo is supplied (OD-01). -->
+  <rect width="64" height="64" rx="6" fill="#141412"/>
+  <rect x="14" y="16" width="16" height="32" fill="#3ddc97"/>
+  <rect x="34" y="16" width="16" height="32" fill="#ff8a4c"/>
+</svg>

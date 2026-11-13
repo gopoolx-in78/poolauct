@@ -1,0 +1,11 @@
+pnpm-lock.yaml
+project-management/
+POOLX_REBUILD_PROMPT.md
+ultimate_universal_website_app_development_master_prompt.txt
+.next/
+node_modules/
+playwright-report/
+test-results/
+coverage/
+supabase/
+next-env.d.ts

@@ -1,0 +1,3 @@
+-- Local development seed. Runs only on `supabase db reset` against the LOCAL database.
+-- Never run against staging or production. Any demo rows added here must be clearly labelled as demo
+-- and must never be presented as live participation (see AGENTS.md honesty rules).

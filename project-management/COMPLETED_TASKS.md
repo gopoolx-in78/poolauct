@@ -31,3 +31,10 @@
 | 2026-11-13 | 2 | 2.9 App rate limits (fail closed) on sign-in/sign-up/reset | exercised in e2e (fail-closed observed when RPC missing) |
 | 2026-11-13 | 2 | 2.11 Unit 29, pgTAP 58, e2e 37 (+11 intentionally skipped) | all pass |
 | 2026-11-13 | 2 | CI workflow split into static + integration (Supabase + Mailpit + e2e) | ⚠ not run (no remote) |
+| 2026-11-13 | 3 | 5a.1–5a.3 payment attempts, webhook events, provider refunds, ledger, sandbox provider, webhook route | pgTAP + unit + e2e (forged/stale/duplicate) |
+| 2026-11-13 | 3 | 3.1–3.2 PoolX schema + pricing (SQL authoritative, TS mirror) | pgTAP + unit/property tests |
+| 2026-11-13 | 3 | 3.3 Public PoolX pages from real data + sitemap | e2e |
+| 2026-11-13 | 3 | 3.4 Join → test checkout → verified webhook → membership; failed → retry | e2e + pgTAP |
+| 2026-11-13 | 3 | 3.5 Withdraw → full refund via worker; late capture refund; cancel → refunds; deadline job | pgTAP + e2e (withdraw) |
+| 2026-11-13 | 3 | 3.6 Pool requests + review | e2e |
+| 2026-11-13 | 3 | 3.8 `/account/poolx`, `/admin/poolx/*` (create, tiers, publish, cancel, sellers, requests) | e2e (admin create→publish) |

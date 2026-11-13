@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { Badge, Skeleton } from "@/components/ui/primitives";
 import { requireStaff } from "@/modules/core/server/auth";
@@ -22,6 +23,32 @@ async function AdminHome() {
         Signed in as {account.email}. PoolX, auction, finance, user and content management modules are added here in
         later phases; each is limited to the permissions below.
       </p>
+      {account.permissions.includes("poolx.pools.manage") || account.permissions.includes("poolx.requests.review") ? (
+        <nav aria-label="Admin modules" className="mt-8">
+          <ul className="flex flex-wrap gap-3">
+            {account.permissions.includes("poolx.pools.manage") ? (
+              <li>
+                <Link
+                  href="/admin/poolx"
+                  className="border-ink hover:bg-ink/5 inline-block border px-4 py-2 font-medium"
+                >
+                  PoolX pools
+                </Link>
+              </li>
+            ) : null}
+            {account.permissions.includes("poolx.requests.review") ? (
+              <li>
+                <Link
+                  href="/admin/poolx/requests"
+                  className="border-ink hover:bg-ink/5 inline-block border px-4 py-2 font-medium"
+                >
+                  Pool requests
+                </Link>
+              </li>
+            ) : null}
+          </ul>
+        </nav>
+      ) : null}
       <section aria-labelledby="roles" className="mt-10">
         <h2 id="roles" className="text-2xl">
           Your roles

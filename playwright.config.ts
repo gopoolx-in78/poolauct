@@ -8,7 +8,7 @@ export default defineConfig({
   globalSetup: "./tests/e2e/support/global-setup.ts",
   fullyParallel: true,
   // The local Supabase stack shares a small Docker VM; too many parallel browsers starve the auth service.
-  workers: process.env.CI ? 2 : 3,
+  workers: 2,
   // Auth journeys round-trip through the auth server and mailbox; allow for a cold server.
   timeout: 60_000,
   expect: { timeout: 15_000 },

@@ -5,13 +5,13 @@ import { usePathname } from "next/navigation";
 import type { NavItem } from "@/config/site";
 import { cn } from "@/lib/cn";
 
-export function MainNav({ items }: { items: NavItem[] }) {
-  const pathname = usePathname();
+/** Pure link list; `pathname` is null while the current URL is not yet known (prerendered shell). */
+export function MainNavLinks({ items, pathname }: { items: NavItem[]; pathname: string | null }) {
   return (
     <nav aria-label="Main" className="hidden lg:block">
       <ul className="flex items-center gap-1">
         {items.map((item) => {
-          const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+          const active = pathname !== null && (item.href === "/" ? pathname === "/" : pathname.startsWith(item.href));
           return (
             <li key={item.href}>
               <Link
@@ -30,4 +30,9 @@ export function MainNav({ items }: { items: NavItem[] }) {
       </ul>
     </nav>
   );
+}
+
+export function MainNav({ items }: { items: NavItem[] }) {
+  const pathname = usePathname();
+  return <MainNavLinks items={items} pathname={pathname} />;
 }

@@ -1,46 +1,45 @@
 # Next Session Prompt
 
 **Project:** Dual marketplace — PoolX (group buying) + Auctions (second-hand assets, mandatory refundable deposits). Parent brand pending (OD-01); interim name "PoolX & Auctions".
-**Current phase:** Phase 2 (Auth & users) complete and verified locally → next: payments core (5a) + Phase 3 (PoolX).
-**Last completed milestone:** Phase 2 — accounts, RBAC, staff MFA, account area.
-**Last completed task:** Phase 2 docs checkpoint.
-**Git:** branch `phase-2-auth`; check `git status` / `git log` — Phase 2 may or may not be committed yet. No remote.
-**Files recently modified:** `supabase/migrations/2026111300000{2..5}_*.sql`, `supabase/tests/0002_identity_rbac.test.sql`,
-`supabase/config.toml`, `supabase/templates/*`, `src/proxy.ts`, `src/lib/supabase/*`, `src/lib/safe-redirect.ts`,
-`src/modules/core/**`, `src/app/(auth)/**`, `src/app/auth/confirm/route.ts`, `src/app/account/**`, `src/app/admin/**`,
-`src/components/auth/totp.tsx`, `src/components/layout/user-menu*.tsx`, `tests/**`, `playwright.config.ts`, `.github/workflows/ci.yml`.
-**Database changes:** migrations 0001–0005 (see DATABASE_SCHEMA.md "Applied migrations").
-**Tests executed:** unit 29/29 ✔ · pgTAP 58/58 ✔ (incl. clean reset) · build ✔ · e2e 37 passed / 11 skipped by design ✔.
-**Known bugs:** none open. Known accepted gaps: TD-16 (CSP inline scripts), TD-23 (HTTP 200 + 404 UI under PPR), TD-25.
-**Unresolved:** no remote (CI unverified); OD-01…OD-15; phone OTP blocked on OD-07.
+**Current phase:** Phase 3 (PoolX + payments core) — core journeys done; **lifecycle after the deadline (3.7) is next**.
+**Last completed milestone:** PoolX join/pay/withdraw/refund with signed (sandbox) webhooks, double-entry ledger, admin pool management.
+**Last completed task:** Phase 3 docs checkpoint.
+**Git:** branch `phase-3-poolx` (from `master` @ `eddb372`) — check `git status`/`git log`; may not be committed yet. No remote.
+**Files recently modified:** `supabase/migrations/2026111300000{6,7,8}_*.sql`, `supabase/tests/0003_payments_poolx.test.sql`
+(+ 0001 adjusted, TD-37), `src/modules/payments/**`, `src/modules/poolx/**`, `src/lib/{time,supabase/public}.ts`, `src/app/poolx/**`,
+`src/app/payments/**`, `src/app/api/{webhooks,cron}/**`, `src/app/account/poolx/**`, `src/app/admin/poolx/**`,
+`src/components/poolx/**`, `src/components/layout/{site-header,main-nav}.tsx`, `src/app/sitemap.ts`, `tests/**`, `.env.example`, CI.
+**Database changes:** migrations 0001–0008 (DATABASE_SCHEMA.md "Applied migrations").
+**Tests:** unit 47/47 ✔ · pgTAP 112/112 ✔ · build ✔ · full e2e (1 worker) 46 passed / 20 skipped by design / 0 failed ✔.
+**Known gaps:** Razorpay adapter (OD-02); no live payments; images; private pools; seller-verification UI; cron schedule (OD-06).
+**Environment:** local Docker disk I/O is very slow (TD-38) — use `--workers=1` for full e2e runs locally.
 
 ## Start-of-session protocol
-Read AGENTS.md (Next.js 16: read `node_modules/next/dist/docs/` before unfamiliar APIs), PROJECT_OVERVIEW, CURRENT_STATUS,
-PENDING_TASKS, this file → `git status` → start the stack:
-`pnpm exec supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime` → `pnpm test:db` (expect 58/58)
-→ report status.
+Read AGENTS.md (Next.js 16 docs in `node_modules/next/dist/docs/`), PROJECT_OVERVIEW, CURRENT_STATUS, PENDING_TASKS, this file
+→ `git status` → `pnpm exec supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime` →
+`pnpm test:db` (expect 112/112) → report status.
 
-## Next exact tasks (PENDING_TASKS.md "Phase 3")
-1. **5a.1–5a.3 payments core** — payment_attempts, webhook_events, provider_refunds; ledger (accounts/journals/entries with
-   balance + domain-isolation triggers); provider interface + `sandbox` adapter (refused in production by env validation);
-   signed webhook route with event-id de-duplication. pgTAP + Vitest integration tests (duplicate webhook → one state change).
-2. **3.1–3.9 PoolX** per POOLX_REQUIREMENTS.md, using `api.*` RPCs (security definer, `core.require_active_user()`),
-   no direct client writes, money in bigint paise, tiers from confirmed contributions only.
+## Next exact task: 3.7 PoolX lifecycle after the deadline
+1. Migration: `poolx.negotiations` (pool, seller, offered unit price paise, terms, status, recorded_by, created_at; RLS staff),
+   `poolx.orders` (one per ACTIVE member at lock: final unit price, quantity, amount, status `CREATED/CONFIRMED/SHIPPED/DELIVERED/
+   CANCELLED/DISPUTED`), `poolx.shipments` (order, carrier, tracking no., status, events jsonb), `poolx.disputes`.
+2. `api.poolx_admin_record_negotiation`, `api.poolx_admin_lock(pool)`: only from THRESHOLD_MET/NEGOTIATING; final price =
+   `poolx.discounted_price(base, discount at final confirmed count)`; create orders; for each member whose contribution
+   unit price > final, insert `PRICE_ADJUSTMENT` refund for `(paid_unit − final_unit) × qty` (+ fee difference); post seller
+   payable journal (Dr `poolx:contribution_liability` / Cr `poolx:seller_payable` [+ `poolx:platform_fee_revenue`]).
+3. Shipments + member delivery confirmation; disputes with admin resolution (MANUAL refund requires reason, audited).
+4. Account + admin UI for these states; e2e: pool reaches threshold → lock → adjustment refund visible → order shipped → delivered.
+5. pgTAP: lock is idempotent; adjustment refunds never exceed paid (existing trigger); ledger balanced; orders only for ACTIVE members.
 
-## Patterns to follow (established in Phase 2)
-- HTTP surface = functions in schema `api` only; grant EXECUTE explicitly; add pgTAP `has_function_privilege` checks.
-- Session reads only via `getAccount()/requireAccount()/requireStaff()` (calls `connection()`); render them inside `<Suspense>`.
-- Forms: client component + `useActionState` + server action returning `FormState`; zod schemas in `src/modules/*/validation.ts`.
-- E2E: scope assertions to `page.getByRole("main")` (Next adds a global `role=alert` announcer); use `uniqueEmail()`,
-  `registerAndConfirm()`, `sql()` helpers; auth-heavy specs desktop-only.
-- Staff features: gate with `requireStaff(path, permission)`; permission names must exist in `core.permissions`.
-
-## Acceptance criteria for Phase 3 (+5a)
-Duplicate webhook delivery causes exactly one state change; a pool's displayed price/tier equals the SQL-computed price from
-confirmed contributions; a user cannot join the same pool twice or read another user's contributions; ledger journals always
-balance and never mix poolx/auction accounts; all prior checks stay green.
+## Patterns to follow
+- HTTP surface = `api.*` functions only, explicit grants, pgTAP `has_function_privilege` checks.
+- Errors from SQL: `raise exception 'CODE: text' using errcode = 'P0001'`; map in `poolxErrorMessage`.
+- Forms: `useActionState`; **return `values` on error** (React resets uncontrolled forms after actions).
+- Server components needing "now" for display: `await requestNow()`; never `Date.now()` in render.
+- Dynamic routes: anything using `usePathname()`/session must sit inside `<Suspense>`.
+- pgTAP: never assume an empty database — scope assertions to the test's own rows (e2e leaves data behind).
+- E2E: `createPoolFixture()`, `becomeStaffWithMfa()`, `signSandboxEvent()`, `readLocalEnv()` in `tests/e2e/support/helpers.ts`.
 
 ## Do NOT
-- Redo Phases 0–2. - Add `export const runtime`. - Use `middleware.ts`. - Read cookies outside Suspense.
-- Invent brand/legal/fee/deposit values. - Present demo data as live. - Let the sandbox provider run in production.
-- Claim tests pass without running them.
+- Redo Phases 0–3 work. - Add `export const runtime`. - Use `middleware.ts`. - Present sandbox/test payments as real.
+- Mark refunds REFUNDED without provider confirmation. - Mix PoolX and Auction ledger accounts. - Claim tests pass without running them.

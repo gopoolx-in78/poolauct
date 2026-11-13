@@ -5,8 +5,9 @@ One website, two independent business modules, one central Super Admin:
 - **PoolX** — community group buying. _Power of People. Power of Pooling._
 - **Auctions** — online auctions of second-hand cars and other approved assets, with a **mandatory refundable participation deposit** per auction.
 
-> **Status:** Phase 2 (accounts) — public site shell, sign-up/sign-in with email confirmation, account area, RBAC and
-> staff MFA. No pools, auctions or payments yet. See [`project-management/CURRENT_STATUS.md`](project-management/CURRENT_STATUS.md).
+> **Status:** Phase 3 (PoolX) — accounts, RBAC, staff MFA, and PoolX pools you can browse, join, pay for and withdraw
+> from, using a **test-only payment provider** (no real money). Auctions and live payments are not built yet.
+> See [`project-management/CURRENT_STATUS.md`](project-management/CURRENT_STATUS.md).
 
 ## Stack
 

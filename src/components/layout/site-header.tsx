@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { mainNav, site } from "@/config/site";
 import { Container } from "@/components/ui/primitives";
-import { MainNav } from "./main-nav";
+import { MainNav, MainNavLinks } from "./main-nav";
 import { MobileNav } from "./mobile-nav";
 import { Suspense } from "react";
 import { ThemeToggle } from "./theme-toggle";
@@ -14,14 +14,19 @@ export function SiteHeader() {
         <Link href="/" className="font-display text-xl font-semibold tracking-tight">
           {site.name}
         </Link>
-        <MainNav items={mainNav} />
+        {/* usePathname() is request data on dynamic routes: highlight the active link once the URL is known. */}
+        <Suspense fallback={<MainNavLinks items={mainNav} pathname={null} />}>
+          <MainNav items={mainNav} />
+        </Suspense>
         <div className="flex items-center gap-1">
           <ThemeToggle />
           {/* Reads the session: streams in behind Suspense so the rest of the header stays in the static shell. */}
           <Suspense fallback={<UserMenuFallback />}>
             <UserMenu />
           </Suspense>
-          <MobileNav items={mainNav} />
+          <Suspense fallback={<span aria-hidden="true" className="inline-block size-11 lg:hidden" />}>
+            <MobileNav items={mainNav} />
+          </Suspense>
         </div>
       </Container>
     </header>

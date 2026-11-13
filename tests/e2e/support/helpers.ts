@@ -51,6 +51,9 @@ export function onApp(link: URL, baseURL: string) {
 }
 
 export async function register(page: Page, email: string, name = "E2E User") {
+  // The suite registers many accounts from one local IP; reset the app's sign-up window so the limiter (tested on its
+  // own in auth.spec.ts) does not throttle unrelated journeys. Local database only.
+  if (!process.env.E2E_BASE_URL) sql("delete from core.rate_limits where bucket like 'signup:%'");
   await page.goto("/register");
   await page.getByLabel("Your name").fill(name);
   await page.getByLabel("Email").fill(email);
@@ -99,4 +102,68 @@ export function totp(secret: string, at = Date.now()): string {
   const offset = hmac[hmac.length - 1]! & 0xf;
   const code = (hmac.readUInt32BE(offset) & 0x7fffffff) % 1_000_000;
   return code.toString().padStart(6, "0");
+}
+
+// ---------------------------------------------------------------------------
+// PoolX fixtures (local database only)
+// ---------------------------------------------------------------------------
+export function readLocalEnv(key: string): string {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const text = require("node:fs").readFileSync(".env.local", "utf8") as string;
+  const line = text.split(/\r?\n/).find((l) => l.startsWith(`${key}=`));
+  if (!line) throw new Error(`${key} missing from .env.local`);
+  return line.slice(key.length + 1).trim();
+}
+
+/** Creates a published PoolX pool directly in the local DB. Prices in paise. Returns the slug. */
+export function createPoolFixture(opts: {
+  slug: string;
+  title?: string;
+  basePaise?: number;
+  maxQty?: number;
+  minMembers?: number;
+  targetMembers?: number;
+  tiers?: [number, number][];
+}) {
+  const title = opts.title ?? `E2E pool ${opts.slug}`;
+  const id = sql(`insert into poolx.pools (slug, title, summary, product_name, category_id, base_unit_price_paise,
+      min_qty_per_member, max_qty_per_member, min_members, target_members, deadline_at, status, published_at)
+    values ('${opts.slug}', '${title}', 'Pool created by the end-to-end tests', 'Test product',
+      (select id from poolx.categories where slug = 'electronics'), ${opts.basePaise ?? 100000},
+      1, ${opts.maxQty ?? 3}, ${opts.minMembers ?? 1}, ${opts.targetMembers ?? 5}, now() + interval '3 days', 'ACTIVE', now())
+    returning id`).split("\n")[0]!;
+  for (const [threshold, bps] of opts.tiers ?? []) {
+    sql(`insert into poolx.discount_tiers (pool_id, threshold, discount_bps) values ('${id}', ${threshold}, ${bps})`);
+  }
+  return { id, slug: opts.slug, title };
+}
+
+export function signSandboxEvent(
+  event: Record<string, unknown>,
+  secret: string,
+  timestamp = Math.floor(Date.now() / 1000),
+) {
+  const body = JSON.stringify(event);
+  const signature = createHmac("sha256", secret).update(`${timestamp}.${body}`).digest("hex");
+  return {
+    body,
+    headers: {
+      "content-type": "application/json",
+      "x-sandbox-signature": signature,
+      "x-sandbox-timestamp": String(timestamp),
+    },
+  };
+}
+
+/** Grants a staff role by SQL, then enrols TOTP through the UI; leaves the browser in an aal2 session. */
+export async function becomeStaffWithMfa(page: Page, email: string, role: string) {
+  sql(`select core.operator_grant_role('${email}', '${role}', 'e2e staff fixture')`);
+  await page.goto("/admin");
+  await expect(page).toHaveURL(/\/admin\/mfa/);
+  await page.getByRole("button", { name: "Set up authenticator app" }).click();
+  const secret = (await page.locator("code").textContent())!.trim();
+  await page.getByLabel("6-digit code").fill(totp(secret));
+  await page.getByRole("button", { name: "Confirm and turn on" }).click();
+  await expect(page).toHaveURL(/\/admin$/);
+  return secret;
 }

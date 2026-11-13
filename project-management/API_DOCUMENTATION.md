@@ -1,6 +1,6 @@
 # API Documentation
 
-> Status: Phase 2 account/auth surface **implemented** (section "Implemented"); everything else is a planned contract.
+> Status: Phase 2 account/auth and Phase 3 payments/PoolX surfaces **implemented** (section "Implemented"); everything else is a planned contract.
 > Last updated: 2026-11-13.
 
 ## Implemented (Phase 2)
@@ -28,7 +28,35 @@ Not exposed over HTTP: `core.operator_grant_role(email, role, reason)` — opera
 | Page | `/account`, `/account/profile`, `/account/security`, `/account/sessions`, `/account/delete` | noindex; data loaded behind Suspense via DAL |
 | Action | `updateProfileAction`, `changeEmailAction`, `revokeSessionAction`, `signOutOtherSessionsAction`, `requestDeletionAction`, `cancelDeletionAction`, `startTotpEnrollmentAction`, `verifyTotpAction` | each re-checks the session (`requireAccount`) |
 | Page | `/admin` (staff + aal2 + `admin.dashboard.view`), `/admin/mfa` (staff only) | non-staff see 404 UI (TD-23) |
-| Proxy | `src/proxy.ts` | refreshes session cookies; 307 to `/login?next=` for signed-out access to `/account`, `/admin`, `/seller` |
+| Proxy | `src/proxy.ts` | refreshes session cookies; 307 to `/login?next=` for signed-out access to `/account`, `/admin`, `/seller`; skips `/api/webhooks`, `/api/cron`, `/api/health` |
+
+### Phase 3 — payments and PoolX (implemented)
+
+**RPC (schema `api`)**
+
+| Function | Caller | Behaviour |
+|---|---|---|
+| `poolx_list_categories()`, `poolx_list_pools(search, category, sort, limit≤48, offset)`, `poolx_get_pool(slug)`, `poolx_public_stats()` | anon, authenticated | Public pools only (no drafts/private); live counts from ACTIVE members; money as strings |
+| `poolx_start_contribution(pool, quantity)` | authenticated, active | Server-computed amount; reuses a valid pending attempt (no duplicate charge); `ALREADY_MEMBER` for active members; errors `POOL_NOT_JOINABLE`, `INVALID_QUANTITY`, `SELLER_CANNOT_JOIN` |
+| `poolx_withdraw(pool)` | authenticated | ACTIVE → full refund queued (only while pool ACTIVE); PENDING → payment cancelled |
+| `poolx_my_membership(pool)`, `poolx_my_activity()`, `payments_get_my_attempt(id)` | authenticated | Own data only |
+| `poolx_submit_request(...)` | authenticated | Max 5 open requests per user |
+| `poolx_admin_list_pools / get_pool / save_pool / set_tiers / publish / cancel / list_sellers / create_seller / list_requests / review_request` | staff at aal2 with the matching `poolx.*` permission | Drafts editable only; tiers frozen after publish; cancel needs a reason and refunds every confirmed member; all audited |
+| `poolx_admin_verify_seller(seller, note)` | `sellers.manage` | Documented manual verification |
+| `payments_attach_order`, `payments_process_event`, `poolx_claim_refunds`, `poolx_record_refund_result`, `poolx_close_due_pools` | **service_role only** | Payment orchestration and jobs |
+
+**HTTP**
+
+| Method | Path | Auth | Notes |
+|---|---|---|---|
+| POST | `/api/webhooks/payments/[provider]` | provider signature | ≤64 KB raw body; 400 bad/stale signature; 404 unknown provider; 500 → provider retries; body `{received, result}` (`CONTRIBUTION_CONFIRMED`, `DUPLICATE`, `ALREADY_CAPTURED`, `AMOUNT_MISMATCH`, `LATE_CAPTURE_REFUND`, …) |
+| GET | `/api/cron/poolx` | `Authorization: Bearer CRON_SECRET` | closes due pools + processes refunds; 401 otherwise |
+
+**Pages / actions**: `/poolx`, `/poolx/pools` (`q`, `category`, `sort=ending|popular|newest`, `page`), `/poolx/pools/[slug]`,
+`/poolx/categories/[slug]`, `/poolx/request` (auth), `/payments/sandbox/[attemptId]` (test mode only, owner only), `/account/poolx`,
+`/admin/poolx`, `/admin/poolx/new`, `/admin/poolx/[id]`, `/admin/poolx/requests`. Actions: `joinPoolAction`, `withdrawFromPoolAction`,
+`submitPoolRequestAction`, `sandboxCompleteAction`, `savePoolAction`, `saveTiersAction`, `publishPoolAction`, `cancelPoolAction`,
+`createSellerAction`, `reviewRequestAction`.
 
 ---
 

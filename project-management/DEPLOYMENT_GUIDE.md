@@ -33,6 +33,18 @@ current password **on**; TOTP MFA enroll/verify **on**; Site URL + redirect allo
 from `supabase/templates/` (confirmation, recovery, email change); exposed API schemas `public, graphql_public, api`;
 custom SMTP provider (OD-07) with sensible send limits.
 
+## Payments and scheduled jobs
+- Local/test: `PAYMENT_PROVIDER=sandbox` + `SANDBOX_WEBHOOK_SECRET` (32+ random chars). The test checkout page lives at
+  `/payments/sandbox/[attemptId]` and is refused when `APP_ENV=production`.
+- Webhook URL to register with a real provider: `https://<domain>/api/webhooks/payments/<provider>` (Razorpay adapter pending OD-02).
+- Schedule `GET /api/cron/poolx` with header `Authorization: Bearer $CRON_SECRET` every 5 minutes (closes pools past their
+  deadline and processes PoolX refunds). Locally you can run it with curl.
+- Generate secrets with `openssl rand -hex 32`; never reuse the same value for `CRON_SECRET` and webhook secrets.
+
+## Creating a pool (staff)
+`/admin/poolx/new` → fill details (prices in rupees; times in IST) → **Create draft** → set tiers → **Publish**. Drafts are
+editable; tiers and prices freeze on publish. Cancelling refunds every confirmed member in full (reason required, audited).
+
 ## Production checklist (Phase 10)
 - [ ] Domain + DNS (OD-01), HTTPS auto-renew, HSTS
 - [ ] Supabase prod project, PITR backups enabled, restore drill completed and recorded

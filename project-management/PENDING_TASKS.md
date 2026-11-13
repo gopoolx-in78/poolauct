@@ -1,7 +1,7 @@
 # Pending Tasks
 
 ## Open owner decisions
-OD-01 … OD-15 (DECISION_LOG.md). Phase 3 can start; live payments still need OD-02/OD-03.
+OD-01 … OD-15 (DECISION_LOG.md). Live payments need OD-02/OD-03; the PoolX contribution model (TD-29) needs OD-03/OD-10 confirmation.
 
 ## Phase 1 leftovers
 - [x] 1.4b DB verified: migration 0001 applied, pgTAP 12/12, health reports database ok
@@ -25,20 +25,29 @@ OD-01 … OD-15 (DECISION_LOG.md). Phase 3 can start; live payments still need O
 - [ ] 2.12 In-place password change with reauthentication (TD-25) — optional, before launch
 - [ ] 2.13 Staff UI to grant/revoke roles (`roles.manage`) — Phase 6; until then use `core.operator_grant_role` via SQL
 
-## Phase 3 — PoolX module (next)
-Depends on a minimal payments core; do 5a first or alongside:
-- [ ] 5a.1 `core.payment_attempts`, `core.payment_webhook_events`, `core.provider_refunds` + RLS + pgTAP
-- [ ] 5a.2 `ledger` accounts/journals/entries + balance + domain-isolation triggers + pgTAP
-- [ ] 5a.3 Payment provider interface + `sandbox` adapter (local/test only) + signed-webhook route `/api/webhooks/payments/[provider]`
-- [ ] 3.1 Migrations: pool_categories (seed list), pool_sellers, pools, pool_products, pool_discount_tiers (strictly increasing), pool_requests
-- [ ] 3.2 Shared pricing function (TS + SQL) with property tests proving they agree
-- [ ] 3.3 Public: `/poolx` with real featured pool card, `/poolx/pools` (search/filter/sort/paginate), `/poolx/pools/[slug]`, category pages; sitemap entries
-- [ ] 3.4 Join flow: `api.join_pool` (unique membership, server-computed contribution) → sandbox payment → webhook → `poolx.confirm_contribution`
-- [ ] 3.5 Withdraw per published rules; refunds via PoolX refund rows (separate from auction)
-- [ ] 3.6 Pool requests (custom/private) + admin review
-- [ ] 3.7 Lifecycle: threshold → negotiation records → lock → orders → shipments → delivery confirmation; expiry/cancel → refunds
-- [ ] 3.8 `/account/poolx/*` pages + user-menu entries; PoolX admin (`/admin/poolx/*`) gated by `poolx.*` permissions
-- [ ] 3.9 Tests: pgTAP (invariants, RLS), integration (webhook idempotency), e2e join journey
+## Phase 3 — PoolX module (in progress)
+- [x] 5a.1 `core.payment_attempts`, `core.payment_webhook_events`, `core.provider_refunds` + RLS + pgTAP
+- [x] 5a.2 `ledger` accounts/journals/entries + balance + domain-isolation + insert-only triggers + pgTAP
+- [x] 5a.3 Provider interface + `sandbox` adapter (test only) + signed webhook route + in-process test checkout
+- [ ] 5a.4 Razorpay adapter — **blocked on OD-02** (account, keys, webhook secret)
+- [x] 3.1 Migrations: categories (seeded), sellers, pools (product fields inline — no separate products table), tiers, requests
+- [x] 3.2 Pricing in SQL + TS mirror; unit tests replicate pgTAP examples; property tests on TS
+- [x] 3.3 Public pages from real data; sitemap entries
+- [x] 3.4 Join → sandbox payment → verified webhook → ACTIVE membership; pending attempt reuse; failed → retry
+- [x] 3.5 Withdraw (ACTIVE while pool open → full refund; PENDING → cancel); refund worker + cron route
+- [x] 3.6 Pool requests + admin review (approve / under review / reject with note)
+- [ ] 3.7 Lifecycle after deadline — **next**:
+  - [ ] 3.7a negotiation records (`poolx.negotiations`) + `NEGOTIATING` state
+  - [ ] 3.7b lock: final price from tiers at lock; `PRICE_ADJUSTMENT` partial refunds for members who paid more (TD-29)
+  - [ ] 3.7c per-member orders (`poolx.orders`) with seller settlement payable ledger entries
+  - [ ] 3.7d shipments (`poolx.shipments`, tracking number/carrier/status), delivery confirmation by member
+  - [ ] 3.7e disputes (`poolx.disputes`) + admin resolution (refund via MANUAL refund with reason)
+- [x] 3.8 `/account/poolx` + menu entry; `/admin/poolx/*` gated by `poolx.*` permissions
+- [x] 3.9 Tests: pgTAP 54 new; unit 18 new; PoolX e2e 8 journeys
+- [ ] 3.10 Seller verification UI (`sellers.manage`) — fold into Phase 6 seller management
+- [ ] 3.11 Product images (Supabase Storage bucket, signed uploads, re-encode) — needed before launch
+- [ ] 3.12 Private pools (invite link / allow-list) — schema has `kind`, no flow yet
+- [ ] 3.13 Schedule `/api/cron/poolx` (every 5 min) once hosting is chosen (OD-06)
 
 ## Later phases
 See PROJECT_ROADMAP.md phases 4–10.

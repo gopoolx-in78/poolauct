@@ -200,3 +200,23 @@ test("auth pages are not indexable", async ({ page }) => {
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
   }
 });
+
+test("sign-up is rate limited per IP (fails closed with a clear message)", async ({ page }) => {
+  // Pre-fill this IP's sign-up window to its limit (10/hour), then attempt one more sign-up through the UI.
+  sql("delete from core.rate_limits where bucket like 'signup:%'");
+  sql(`insert into core.rate_limits (bucket, window_start, hits)
+       select bucket, to_timestamp(floor(extract(epoch from now()) / 3600) * 3600), 10
+       from (select 'signup:ip:' || encode(extensions.digest(lower('ip|' || ip), 'sha256'), 'hex') as bucket
+             from unnest(array['unknown', '::1', '127.0.0.1', '::ffff:127.0.0.1']) ip) b`);
+  await page.goto("/register");
+  await page.getByLabel("Your name").fill("Limited");
+  await page.getByLabel("Email").fill(uniqueEmail("limited"));
+  await page.getByLabel(/^Password/).fill(STRONG_PASSWORD);
+  await page.getByLabel("Confirm password").fill(STRONG_PASSWORD);
+  await page.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(page.getByRole("main").getByRole("alert")).toHaveText(
+    "Too many attempts. Please wait a few minutes and try again.",
+  );
+  sql("delete from core.rate_limits where bucket like 'signup:%'");
+});

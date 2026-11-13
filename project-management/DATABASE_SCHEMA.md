@@ -1,6 +1,6 @@
 # Database Schema
 
-> Status: migrations **0001–0005 applied and tested** (pgTAP 58/58); the rest of this document is the plan.
+> Status: migrations **0001–0008 applied and tested** (pgTAP 112/112); the rest of this document is the plan.
 > Last updated: 2026-11-13.
 > Engine: Supabase Postgres 17. Schemas: `core`, `poolx`, `auction`, `ledger`, `cms`, plus `api` (HTTP surface, functions only — TD-22).
 
@@ -13,8 +13,11 @@
 | `20261113000003_core_audit_security.sql` | `core.audit_logs` (append-only: UPDATE/DELETE/TRUNCATE blocked; SELECT needs `audit.read`); `core.write_audit()`; `core.security_events` (append-only; own or `audit.read`); `core.user_verifications` (EMAIL/PHONE/BIDDER_KYC/SELLER_KYC; one open per level); `core.rate_limits` + `core.rate_limit_hit()`; `core.record_security_event()` |
 | `20261113000004_api_account.sql` | `core.require_active_user()`; `api.get_my_account`, `api.update_my_profile`, `api.list_my_sessions`, `api.revoke_my_session`, `api.request_account_deletion`, `api.cancel_account_deletion`; `core.operator_grant_role()` (service_role/SQL only) |
 | `20261113000005_api_server_helpers.sql` | `api.rate_limit_hit`, `api.record_security_event` (service_role only) |
+| `20261113000006_payments_ledger.sql` | `core.payment_attempts` (domain+purpose pairing CHECK; provider set only by server; unique provider order/payment ids; no delete), `core.payment_webhook_events` (unique provider+event id; no user access), `core.provider_refunds` (unique idempotency key); `ledger.accounts` (9, domain-prefixed), `ledger.journals` (unique idempotency key), `ledger.entries` (one-sided CHECK); triggers: insert-only, entry account domain = journal domain, deferred balance check (≥2 entries, debits = credits); `ledger.post_journal()` (idempotent); RLS: ledger readable only with `finance.ledger.read` |
+| `20261113000007_poolx_schema.sql` | `poolx.categories` (12 seeded), `poolx.sellers` (VERIFIED requires verifier + time), `poolx.pools` (lifecycle status, bigint paise, reference price requires source, qty/member/deadline CHECKs, FTS index), `poolx.discount_tiers` (deferred trigger: discount strictly increases), `poolx.requests`, `poolx.members` (UNIQUE pool+user), `poolx.contributions` (amount = qty×unit+fee; one live PENDING/CONFIRMED per member; no delete), `poolx.refunds` (one full refund per contribution; refunds ≤ paid; no delete); RLS: own rows or PoolX/finance staff; no end-user writes |
+| `20261113000008_poolx_functions.sql` | Pricing (`discounted_price`, `fee_for`, `discount_bps_at`, `current_discount_bps`), `pool_json`; domain reactions (`on_contribution_captured`/`failed`, `create_full_refund`, `apply_refund_result`); service-role API (`payments_attach_order`, `payments_process_event`, `poolx_claim_refunds`, `poolx_record_refund_result`, `poolx_close_due_pools`); public API (`poolx_list_categories`, `poolx_list_pools`, `poolx_get_pool`, `poolx_public_stats`); member API (`poolx_start_contribution`, `poolx_withdraw`, `poolx_my_membership`, `poolx_my_activity`, `payments_get_my_attempt`, `poolx_submit_request`); staff API (`poolx_admin_*`); `core.require_permission()` |
 
-Tests: `supabase/tests/0001_schemas.test.sql` (12), `supabase/tests/0002_identity_rbac.test.sql` (46).
+Tests: `supabase/tests/0001_schemas.test.sql` (12), `0002_identity_rbac.test.sql` (46), `0003_payments_poolx.test.sql` (54).
 
 Note: migration numbering below was the original plan; actual files use timestamps and Phase 2 split identity/audit/API
 differently. Later phases continue with `20261113000006+` / dated prefixes.

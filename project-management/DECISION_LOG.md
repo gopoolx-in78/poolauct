@@ -32,12 +32,23 @@
 | TD-26 | 2026-11-13 | Staff permissions are effective only in an aal2 (TOTP-verified) session — enforced in `core.has_permission()` (and therefore RLS), the admin page gate and `get_my_account()` | MFA for privileged accounts (§11.6, §17) enforced in the database, not just the UI |
 | TD-27 | 2026-11-13 | Session reads go through the Data Access Layer (`getAccount`), which calls `connection()` first so auth work never runs during prerendering or App-Shell prefetching | Supabase token checks use the current time; Next.js 16 rejects that in prerenders |
 | TD-28 | 2026-11-13 | App-level rate limits (Postgres fixed-window, fail closed): sign-in 30/15 min per IP + 8/15 min per email; sign-up 10/h per IP; reset 10/h per IP + 3/h per email. Keys are SHA-256 hashes, never raw emails/IPs. | Brute-force / credential-stuffing protection on top of Supabase Auth's own limits |
+| TD-29 | 2026-11-13 | **PoolX contribution model (interim, pending OD-03/OD-10):** a member pays `quantity × current tier price + disclosed fee`, computed in SQL at join from *confirmed* membership only. If a deeper tier unlocks later, the difference is to be refunded as a `PRICE_ADJUSTMENT` partial refund at lock (lock step not built yet). | Members never pay more than the price shown; avoids holding balances |
+| TD-30 | 2026-11-13 | A payment attempt is created by the user's own API call **without** a provider; the server then creates the provider order and attaches it via a service-role-only function. | Users cannot choose the provider (e.g. force the test provider) |
+| TD-31 | 2026-11-13 | Sandbox provider: HMAC-SHA256 over `timestamp.body`, 300 s freshness window, timing-safe compare; test checkout submits through the same verify + process path as real webhooks; refused when `APP_ENV=production` and when no secret is set; page labelled "Test mode — no real money moves". | Build and test the full flow honestly before real credentials exist |
+| TD-32 | 2026-11-13 | One SQL entry point `api.payments_process_event`: de-duplicates by `(provider, event_id)`, never applies a capture whose amount/currency differs from the attempt (audited), routes by `purpose` to exactly one domain, and turns a capture that arrives after withdrawal/expiry/closure into an automatic full `LATE_CAPTURE` refund. | Idempotent, auditable, domain-isolated payment handling |
+| TD-33 | 2026-11-13 | Refund worker: claim (`REFUND_INITIATED` committed before the provider call) → provider refund with a stable idempotency key → record outcome. `REFUNDED` only on provider-confirmed status; failures back off 1 m / 5 m / 30 m / 2 h / 12 h, then stop for manual review (audited). | No duplicate refunds; accurate states |
+| TD-34 | 2026-11-13 | Scheduled work via `GET /api/cron/poolx` (Bearer `CRON_SECRET`, timing-safe): closes pools past deadline (THRESHOLD_MET or EXPIRED + full refunds) and runs the refund worker. Scheduler itself depends on hosting (OD-06). | Provider calls cannot run inside Postgres |
+| TD-35 | 2026-11-13 | Public catalogue uses a cookie-less anon client calling `api.poolx_*` functions; live numbers render per request; only immutable-after-publish metadata (title/summary, categories) is cached with `use cache` + `cacheLife("hours")`. | Accurate member counts/prices; fast metadata |
+| TD-36 | 2026-11-13 | Admin date/time inputs (`datetime-local`) are interpreted as IST; all storage UTC; all display IST. | §8.2 time rules |
+| TD-37 | 2026-11-13 | `authenticated` now has USAGE on the `ledger` schema; every ledger table is RLS-gated to `finance.ledger.read` (pgTAP proves customers see 0 rows). Supersedes the Phase 1 test that asserted no usage. | Lets finance staff read the ledger in later phases without a new schema grant |
+| TD-38 | 2026-11-13 | Local Playwright runs with 2 workers (1 for a full verification run): the shared local Docker VM showed 69 s checkpoints (I/O starvation), causing 3 s anon statement timeouts under load. Not a code issue; CI runners are unaffected. | Reliable local verification |
 
 ## Approvals
 | Date | Item | By |
 |---|---|---|
 | 2026-11-13 | Phase 0 architecture & roadmap approved; Phase 1 started | Owner (chat: "Approve, start Phase 1") |
 | 2026-11-13 | Phase 2 started | Owner (chat: "Start Phase 2") |
+| 2026-11-13 | Phase 2 merged to master; Phase 3 started | Owner (chat: "Merge into master", "Start Phase 3") |
 
 ## Pending owner decisions (do not invent — sensible configurable defaults used meanwhile)
 

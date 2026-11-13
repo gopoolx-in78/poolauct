@@ -12,7 +12,7 @@
 | XSS | React escaping; no `dangerouslySetInnerHTML` except sanitised Markdown renderer; strict nonce CSP | ☐ |
 | CSRF | Server Actions Origin check; Origin/Sec-Fetch-Site check on route handlers; SameSite=Lax | ☐ |
 | RCE | no eval/user templates; dependency scanning; image processing in sandboxed lib | ☐ |
-| Broken access control / IDOR | RLS on every protected table; ownership via auth.uid() in functions; pgTAP cross-user tests | ☑ core tables — `supabase/tests/0002_identity_rbac.test.sql` (own vs other, staff aal1 vs aal2, no end-user writes) |
+| Broken access control / IDOR | RLS on every protected table; ownership via auth.uid() in functions; pgTAP cross-user tests | ☑ core + PoolX + ledger — `0002_identity_rbac.test.sql`, `0003_payments_poolx.test.sql` (other users' memberships/contributions/ledger invisible; staff need aal2; anon cannot join; users cannot submit payment events) |
 | SSRF | no user-supplied URLs fetched server-side; provider URLs allowlisted | ☐ |
 | Directory traversal | storage paths generated server-side (uuid), never from user input | ☐ |
 | Session hijacking | Supabase SSR cookies, refresh-token rotation, session list/revoke, reset signs out other sessions | ◐ list/revoke ☑ (pgTAP + e2e); cookie flags in prod unverified until deployed |
@@ -20,8 +20,8 @@
 | Clickjacking | `frame-ancestors 'none'` + X-Frame-Options DENY | ☐ |
 | File upload attacks | signed uploads, MIME/magic sniff, size limits, image re-encode, private bucket, malware scan ⚑ OD-09 | ☐ |
 | Open redirects | `safeNextPath()` on every `next` | ☑ `tests/unit/safe-redirect.test.ts` + e2e `//evil.example` |
-| API abuse | per-user/IP rate limits, pagination caps, body-size limits | ☐ |
-| Business-logic abuse | deposit bypass, fake payment confirmations, duplicate refunds, duplicate winners, bid manipulation, races, seller self-bid, unauthorised reserve edits, admin misuse → DB invariants + tests (acceptance 1–20) + audit | ☐ |
+| API abuse | per-user/IP rate limits, pagination caps, body-size limits | ◐ pool listing capped at 48/page; webhook body ≤ 64 KB; request limit 5 open pool requests/user; join/withdraw not yet rate-limited |
+| Business-logic abuse | deposit bypass, fake payment confirmations, duplicate refunds, duplicate winners, bid manipulation, races, seller self-bid, unauthorised reserve edits, admin misuse → DB invariants + tests (acceptance 1–20) + audit | ◐ PoolX/payments ☑: forged/stale webhook rejected (unit + e2e), duplicate webhook no-op (pgTAP + e2e), amount mismatch never applied (pgTAP), server-computed prices, no duplicate membership/charge, refunds idempotent & ≤ paid, late capture refunded, user cannot pick provider. Auction items ☐ (Phase 4/5) |
 
 ## Auth & accounts
 Password hashing by Supabase Auth (bcrypt) ◐ (provider) · password policy ≥10 chars + upper/lower/digit ☑ (config + zod + e2e) · single-use expiring reset & confirm tokens ☑ (e2e: link reuse rejected) · email verification required ☑ (e2e) ·
@@ -30,7 +30,7 @@ phone OTP ⚑ OD-07 (SMS provider) · reauthentication UI for in-place password 
 
 ## API & backend
 zod validation on all Phase 2 inputs ☑ (`tests/unit/validation.test.ts`) · ownership checks ☑ · rate limiting ◐ · request size limits ☐ · method validation ☐ · CORS restricted (same-origin only) ☐ ·
-webhook HMAC + replay protection ☐ · timeouts (HTTP 10s, DB statement_timeout) ☐ · validate third-party responses ☐ · never trust client prices/roles/status ☐
+webhook HMAC (timing-safe) + 300 s replay window + event-id de-duplication ☑ (unit + pgTAP + e2e) · timeouts (HTTP 10s, DB statement_timeout) ☐ · validate third-party responses ☐ · never trust client prices/roles/status ☑ for PoolX (amounts computed in SQL; status only via verified webhook)
 
 ## Data protection
 Service-role key server-only (`server-only` import + ESLint restricted import) ◐ · secrets via env, `.env*` gitignored ☑ · secret scanning in CI (gitleaks) ☐ ·

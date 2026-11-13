@@ -1,6 +1,11 @@
 # Financial Architecture
 
-> Status: designed, **not implemented**. Last updated: 2026-11-13.
+> Status: ledger, payment attempts, webhook processing and **PoolX** capture/refund journals **implemented** (migrations
+> 0006–0008, pgTAP-verified) with a **test-only sandbox provider**. Auction journals, seller settlements, invoices and a real
+> provider are not built. Last updated: 2026-11-13.
+>
+> Implemented journals: `CONTRIBUTION_CAPTURED` (Dr `poolx:gateway_clearing` / Cr `poolx:contribution_liability`, key
+> `poolx:capture:<attempt>`), `CONTRIBUTION_REFUNDED` (reverse, key `poolx:refund:<refund>`). PoolX contribution model: TD-29.
 > **Legal notice:** nothing here makes the platform an escrow agent or authorises it to hold
 > customer funds. The legally suitable fund-flow structure (payment aggregator marketplace /
 > split settlement / escrow arrangement with a regulated entity) must be confirmed by the owner's

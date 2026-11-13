@@ -6,14 +6,32 @@ Last updated: 2026-11-13
 | Suite | Tool | Location | Status |
 |---|---|---|---|
 | Unit | Vitest 5.1 | `tests/unit` | ✔ active |
-| DB / RLS / invariants | pgTAP via `supabase test db` | `supabase/tests` | ✔ active (58 assertions) |
-| Integration / API | Vitest + local Supabase + sandbox provider | `tests/integration` | from Phase 3/5a (payments) |
+| DB / RLS / invariants | pgTAP via `supabase test db` | `supabase/tests` | ✔ active (112 assertions) |
+| Integration / API | Webhook/payment integration is covered end-to-end (Playwright `request` against the real route + local DB) and in pgTAP; no separate Vitest integration suite yet | `tests/e2e`, `supabase/tests` | ◐ |
 | E2E + a11y + SEO + headers + auth | Playwright 1.65 + @axe-core/playwright 4.14; Mailpit for email links; RFC 6238 TOTP helper for MFA | `tests/e2e` | ✔ active (Chromium desktop 1440 + Pixel 7; auth journeys desktop-only) |
 | Security | OWASP ZAP baseline, gitleaks, pnpm audit | CI | audit run locally; gitleaks/ZAP in CI only |
 | Performance | Lighthouse CI | CI | not yet |
 | Backup | restore drill | DEPLOYMENT_GUIDE | Phase 10 |
 
 ## Run log
+
+### 2026-11-13 — Phase 3 (payments core + PoolX)
+| Command | Result |
+|---|---|
+| `pnpm lint` / `typecheck` / `format:check` | ✔ |
+| `pnpm test` | ✔ 7 files, 47 tests — adds pricing mirror (incl. pgTAP-matching examples + property tests), sandbox webhook verification (valid / tampered / wrong secret / stale / missing headers / refund idempotency), PoolX validation (rupees→paise, IST datetimes, admin pool rules, requests), sandbox-secret env rule |
+| `pnpm test:db` | ✔ 3 files, 112 assertions — new `0003_payments_poolx.test.sql` (54): staff need aal2 + permission; reference price needs a source; non-monotonic tiers rejected; tiers frozen after publish; drafts invisible; public list/search/category; base vs tier price; anon cannot join; quantity bounds; pending attempt reused (no duplicate charge); user cannot choose provider; amount-mismatch capture not applied; capture confirms; duplicate event no-op; second capture no-op; unknown order; one capture journal; ACTIVE member cannot pay twice; cross-user RLS on members/contributions/ledger; price drops with confirmed members; half-up rounding; ledger balanced; no cross-domain entries; cross-domain journal rejected; unbalanced journal rejected; ledger immutable; withdraw → full refund; claim once; provider-confirmed refund; recording again no-op; one refund journal; no double full refund; late capture → refund; cancel refunds confirmed members; users cannot submit payment events. Isolated from leftover e2e data. |
+| `pnpm build` | ✔ 41 routes |
+| `playwright test --workers=1` | ✔ **46 passed**, 20 skipped by design (desktop-only journeys on the mobile project), 0 failed. New `poolx.spec.ts` (8): public listing/detail/JSON-LD; join → test checkout → membership + tier price; failed payment → retry (no duplicate membership); webhook forged 400 / stale 400 / valid → confirmed / duplicate → `DUPLICATE` / unknown provider 404 / one journal; withdraw (unconfirmed → error) → cron 401 without secret → refunded; staff create → tiers (bad tiers rejected, input kept) → publish → public page + 3 audit rows; pool request → reviewer approves → note visible; sitemap contains pools/categories. Plus `auth.spec.ts` sign-up rate-limit test. |
+
+Bugs found by these tests and fixed: (1) pool-request price field name mismatch made every request fail validation;
+(2) tier editor lost typed values after a validation error (React 19 resets uncontrolled forms after actions) — actions now echo
+values; (3) "please confirm" on withdraw rendered as a success notice; (4) header navs used `usePathname()` outside Suspense,
+breaking the build for dynamic routes; (5) pool listing passed a non-`pools` row type to `pool_json` (would fail at runtime);
+(6) a temp table inside a STABLE function. Environment findings: the full suite registers >10 accounts from one IP, so the app's
+own sign-up limiter (10/h) correctly throttled later tests — the helper now resets the local window and a dedicated test proves
+the limiter; intermittent 3 s anon statement timeouts / 1.8 s Supabase Auth lookups come from the shared local Docker VM (no lock
+waits observed with `log_lock_waits` enabled) — TD-38.
 
 ### 2026-11-13 — Phase 2 (auth & users)
 | Command | Result |

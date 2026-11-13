@@ -1,7 +1,14 @@
-import { Breadcrumbs, Container, EmptyState, Progress, SectionHeading } from "@/components/ui/primitives";
+import Link from "next/link";
+import { connection } from "next/server";
+import { Suspense } from "react";
+import { MemberProgress, PoolCard, PoolPrice } from "@/components/poolx/pool-card";
+import { ButtonLink } from "@/components/ui/button";
+import { Breadcrumbs, Container, EmptyState, Progress, SectionHeading, Skeleton } from "@/components/ui/primitives";
 import { site } from "@/config/site";
 import { applyBps, formatINR, rupees, subPaise } from "@/lib/money";
 import { pageMetadata } from "@/lib/seo";
+import { formatIST, requestNow, timeLeft } from "@/lib/time";
+import { getPublicStats, listCategories, listPools } from "@/modules/poolx/server/queries";
 
 export const metadata = pageMetadata({
   title: "PoolX — Join buying pools and unlock bulk prices together",
@@ -26,30 +33,6 @@ const steps = [
   ["Deal locked", "When the pool’s conditions are met, the price is locked and individual orders are created."],
   ["Direct delivery", "Each member’s order is delivered individually, with tracking where the seller supports it."],
 ] as const;
-
-const categories = [
-  "Electronics",
-  "Smartphones",
-  "Laptops",
-  "Groceries",
-  "Construction materials",
-  "Cement and steel",
-  "Society purchases",
-  "Office supplies",
-  "Household products",
-  "Commercial supplies",
-  "Services",
-  "Custom group purchases",
-];
-
-// Illustrative only — mirrors the example tiers in the requirements; not a live pool or a price promise.
-const exampleBase = rupees(1000);
-const exampleTiers = [
-  { members: 10, bps: 500 },
-  { members: 20, bps: 1000 },
-  { members: 40, bps: 1500 },
-  { members: 50, bps: 2000 },
-];
 
 export default function PoolXPage() {
   return (
@@ -77,57 +60,35 @@ export default function PoolXPage() {
               Join buying pools, combine purchasing power and negotiate like a corporation — whether you need one phone
               or a truckload of cement.
             </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <ButtonLink href="/poolx/pools" variant="accent" size="lg">
+                Browse open pools
+              </ButtonLink>
+              <ButtonLink href="/poolx/request" variant="secondary" size="lg">
+                Request a pool
+              </ButtonLink>
+            </div>
+            <Suspense fallback={<Skeleton className="mt-8 h-6 w-64" />}>
+              <Stats />
+            </Suspense>
           </div>
-
-          <figure className="border-ink bg-surface border p-5" aria-labelledby="tier-caption">
-            <figcaption id="tier-caption" className="flex items-center justify-between gap-2">
-              <span className="font-display text-lg">How price tiers work</span>
-              <span className="border-warning text-warning rounded-full border px-2 py-0.5 font-mono text-[11px] tracking-wide uppercase">
-                Illustration
-              </span>
-            </figcaption>
-            <p className="text-ink-muted mt-1 text-sm">
-              Example only — not a live pool. Each real pool publishes its own tiers.
-            </p>
-            <table className="mt-4 w-full text-left text-sm">
-              <caption className="sr-only">Example discount tiers for an item with a reference price of ₹1,000</caption>
-              <thead className="text-ink-muted font-mono text-xs tracking-wide uppercase">
-                <tr>
-                  <th scope="col" className="py-2 font-normal">
-                    Members
-                  </th>
-                  <th scope="col" className="py-2 font-normal">
-                    Discount
-                  </th>
-                  <th scope="col" className="py-2 text-right font-normal">
-                    Unit price
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="font-mono tabular-nums">
-                {exampleTiers.map((t) => (
-                  <tr key={t.members} className="border-rule border-t">
-                    <td className="py-2">{t.members}+</td>
-                    <td className="py-2">{t.bps / 100}%</td>
-                    <td className="py-2 text-right">
-                      {formatINR(subPaise(exampleBase, applyBps(exampleBase, t.bps)))}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <Progress className="mt-4" value={2} max={4} label="Example: two of four tiers unlocked" />
-          </figure>
+          <Suspense fallback={<Skeleton className="h-96" />}>
+            <HeroCard />
+          </Suspense>
         </Container>
       </section>
 
       <section aria-labelledby="pools-title" className="mt-16">
         <Container>
-          <SectionHeading eyebrow="Open pools" title="Buying pools" id="pools-title" />
-          <EmptyState className="mt-8" title="No pools are open yet">
-            Live pools will appear here with their real member counts, price tiers and deadlines as soon as they are
-            published.
-          </EmptyState>
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <SectionHeading eyebrow="Ending soon" title="Open pools" id="pools-title" />
+            <Link href="/poolx/pools" className="font-medium underline underline-offset-4">
+              See all pools
+            </Link>
+          </div>
+          <Suspense fallback={<Skeleton className="mt-8 h-80" />}>
+            <FeaturedPools />
+          </Suspense>
         </Container>
       </section>
 
@@ -151,15 +112,143 @@ export default function PoolXPage() {
           <SectionHeading eyebrow="What people pool" title="Categories" id="poolx-cats">
             From everyday electronics to building materials and housing-society purchases.
           </SectionHeading>
-          <ul className="mt-8 flex flex-wrap gap-2">
-            {categories.map((c) => (
-              <li key={c} className="border-rule rounded-full border px-4 py-2 text-sm">
-                {c}
-              </li>
-            ))}
-          </ul>
+          <Suspense fallback={<Skeleton className="mt-8 h-24" />}>
+            <Categories />
+          </Suspense>
         </Container>
       </section>
     </div>
+  );
+}
+
+async function Stats() {
+  await connection();
+  const stats = await getPublicStats();
+  if (stats.openPools === 0) return null;
+  return (
+    <p className="mt-8 text-sm">
+      <strong className="font-mono">{stats.openPools}</strong> open pool{stats.openPools === 1 ? "" : "s"} ·{" "}
+      <strong className="font-mono">{stats.activeMembers}</strong> confirmed member
+      {stats.activeMembers === 1 ? "" : "s"} right now
+    </p>
+  );
+}
+
+/** Live pool card from real data; falls back to a clearly labelled illustration when no pool is open. */
+async function HeroCard() {
+  const now = await requestNow();
+  const { items } = await listPools({ sort: "popular", limit: 1 });
+  const pool = items.find((p) => p.status === "ACTIVE");
+  if (!pool) return <IllustrationCard />;
+  return (
+    <figure className="border-ink bg-surface border p-5" aria-labelledby="live-pool-caption">
+      <figcaption id="live-pool-caption" className="flex items-center justify-between gap-2">
+        <span className="text-accent font-mono text-xs tracking-[0.15em] uppercase">Live pool</span>
+        <span className="text-ink-muted text-xs">{timeLeft(pool.deadlineAt, now)}</span>
+      </figcaption>
+      <p className="font-display mt-3 text-2xl">
+        <Link href={`/poolx/pools/${pool.slug}`} className="hover:underline hover:underline-offset-4">
+          {pool.title}
+        </Link>
+      </p>
+      <div className="mt-4">
+        <PoolPrice pool={pool} size="lg" />
+      </div>
+      <div className="mt-5">
+        <MemberProgress pool={pool} />
+      </div>
+      <p className="text-ink-muted mt-4 text-xs">Deadline {formatIST(pool.deadlineAt)}</p>
+      <ButtonLink href={`/poolx/pools/${pool.slug}`} variant="accent" className="mt-5 w-full">
+        Join pool
+      </ButtonLink>
+    </figure>
+  );
+}
+
+function IllustrationCard() {
+  const base = rupees(1000);
+  const tiers = [
+    { members: 10, bps: 500 },
+    { members: 20, bps: 1000 },
+    { members: 40, bps: 1500 },
+    { members: 50, bps: 2000 },
+  ];
+  return (
+    <figure className="border-ink bg-surface border p-5" aria-labelledby="tier-caption">
+      <figcaption id="tier-caption" className="flex items-center justify-between gap-2">
+        <span className="font-display text-lg">How price tiers work</span>
+        <span className="border-warning text-warning rounded-full border px-2 py-0.5 font-mono text-[11px] tracking-wide uppercase">
+          Illustration
+        </span>
+      </figcaption>
+      <p className="text-ink-muted mt-1 text-sm">
+        Example only — not a live pool. Each real pool publishes its own tiers.
+      </p>
+      <table className="mt-4 w-full text-left text-sm">
+        <caption className="sr-only">Example discount tiers for an item with a reference price of ₹1,000</caption>
+        <thead className="text-ink-muted font-mono text-xs tracking-wide uppercase">
+          <tr>
+            <th scope="col" className="py-2 font-normal">
+              Members
+            </th>
+            <th scope="col" className="py-2 font-normal">
+              Discount
+            </th>
+            <th scope="col" className="py-2 text-right font-normal">
+              Unit price
+            </th>
+          </tr>
+        </thead>
+        <tbody className="font-mono tabular-nums">
+          {tiers.map((t) => (
+            <tr key={t.members} className="border-rule border-t">
+              <td className="py-2">{t.members}+</td>
+              <td className="py-2">{t.bps / 100}%</td>
+              <td className="py-2 text-right">{formatINR(subPaise(base, applyBps(base, t.bps)))}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <Progress className="mt-4" value={2} max={4} label="Example: two of four tiers unlocked" />
+    </figure>
+  );
+}
+
+async function FeaturedPools() {
+  const now = await requestNow();
+  const { items } = await listPools({ sort: "ending", limit: 3 });
+  if (items.length === 0) {
+    return (
+      <EmptyState className="mt-8" title="No pools are open yet">
+        Live pools will appear here with their real member counts, price tiers and deadlines as soon as they are
+        published.
+      </EmptyState>
+    );
+  }
+  return (
+    <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {items.map((p) => (
+        <PoolCard key={p.id} pool={p} now={now} />
+      ))}
+    </div>
+  );
+}
+
+async function Categories() {
+  await connection();
+  const categories = await listCategories();
+  return (
+    <ul className="mt-8 flex flex-wrap gap-2">
+      {categories.map((c) => (
+        <li key={c.slug}>
+          <Link
+            href={`/poolx/categories/${c.slug}`}
+            className="border-rule hover:border-ink inline-block rounded-full border px-4 py-2 text-sm"
+          >
+            {c.name}
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }

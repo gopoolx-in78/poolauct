@@ -10,6 +10,7 @@ import { cn } from "@/lib/cn";
  */
 export const accountLinks = [
   { href: "/account", label: "Overview" },
+  { href: "/account/poolx", label: "My PoolX activities" },
   { href: "/account/profile", label: "Profile" },
   { href: "/account/security", label: "Security" },
   { href: "/account/sessions", label: "Sessions" },

@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-11-13 — Session 1 (Phase 3: payments core + PoolX) — branch `phase-3-poolx`
+- Migrations 0006–0008: payment attempts / webhook events / provider refunds; double-entry ledger with balance,
+  insert-only and domain-isolation triggers; PoolX schema (categories, sellers, pools, tiers, requests, members,
+  contributions, refunds); PoolX business logic and HTTP API; payment-event orchestration.
+- `src/modules/payments`: provider interface, sandbox provider (signed webhooks, test only), registry, webhook processing.
+- `src/modules/poolx`: pricing mirror, types, validation, public queries, refund worker.
+- Routes: `/api/webhooks/payments/[provider]`, `/api/cron/poolx`; pages: `/poolx` (live data), `/poolx/pools`,
+  `/poolx/pools/[slug]`, `/poolx/categories/[slug]`, `/poolx/request`, `/payments/sandbox/[attemptId]`, `/account/poolx`,
+  `/admin/poolx` (+ new, [id], requests). Dynamic sitemap entries.
+- Header navs wrapped in Suspense (usePathname on dynamic routes); `requestNow()` display-time helper.
+- Env: `SANDBOX_WEBHOOK_SECRET` (required for sandbox), `CRON_SECRET` used; CI generates both.
+- Tests: pgTAP `0003_payments_poolx.test.sql` (54); unit pricing/sandbox/validation; Playwright `poolx.spec.ts` (8).
+- Fixes found by tests: request form price field name mismatch; tier editor lost input after an error (React form reset);
+  withdraw-without-confirmation showed as success; JSON-LD test; pgTAP isolation from e2e data.
+
 ## 2026-11-13 — Session 1 (Phase 2: authentication & users) — branch `phase-2-auth`
 - Migrations 0002–0005: profiles, RBAC + permission matrix seed, append-only audit log, security events, verifications,
   rate limiter, `api` schema with account RPCs and service-role-only helpers.

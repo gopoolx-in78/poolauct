@@ -3,9 +3,14 @@ import { serverSchema } from "@/lib/env";
 
 describe("server env validation", () => {
   it("defaults to local + sandbox", () => {
-    const env = serverSchema.parse({});
+    const env = serverSchema.parse({ SANDBOX_WEBHOOK_SECRET: "s".repeat(32) });
     expect(env.APP_ENV).toBe("local");
     expect(env.PAYMENT_PROVIDER).toBe("sandbox");
+  });
+
+  it("requires a 32+ char webhook secret for the sandbox provider", () => {
+    expect(serverSchema.safeParse({}).success).toBe(false);
+    expect(serverSchema.safeParse({ SANDBOX_WEBHOOK_SECRET: "short" }).success).toBe(false);
   });
 
   it("refuses the sandbox payment provider in production (TD-06)", () => {

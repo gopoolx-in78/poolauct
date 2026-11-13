@@ -31,6 +31,7 @@ export const serverSchema = z
     RAZORPAY_KEY_ID: z.string().optional(),
     RAZORPAY_KEY_SECRET: z.string().optional(),
     RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
+    SANDBOX_WEBHOOK_SECRET: z.string().min(32).optional(),
     CRON_SECRET: z.string().min(32).optional(),
     FIELD_ENCRYPTION_KEY: z.string().optional(),
   })
@@ -41,6 +42,13 @@ export const serverSchema = z
         code: "custom",
         path: ["PAYMENT_PROVIDER"],
         message: "The sandbox payment provider is not allowed when APP_ENV=production.",
+      });
+    }
+    if (env.PAYMENT_PROVIDER === "sandbox" && env.APP_ENV !== "production" && !env.SANDBOX_WEBHOOK_SECRET) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["SANDBOX_WEBHOOK_SECRET"],
+        message: "SANDBOX_WEBHOOK_SECRET (32+ chars) is required for the sandbox payment provider.",
       });
     }
     if (env.PAYMENT_PROVIDER === "razorpay") {

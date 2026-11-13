@@ -12,6 +12,7 @@ import { signOutAction } from "@/app/(auth)/actions";
  */
 const items = [
   { href: "/account", label: "My Account" },
+  { href: "/account/poolx", label: "My PoolX activities" },
   { href: "/account/profile", label: "Profile" },
   { href: "/account/security", label: "Security" },
   { href: "/account/sessions", label: "Sessions" },

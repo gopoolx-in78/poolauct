@@ -63,6 +63,8 @@ jobs:
             echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
             echo "SUPABASE_DB_URL=$DB_URL"
             echo "PAYMENT_PROVIDER=sandbox"
+            echo "SANDBOX_WEBHOOK_SECRET=$(openssl rand -hex 32)"
+            echo "CRON_SECRET=$(openssl rand -hex 32)"
           } > .env.local
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium

@@ -26,6 +26,7 @@
   --color-success: #16794c;
   --color-warning: #a15c00;
   --color-danger: #b42318;
+  --color-danger-ink: #ffffff;
   --color-info: #1f5fad;
   --color-focus: #1f5fad;
 
@@ -63,6 +64,7 @@
     --color-success: #4ade80;
     --color-warning: #fbbf24;
     --color-danger: #f87171;
+    --color-danger-ink: #1f0707;
     --color-info: #7cb4ff;
     --color-focus: #7cb4ff;
     --shadow-overlay: 0 8px 24px rgb(0 0 0 / 0.5);
@@ -86,6 +88,7 @@
   --color-success: #4ade80;
   --color-warning: #fbbf24;
   --color-danger: #f87171;
+  --color-danger-ink: #1f0707;
   --color-info: #7cb4ff;
   --color-focus: #7cb4ff;
   --shadow-overlay: 0 8px 24px rgb(0 0 0 / 0.5);
@@ -137,6 +140,7 @@
   --color-success: var(--color-success);
   --color-warning: var(--color-warning);
   --color-danger: var(--color-danger);
+  --color-danger-ink: var(--color-danger-ink);
   --color-info: var(--color-info);
   --color-focus: var(--color-focus);
 

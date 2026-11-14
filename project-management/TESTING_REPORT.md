@@ -15,6 +15,24 @@ Last updated: 2026-11-14
 
 ## Run log
 
+### 2026-11-14 — Phase 9 part 2 (regression)
+| Command | Result |
+|---|---|
+| `pnpm lint` / `tsc --noEmit` / `prettier --check . --end-of-line auto` | ✔ |
+| `pnpm test` | ✔ 77/77 |
+| `pnpm test:db` | ✔ 9 files, 447 assertions — new `0009_hardening.test.sql` (4: service_role 30 s / 10 s, authenticated 8 s, anon 3 s) |
+| PostgREST probe as service_role | `statement_timeout/lock_timeout` = `30s/10s` (temporary function, dropped) |
+| `pnpm test:integration` | ✔ 3/3 |
+| `playwright test foundation.spec.ts -g "dark mode"` | ✔ 2/2 (desktop + Pixel 7) |
+| `playwright test a11y-private.spec.ts` (light + dark) | first run: `/account/delete` danger button contrast in dark (BUG-005); after the fix a rerun still failed in light **and** dark because Turbopack's build cache served a stylesheet without the new utility — cleared `.next/cache/turbopack`, rebuilt: **2/2 passed** |
+| `playwright test --workers=1` (full, existing local DB) | ✔ **62 passed, 0 failed**, 32 skipped by design (18.9 min) |
+| CSP experiment (SRI on, no 'unsafe-inline') | 54 CSP violations on `/`, `/poolx`, `/auctions`, `/login`; no hydration — reverted (TD-70) |
+| Lighthouse medians (3 runs) — font experiment | before: `/` 78, `/poolx` 84, `/auctions` 81; without Fraunces opsz: 74 / 76 / 80 (within noise) — reverted |
+| `supabase db reset` (owner approved) | ✔ all 15 migrations applied to an empty database, seed loaded; service_role shows `statement_timeout=30s, lock_timeout=10s` |
+| `pnpm test:db` (fresh DB) | ✔ 9 files, 447/447 |
+| `pnpm test:integration` (fresh DB) | ✔ 3/3 |
+| `playwright test --workers=1` (full, fresh DB) | ✔ **62 passed, 0 failed**, 32 skipped by design (17.1 min) |
+
 ### 2026-11-14 — Phase 9 part 1 (hardening)
 | Command | Result |
 |---|---|

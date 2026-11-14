@@ -72,6 +72,8 @@
 | TD-66 | 2026-11-14 | Server-side Supabase clients (user and service-role) abort a request after 15 s unless the caller passes its own signal. | A stalled database / API call must not hang a page render or a cron job indefinitely; 15 s is above every normal query here |
 | TD-67 | 2026-11-14 | Every horizontal scroll box (`overflow-x-auto`) is also `relative`, so absolutely positioned screen-reader-only labels inside tables stay clipped by it. | Fixes the BUG-003 class of mobile overflow at the source |
 | TD-68 | 2026-11-14 | Send `Cross-Origin-Resource-Policy: same-origin` on every response; do **not** send `Cross-Origin-Embedder-Policy`. ZAP's anti-CSRF warning on auth forms is a false positive (Server Actions check Origin). | COEP would block the payment provider's checkout window (OD-02); CORP costs nothing for a same-origin app |
+| TD-69 | 2026-11-14 | `service_role` gets explicit `statement_timeout = 30s` and `lock_timeout = 10s` (migration 0015). anon 3 s / authenticated 8 s unchanged. | Jobs and webhooks had only the authenticator's 8 s by accident; batch jobs need a known, slightly higher bound |
+| TD-70 | 2026-11-14 | Keep `script-src 'unsafe-inline'` (TD-16) after testing Next.js experimental SRI: SRI only covers script files; the inline RSC payload scripts of PPR pages are blocked without 'unsafe-inline' (54 violations, no hydration). | Measured, not assumed |
 
 ## Approvals
 | Date | Item | By |

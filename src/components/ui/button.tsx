@@ -16,7 +16,7 @@ const variants: Record<Variant, string> = {
   accent: "bg-accent text-accent-ink hover:bg-accent/85",
   secondary: "border border-ink text-ink hover:bg-ink hover:text-paper",
   ghost: "text-ink hover:bg-ink/5",
-  danger: "bg-danger text-white hover:bg-danger/85",
+  danger: "bg-danger text-danger-ink hover:bg-danger/85",
 };
 
 // Minimum 44px touch target on md/lg (WCAG 2.2 target size).

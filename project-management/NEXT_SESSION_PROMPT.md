@@ -4,8 +4,8 @@
 **Current phase:** Phase 9 (Testing & hardening) — part 1 done (signed-in a11y/responsive sweep, 2 mobile fixes, webhook body cap, Supabase timeouts, log + dependency review).
 **Last completed milestone:** central notification service — 28 PoolX / auction events raised by database triggers, in-app inbox, preferences, e-mail delivery worker with retries (Mailpit test inbox locally), admin delivery log, auction reminders.
 **Git:** branch `phase-9-hardening` (from `master` at `c0a18fd`, which includes Phase 8) — Phase 9 work may be uncommitted; check `git status`. No remote.
-**Database changes:** migrations 0001–0014 (DATABASE_SCHEMA.md "Applied migrations").
-**Tests:** unit 77 · pgTAP 443 · integration 3 · build · e2e (full suite with `--workers=1`, TD-38) — see TESTING_REPORT.
+**Database changes:** migrations 0001–0015 (DATABASE_SCHEMA.md "Applied migrations").
+**Tests:** unit 77 · pgTAP 447 · integration 3 · build · e2e (full suite with `--workers=1`, TD-38) — see TESTING_REPORT.
 **Local env:** `.env.local` needs `EMAIL_PROVIDER=mailpit`, `EMAIL_FROM`, `MAILPIT_URL` for e-mail locally (see `.env.example`).
 **Known gaps:** real e-mail provider / SMS / WhatsApp (OD-07); cron schedules (OD-06); header unread badge (8.11); notification retention (8.12); featured picker (7.7); images (media pipeline 4.8); inspection/RC staff UI; seller self-listing; seller settlements (OD-03); Razorpay (OD-02) — no live payments; deposit values OD-04, bidder KYC OD-05, forfeiture policy OD-11.
 
@@ -15,10 +15,9 @@ Read AGENTS.md (Next.js 16 docs in `node_modules/next/dist/docs/`), PROJECT_OVER
 (expect 443/443) → report status.
 
 ## Next exact tasks (ask the owner which first)
-1. **Commit Phase 9 part 1** when the owner asks.
-2. **Finish Phase 9** (PENDING_TASKS 9.9–9.13): performance work (9.13); DB
-   statement timeout for service_role jobs; CSP nonce re-check (2.10); fresh `supabase db reset` + full pgTAP + full e2e
-   (`--workers=1`); manual light/dark review. Fix findings; exit = no open critical/high.
+1. **Commit Phase 9 part 2** when the owner asks; merge `phase-9-hardening` to `master` when asked.
+2. **Phase 9 is complete locally** except performance (9.13), which needs a stable staging host to measure (owner to provide).
+   Fresh `db reset` + full regression passed. No open critical/high findings. Next: Phase 10 (launch readiness) or media pipeline.
 3. **Media pipeline (shared, 4.8 / 3.11 / 7.8):** Storage buckets with RLS, signed uploads with magic-byte check, WebP re-encode,
    alt text; galleries on auctions and pools; blog covers. Unblocks KYC queue (6.10) and inspection/RC UI (4.9).
 4. **Search (R-H2, §16):** PoolX and auction filters (price, discount, progress, location, brand, model, year, ending time, seller).
@@ -45,6 +44,8 @@ Read AGENTS.md (Next.js 16 docs in `node_modules/next/dist/docs/`), PROJECT_OVER
   rolled-back transaction.
 - Admin pages: `requireStaff(path, permission)` inside `<Suspense>`; simple forms post to a server action that redirects with
   `?notice=` / `?error=` (`action-kit.ts` `outcome()`, `sqlMessage()`); shared UI in `src/app/admin/admin-kit.tsx`.
+- Build cache: if a new Tailwind class has no effect in `pnpm build`, clear `.next/cache/turbopack` (stale CSS seen once).
+- Danger buttons use `text-danger-ink`; new colour pairs need a dark-mode value (axe runs in dark too).
 - Wide tables: put them in a `relative overflow-x-auto` box (TD-67); add new signed-in pages to `a11y-private.spec.ts`.
 - E2E: make any text you assert in shared lists (audit log, tables) unique per run.
 - E2E helpers: `becomeStaffWithMfa(page, email, "auction_manager")`, `registerAndConfirm`, `sql()`, `readLocalEnv("CRON_SECRET")`.

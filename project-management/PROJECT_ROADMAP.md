@@ -13,7 +13,7 @@ Last updated: 2026-11-13. Each phase ends with tests + doc checkpoint. Phases 3 
 | 6 | Central admin | Separated metrics dashboard, user/seller/payment/deposit/refund mgmt, disputes, reports/exports, audit viewer | 3, 4, 5 | permission tests per matrix | ☑ (local; settlements need OD-03) |
 | 7 | Theme & CMS | Theme editor (20 controls), live preview, draft/publish, versions, rollback, homepage section editor, banners, nav/footer, FAQ, blog, pages, SEO settings | 1, 2 | Acceptance test 20; XSS/CSS-injection tests | ☑ (local; featured picker and CMS images pending) |
 | 8 | Notifications | Outbox processor, in-app, email adapter, SMS/WhatsApp adapters (disabled until configured), preferences, delivery logs | 2 | event coverage tests | ☑ (local; real e-mail provider and SMS/WhatsApp wait for OD-07) |
-| 9 | Testing & hardening | Full unit/integration/DB/API/RLS/payment/refund/concurrency/security (ZAP baseline)/a11y (axe)/responsive/perf/SEO/regression | 1–8 | TESTING_REPORT complete; no open critical/high | ☐ |
+| 9 | Testing & hardening | Full unit/integration/DB/API/RLS/payment/refund/concurrency/security (ZAP baseline)/a11y (axe)/responsive/perf/SEO/regression | 1–8 | TESTING_REPORT complete; no open critical/high | ◐ (all done locally; performance budgets wait for staging, 9.13) |
 | 10 | Deployment & launch | Staging + prod projects, secrets, domain, HTTPS, WAF, backups + restore test, Sentry, uptime, CI/CD + rollback, Search Console, GA4 + consent, final audit | 9 + owner decisions | Security/Quality/Launch gates | ☐ ⚑ |
 
 ## Sitemap (planned)

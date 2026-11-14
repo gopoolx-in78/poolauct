@@ -69,4 +69,10 @@
 | 2026-11-14 | 9 | 9.4 15 s timeout on server Supabase requests | typecheck; payment e2e 9 passed |
 | 2026-11-14 | 9 | 9.5 / 9.6 Log redaction review; dependency audit | review; `pnpm audit` |
 | 2026-11-14 | 9 | 9.8 / 1.15 Lighthouse baseline, 7 public pages (local production build) | TESTING_REPORT table |
+| 2026-11-14 | 9 | Phase 9 part 1 committed (`a6e9c24`) | git log |
+| 2026-11-14 | 9 | 9.9 service_role statement / lock timeouts (migration 0015) | pgTAP 0009; PostgREST probe |
+| 2026-11-14 | 9 | 9.10 CSP SRI experiment — TD-16 confirmed (TD-70) | 54 violations, reverted |
+| 2026-11-14 | 9 | 9.12 Dark-mode axe + danger contrast fix (BUG-005) | sweeps 2/2, foundation dark 2/2 |
+| 2026-11-14 | 9 | Full regression (existing DB) | e2e 62 passed / 0 failed |
+| 2026-11-14 | 9 | 9.11 Fresh `supabase db reset` + regression (owner approved) | migrations 0001–0015 clean; pgTAP 447; integration 3; e2e 62 passed / 0 failed |
 | 2026-11-14 | 9 | 9.7 OWASP ZAP baseline: FAIL 0 / WARN 7 triaged; CORP header added | ZAP report; `foundation.spec.ts` 28/28 |

@@ -73,13 +73,21 @@ async function sweep(page: Page, paths: string[]) {
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
       );
       if (overflow > 0) findings.push({ path, width, problem: `horizontal overflow ${overflow}px` });
-      // Colour contrast does not depend on width; run axe once per page, at the widest viewport.
+      // Colour contrast does not depend on width; run axe at the widest viewport, in light and in dark mode.
       if (width === 1440) {
-        const results = await new AxeBuilder({ page })
-          .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-          .analyze();
-        for (const v of results.violations.filter((v) => v.impact === "serious" || v.impact === "critical"))
-          findings.push({ path, width, problem: `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}` });
+        for (const colorScheme of ["light", "dark"] as const) {
+          await page.emulateMedia({ colorScheme });
+          const results = await new AxeBuilder({ page })
+            .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+            .analyze();
+          for (const v of results.violations.filter((v) => v.impact === "serious" || v.impact === "critical"))
+            findings.push({
+              path,
+              width,
+              problem: `${colorScheme} ${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`,
+            });
+        }
+        await page.emulateMedia({ colorScheme: "light" });
       }
     }
   }

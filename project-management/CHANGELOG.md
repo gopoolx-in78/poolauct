@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-14 — Session 1 (Phase 9: testing & hardening, part 2) — branch `phase-9-hardening`
+- Migration 0015: explicit service_role statement / lock timeouts (TD-69); pgTAP `0009_hardening.test.sql` (4).
+- Dark-mode axe checks in `foundation.spec.ts` and `a11y-private.spec.ts`; fixed danger-button contrast in dark mode with a
+  `--color-danger-ink` token (BUG-005).
+- CSP SRI experiment documented and reverted (TD-70); performance investigation recorded under 9.13.
+- Fresh `supabase db reset` (owner approved): all migrations apply cleanly; full regression green.
+
 ## 2026-11-14 — Session 1 (Phase 9: testing & hardening, part 1) — branch `phase-9-hardening`
 - Tests: Playwright `a11y-private.spec.ts` (2) — axe + one h1 + no horizontal overflow on 9 account and 27 admin pages at
   320 / 768 / 1440; `foundation.spec.ts` gains a webhook body-limit test (declared, chunked, wrong method).

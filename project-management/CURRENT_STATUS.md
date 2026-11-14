@@ -2,9 +2,10 @@
 
 **Date:** 2026-11-14
 **Phase:** 9 — Testing & hardening — **in progress** (part 1 done: signed-in accessibility / responsive sweep,
-two mobile layout fixes, webhook body limit, Supabase request timeouts, log and dependency review). Phase 8 committed
-(`c0a18fd`) and merged to `master`.
-**Git:** branch `phase-9-hardening` (from `master` at `c0a18fd`). Phase 9 work is **uncommitted**. No remote.
+two mobile layout fixes, webhook body limit, Supabase request timeouts, log and dependency review; part 2: DB role timeouts,
+dark-mode accessibility checks + fix, CSP and performance investigations, full regression green). Phase 8 committed
+(`c0a18fd`) and merged to `master`; Phase 9 part 1 committed (`a6e9c24`).
+**Git:** branch `phase-9-hardening` (from `master` at `c0a18fd`). Part 1 committed (`a6e9c24`); part 2 **uncommitted**. No remote.
 
 ## What exists and is verified
 ### Phase 9 so far (this session)
@@ -18,8 +19,12 @@ two mobile layout fixes, webhook body limit, Supabase request timeouts, log and 
 - **ZAP baseline:** FAIL 0 · WARN 7 · PASS 61 after a Docker restart (memory-capped run). Added
   `Cross-Origin-Resource-Policy: same-origin`; the other warnings are triaged as accepted or false positives (TD-68,
   TESTING_REPORT).
-- **Still open:** performance work (9.13), DB statement timeout for jobs, CSP nonce re-check, fresh `db reset` +
-  full regression, manual light/dark review.
+- **Part 2:** migration 0015 (service_role 30 s / 10 s timeouts, TD-69); dark-mode axe on all swept pages, danger-button
+  contrast fixed (BUG-005); SRI-instead-of-nonces tested and rejected (TD-70); performance leads investigated (9.13).
+  Full regression on the existing local DB: unit 77, pgTAP 447, integration 3, e2e 62 passed / 0 failed.
+- **Fresh database:** `supabase db reset` (owner approved) applied all 15 migrations cleanly; pgTAP 447, integration 3 and
+  full e2e 62 passed / 0 failed on it.
+- **Still open:** performance work (9.13) — needs a stable staging host to measure. No open critical/high findings.
 
 ### Earlier phases
 Foundation (1), accounts/RBAC/staff MFA (2), payments core + ledger + full PoolX lifecycle (3) — see CHANGELOG and git history.
@@ -94,6 +99,9 @@ Foundation (1), accounts/RBAC/staff MFA (2), payments core + ledger + full PoolX
 - **Admin:** `/admin/auctions` list, create/edit draft (item, vehicle, bidding, mandatory deposit), publish, cancel (platform /
   seller withdrew, refunds all), close-now for ended auctions; `/admin/auctions/deposits` dashboard (liability, by-state counts,
   failed-refund retry); `/admin/auctions/defaults` (extend / refund / forfeit proposal); `/admin/auctions/policy` (min/max with reason).
+
+## Verification (local, 2026-11-14, Phase 9 part 2)
+lint ✔ · typecheck ✔ · format ✔ · unit ✔ 77/77 · pgTAP ✔ 447/447 · integration ✔ 3/3 · build ✔ · full e2e (`--workers=1`) ✔ 62 passed, 0 failed, 32 skipped by design. Fresh `supabase db reset` (owner approved): migrations 0001–0015 ✔ · pgTAP ✔ 447/447 · integration ✔ 3/3 · full e2e ✔ 62 passed, 0 failed.
 
 ## Verification (local, 2026-11-14, Phase 9 part 1)
 lint ✔ · typecheck ✔ · format ✔ · unit ✔ 77/77 · build ✔ · `a11y-private.spec.ts` ✔ 2/2 (36 signed-in pages × 3 widths, 0 axe violations) · `foundation.spec.ts` ✔ 28/28 · `poolx.spec.ts` + `auction.spec.ts` ✔ 9 passed. Lighthouse baseline recorded (7 pages). ZAP ✔ FAIL 0 / WARN 7 (triaged); `foundation.spec.ts` rerun ✔ 28/28 with the CORP header. Not run: full e2e, pgTAP (no SQL change).

@@ -117,8 +117,8 @@ See PROJECT_ROADMAP.md phases 7–10.
 - [x] 9.6 `pnpm audit`: production dependencies clean; 1 moderate in dev tooling (`minimatch` via `eslint-config-next`) — accepted, unchanged
 - [x] 9.7 OWASP ZAP baseline against the production build — FAIL 0, WARN 7 (triaged in TESTING_REPORT); fixed missing Cross-Origin-Resource-Policy; COEP deliberately not set (TD-68)
 - [x] 9.8 Lighthouse baseline (1.15) on the production build — 7 public pages: a11y / best practices / SEO 100, CLS good, perf 57–80 (local, noisy); see TESTING_REPORT
-- [ ] 9.9 Database statement timeout for `service_role` jobs (anon / authenticated have Supabase defaults) — confirm on the hosted project
-- [ ] 9.10 Re-evaluate CSP nonces for private areas (2.10)
-- [ ] 9.11 Fresh `supabase db reset` + full pgTAP and full e2e as the Phase 9 regression run
-- [ ] 9.12 Manual light/dark visual review (1.16 / 7.10)
-- [ ] 9.13 Performance: reduce first-load JS and main-thread work (TBT ~0.7–1.4 s, LCP 2.4–3.7 s under mobile throttling); re-measure on staging and set Lighthouse budgets
+- [x] 9.9 Migration 0015: `service_role` statement_timeout 30 s, lock_timeout 10 s (verified through PostgREST; pgTAP 0009). Hosted project: apply migration + `notify pgrst, 'reload config'`
+- [x] 9.10 CSP re-evaluated: experimental SRI without 'unsafe-inline' tested — 54 violations on 4 pages and no hydration (inline RSC payload scripts). TD-16 stands
+- [x] 9.11 Full regression ✔ on the existing DB and again after a fresh `supabase db reset` (owner approved): migrations 0001–0015 apply cleanly; pgTAP 447, integration 3, e2e 62 passed / 0 failed / 32 skipped by design
+- [x] 9.12 Light/dark review: axe now runs in dark mode on 6 public + 36 signed-in pages; fixed danger-button contrast in dark (BUG-005); screenshots at 375 / 768 / 1440 checked
+- [ ] 9.13 Performance: reduce first-load JS and main-thread work (TBT ~0.7–1.4 s, LCP 2.4–3.7 s under mobile throttling); re-measure on staging and set Lighthouse budgets. Investigated: unused `zod` on `/` is only a link prefetch of `/login`; dropping Fraunces' opsz axis saved 30 KB but no measurable change (reverted); remaining cost is React/Next runtime + hydration. Local noise ±15 points — needs stable staging

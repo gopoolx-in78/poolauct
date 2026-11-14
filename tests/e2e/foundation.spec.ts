@@ -46,6 +46,18 @@ test.describe("public pages", () => {
   });
 });
 
+test("public pages have no serious a11y violations in dark mode", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  const findings: string[] = [];
+  for (const path of publicPages) {
+    await page.goto(path);
+    const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
+    for (const v of results.violations.filter((v) => v.impact === "serious" || v.impact === "critical"))
+      findings.push(`${path} ${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`);
+  }
+  expect(findings, findings.join(" | ")).toEqual([]);
+});
+
 test("no horizontal overflow at 320px", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
   for (const path of publicPages) {

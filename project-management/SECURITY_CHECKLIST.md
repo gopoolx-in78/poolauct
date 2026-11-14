@@ -48,6 +48,13 @@ WCAG contrast ≥ 4.5 enforced ☑ (pgTAP + unit) · Markdown without raw HTML, 
 pinned (`[data-admin]`) ☑ (unit) · CMS cannot touch business data ☑ (acceptance 20, pgTAP) · every publish / rollback /
 content change audited ☑ (pgTAP + e2e) · theme publish needs `cms.theme.publish` (content managers cannot) ☑ (pgTAP + e2e)
 
+## Notifications (Phase 8)
+Users read only their own notifications and preferences; nobody writes them directly ☑ (pgTAP) · notification content immutable ☑
+(pgTAP) · no payment ids, provider references beyond the last 4 characters, or e-mail addresses in notification data ☑ (pgTAP) ·
+links internal-only (CHECK + e-mail builder) ☑ (pgTAP + unit) · e-mail HTML escaped, subject header-injection safe ☑ (unit) ·
+delivery worker and reminder job service-role only; cron route Bearer secret ☑ (pgTAP + e2e) · test inbox refused in production ☑
+(unit) · trigger failures cannot block financial transactions ☑ (design + pgTAP "no trigger errors") · re-send audited with reason ☑ (pgTAP)
+
 ## Headers
 CSP ◐ verified present (`tests/e2e/foundation.spec.ts`) — `script-src 'unsafe-inline'` accepted risk TD-16, no third-party script origins, `object-src 'none'`, `frame-ancestors 'none'`, `base-uri`/`form-action 'self'` ·
 X-Frame-Options DENY ☑ · X-Content-Type-Options ☑ · Referrer-Policy ☑ · Permissions-Policy ☑ (header set) · COOP ◐ · HSTS ◐ (prod only, unverified until deployed) · `X-Powered-By` removed ☑ ·

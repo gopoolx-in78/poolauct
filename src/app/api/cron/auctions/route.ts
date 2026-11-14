@@ -1,9 +1,12 @@
 import { timingSafeEqual } from "node:crypto";
 import { connection } from "next/server";
 import { getServerEnv } from "@/lib/env.server";
-import { closeDueAuctions, processAuctionRefunds } from "@/modules/auction/server/jobs";
+import { closeDueAuctions, processAuctionRefunds, queueAuctionReminders } from "@/modules/auction/server/jobs";
 
-/** Scheduled job (every minute): close ended auctions, flag overdue invoices, then process deposit refunds. */
+/**
+ * Scheduled job (every minute): close ended auctions, flag overdue invoices, process deposit refunds, then queue
+ * "starting soon" / "ending soon" reminders.
+ */
 export async function GET(request: Request) {
   await connection();
   const secret = getServerEnv().CRON_SECRET;
@@ -13,5 +16,6 @@ export async function GET(request: Request) {
   }
   const closed = await closeDueAuctions();
   const refunds = await processAuctionRefunds();
-  return Response.json({ closed, refunds }, { headers: { "Cache-Control": "no-store" } });
+  const reminders = await queueAuctionReminders();
+  return Response.json({ closed, refunds, reminders }, { headers: { "Cache-Control": "no-store" } });
 }

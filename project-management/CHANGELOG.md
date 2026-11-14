@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-11-14 — Session 1 (Phase 8: notifications) — branch `phase-8-notifications`
+- Migration 0014: `core.notification_events` (28 seeded), `notification_preferences`, `notifications`, `notification_deliveries`,
+  `notification_errors`; `core.notify`, `core.notify_subscribers`, `core.mask_reference`; triggers on `poolx.pools`, `requests`,
+  `members`, `contributions`, `orders`, `refunds` and `auction.auctions`, `bids`, `deposits`, `results`, `refunds`,
+  `deposit_adjustments`, `invoices`; API `notifications_list`, `_unread_count`, `_mark_read`, `_preferences`,
+  `_set_preference`, `_claim_deliveries`, `_record_delivery`, `auction_notify_due`, `admin_notification_overview`,
+  `admin_list_notification_deliveries`, `admin_retry_notification_delivery`.
+- Code: `src/modules/notifications` (wording catalogue, e-mail builder, channel registry, delivery worker);
+  `/api/cron/notifications`; `/api/cron/auctions` queues reminders; env `EMAIL_PROVIDER` (none | mailpit), `EMAIL_FROM`,
+  `MAILPIT_URL`.
+- Pages: `/account/notifications`, `/account/notifications/preferences`, `/admin/notifications`; menu entries.
+- Fix: account menu caused horizontal scrolling on phones (`min-w-0`).
+- Tests: pgTAP `0008_notifications.test.sql` (80); unit `notifications.test.ts` (9); Playwright `notifications.spec.ts` (2).
+
 ## 2026-11-14 — Session 1 (Phase 7: theme & CMS) — branch `phase-7-theme-cms`
 - Migration 0013: `cms.theme_versions`, `cms.documents`, `cms.document_revisions` (append-only), `cms.faqs`, `cms.seo_entries`;
   validators `cms.theme_config_problem`, `has_exact_keys`, `is_plain_text`, `is_internal_href`, `is_hex`, `contrast`;

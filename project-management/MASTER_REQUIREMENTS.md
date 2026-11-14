@@ -43,7 +43,7 @@ R-D9 automated idempotent closing, optional anti-sniping. Status: ☐ all
 R-E1 positive deposit on every auction, no disable switch, DB + server enforced · R-E2 11-step bidder workflow ·
 R-E3 one deposit per user per auction · R-E4 full refunds for all eligible non-winners · R-E5 winner adjustment exactly once ·
 R-E6 default handling only per legally approved policy · R-E7 idempotent refund engine w/ retries & reconciliation ·
-R-E8 14 explicit statuses + valid transitions · R-E9 My Auction Deposits page · R-E10 refund notifications. Status: ☐ all
+R-E8 14 explicit statuses + valid transitions · R-E9 My Auction Deposits page · R-E10 refund notifications (☑ Phase 8). Status: ☐ all
 
 ## F. Accounts, dashboards, sellers, admin (§9–§11)
 R-F1 auth: register/login/logout/email+phone verify/reset/sessions/profile/deletion · R-F2 bidder & seller KYC ·
@@ -57,7 +57,7 @@ R-G2 separate domains · R-G3 double-entry ledger, paise integers · R-G4 no wal
 R-G5 no live payments before credentials, webhooks, legal review, settlement arrangement ⚑
 
 ## H. Notifications, search (§15–§16)
-R-H1 central notification service, PoolX + Auction event lists, in-app + email (+SMS/WhatsApp when configured), preferences, delivery tracking ·
+R-H1 central notification service, PoolX + Auction event lists, in-app + email (+SMS/WhatsApp when configured), preferences, delivery tracking — ◐ built (Phase 8); e-mail provider / SMS / WhatsApp pending OD-07 ·
 R-H2 PoolX + Auction search with filters/sort/pagination/empty states
 
 ## I. Non-functional (§17–§21, §25, Appendix A/B)

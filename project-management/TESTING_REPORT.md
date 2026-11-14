@@ -6,7 +6,7 @@ Last updated: 2026-11-14
 | Suite | Tool | Location | Status |
 |---|---|---|---|
 | Unit | Vitest 5.1 | `tests/unit` | ✔ active |
-| DB / RLS / invariants | pgTAP via `supabase test db` | `supabase/tests` | ✔ active (363 assertions) |
+| DB / RLS / invariants | pgTAP via `supabase test db` | `supabase/tests` | ✔ active (443 assertions) |
 | Integration / API | Vitest integration suite against the local stack (`pnpm test:integration`): concurrent bidding with 8 real users (acceptance 8); webhooks covered in Playwright + pgTAP | `tests/integration`, `tests/e2e`, `supabase/tests` | ✔ active |
 | E2E + a11y + SEO + headers + auth | Playwright 1.65 + @axe-core/playwright 4.14; Mailpit for email links; RFC 6238 TOTP helper for MFA | `tests/e2e` | ✔ active (Chromium desktop 1440 + Pixel 7; auth journeys desktop-only) |
 | Security | OWASP ZAP baseline, gitleaks, pnpm audit | CI | audit run locally; gitleaks/ZAP in CI only |
@@ -14,6 +14,18 @@ Last updated: 2026-11-14
 | Backup | restore drill | DEPLOYMENT_GUIDE | Phase 10 |
 
 ## Run log
+
+### 2026-11-14 — Phase 8 (notifications)
+| Command | Result |
+|---|---|
+| `pnpm lint` / `typecheck` / `prettier --check . --end-of-line auto` | ✔ |
+| `pnpm test` | ✔ 77/77 — new `notifications.test.ts` (9): wording exists for exactly the 28 seeded events; every event renders with and without data (no "undefined"); money from paise strings; e-mail HTML escapes stored text, subject is one line, only internal links, settings link present; `mailpit` refused in production and needs sender + URL; default is no e-mail |
+| `pnpm test:db` | ✔ 8 files, 443 assertions — new `0008_notifications.test.sql` (80): catalogue (28 / 11 PoolX); announcements opt-in; essential notices cannot be turned off; preferences not writable directly; **every catalogue event raised by its real source** (pool request review, publish, joins with milestones and target, contribution capture, lock refunds via the refund worker, shipping, delivery, completion; auction publish, deposits, LIVE flip by the job, bids and outbid, reminder job, closing, refund worker success / failure, invoice payment, overdue invoice); no trigger errors; essential notices always have an e-mail delivery; links internal; no payment ids or e-mail addresses in data; masked provider reference; replayed bid not notified twice; reminders once; privacy (own rows only, cannot mark others', content immutable); worker claim / SENT / IGNORED re-record / RETRY with back-off / SKIPPED; staff permission, reason, retry audited |
+| `pnpm test:integration` | ✔ 3/3 |
+| `pnpm build` | ✔ |
+| `playwright test tests/e2e/notifications.spec.ts` | ✔ 2/2 — customer joins a pool → inbox shows joined / contribution / milestone (reached from the user menu) → mark one and all as read → delivery job sends the e-mail to Mailpit (greeting, amount, link, settings link) → settings: essential locked, outbid e-mail off and new auctions on are saved; cron route refuses a wrong secret; customer cannot open the delivery log; support (MFA) filters the log and sees the SENT delivery |
+| Browser check (dev server, 375 px and desktop, dark) | Inbox and settings render; found and fixed horizontal scrolling on every `/account` page at 375 px (account menu) |
+| `playwright test --workers=1` (full) | 54 passed, 1 failed, 1 did not run, 30 skipped by design. The failure was the PoolX "request a custom pool" test hitting its 60 s timeout while Playwright closed a second browser context (`Target.disposeBrowserContext` protocol error) after the approval had already succeeded; the next test in that serial file did not run. Rerun of `poolx.spec.ts`: **8 passed, 0 failed** (8 skipped by design). Net: every test that is not skipped by design passed on current code. |
 
 ### 2026-11-14 — Phase 7 (theme & CMS)
 | Command | Result |

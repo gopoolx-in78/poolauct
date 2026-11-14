@@ -39,6 +39,10 @@ custom SMTP provider (OD-07) with sensible send limits.
 - Webhook URL to register with a real provider: `https://<domain>/api/webhooks/payments/<provider>` (Razorpay adapter pending OD-02).
 - Schedule `GET /api/cron/poolx` with header `Authorization: Bearer $CRON_SECRET` every 5 minutes (closes pools past their
   deadline and processes PoolX refunds). Locally you can run it with curl.
+- Schedule `GET /api/cron/auctions` every minute (LIVE flip, closing, overdue invoices, deposit refunds, reminders) and
+  `GET /api/cron/notifications` every minute (sends queued e-mails), both with `Authorization: Bearer $CRON_SECRET`.
+- E-mail: `EMAIL_PROVIDER=none` (default — deliveries are recorded as SKIPPED) or, locally only, `EMAIL_PROVIDER=mailpit` with
+  `EMAIL_FROM` and `MAILPIT_URL` (the Mailpit address from `supabase status`). A production provider adapter needs OD-07.
 - Generate secrets with `openssl rand -hex 32`; never reuse the same value for `CRON_SECRET` and webhook secrets.
 
 ## Creating a pool (staff)

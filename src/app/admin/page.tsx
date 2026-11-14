@@ -72,6 +72,7 @@ async function AdminHome() {
         { href: "/admin/users", label: "Users", show: has("users.read") },
         { href: "/admin/roles", label: "Roles & permissions", show: has("roles.manage") },
         { href: "/admin/sellers", label: "Sellers", show: has("sellers.manage") },
+        { href: "/admin/notifications", label: "Notification deliveries", show: has("support.tickets") },
       ],
     },
     {

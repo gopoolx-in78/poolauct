@@ -14,6 +14,7 @@ const items = [
   { href: "/account", label: "My Account" },
   { href: "/account/poolx", label: "My PoolX activities" },
   { href: "/account/auctions", label: "My auction activities" },
+  { href: "/account/notifications", label: "Notifications" },
   { href: "/account/profile", label: "Profile" },
   { href: "/account/security", label: "Security" },
   { href: "/account/sessions", label: "Sessions" },

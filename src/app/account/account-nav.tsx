@@ -12,6 +12,7 @@ export const accountLinks = [
   { href: "/account", label: "Overview" },
   { href: "/account/poolx", label: "My PoolX activities" },
   { href: "/account/auctions", label: "My auction activities" },
+  { href: "/account/notifications", label: "Notifications" },
   { href: "/account/profile", label: "Profile" },
   { href: "/account/security", label: "Security" },
   { href: "/account/sessions", label: "Sessions" },
@@ -21,7 +22,7 @@ export const accountLinks = [
 export function AccountNav() {
   const pathname = usePathname();
   return (
-    <nav aria-label="Account">
+    <nav aria-label="Account" className="min-w-0">
       <ul className="flex gap-1 overflow-x-auto md:flex-col">
         {accountLinks.map((l) => {
           const active = pathname === l.href;

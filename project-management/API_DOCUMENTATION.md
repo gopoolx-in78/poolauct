@@ -145,6 +145,25 @@ DEFINER, `authenticated` only, checked with `core.require_permission`, and write
 Routes: public `/faq`, `/blog`, `/blog/[slug]`, `/info/[slug]`; admin `/admin/theme`, `/admin/theme/editor`, `/admin/content`
 (+ `/new`, `/[id]`, `/faqs`), `/admin/seo` (server actions in each folder's `actions.ts`; publish actions call `updateTag`).
 
+### Phase 8 — notifications (implemented)
+| Function | Caller | Notes |
+|---|---|---|
+| `notifications_list(p_unread_only, p_limit ≤ 50, p_offset)` | authenticated | own in-app notifications `{total, unread, items[{id, event, domain, data, link, readAt, createdAt}]}` |
+| `notifications_unread_count()` | authenticated | |
+| `notifications_mark_read(p_id)` | authenticated | `null` = all; returns rows changed (0 for someone else's id) |
+| `notifications_preferences()` | authenticated | every event with label, description, audience, essential, effective inApp / email |
+| `notifications_set_preference(p_event, p_in_app, p_email)` | active user | `NOT_FOUND`, `INVALID_REQUEST`, `ESSENTIAL` |
+| `notifications_claim_deliveries(p_limit ≤ 100)` | service_role | marks SENDING, counts the attempt; returns event, data, link, recipient e-mail + name + status |
+| `notifications_record_delivery(p_delivery, p_status SENT/FAILED/SKIPPED, p_provider, p_message_id, p_error, p_retryable)` | service_role | `SENT` / `RETRY` / `FAILED` / `SKIPPED` / `IGNORED` (not SENDING) |
+| `auction_notify_due()` | service_role | queues starting-soon / ending-soon reminders; returns count |
+| `admin_notification_overview()` | `support.tickets` | 7-day counts by status, notifications, trigger errors, recent errors, event list |
+| `admin_list_notification_deliveries(p_status, p_event, p_search, p_limit ≤ 100, p_offset)` | `support.tickets` | includes the customer e-mail |
+| `admin_retry_notification_delivery(p_delivery, p_reason ≥ 10)` | `support.tickets` | FAILED / SKIPPED only; audited `notification.delivery.retried` |
+
+Routes: `GET /api/cron/notifications` (Bearer `CRON_SECRET`, every minute) → `{deliveries: {sent, failed, retry, skipped}}`;
+`GET /api/cron/auctions` now also returns `reminders`. Pages `/account/notifications`, `/account/notifications/preferences`,
+`/admin/notifications` (server actions in each folder's `actions.ts`).
+
 ## Planned contracts
 > All endpoints: JSON, zod-validated, typed responses `{ data } | { error: { code, message } }`, no internal details in errors.
 > Mutations: authenticated, Origin-checked, rate-limited, `Idempotency-Key` header required for payment/bid/refund mutations.

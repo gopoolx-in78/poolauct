@@ -19,6 +19,13 @@ export async function closeDueAuctions(): Promise<number> {
   return Number(data ?? 0);
 }
 
+/** Queues "auction starting soon" and "auction ending soon" notifications (idempotent per auction and user). */
+export async function queueAuctionReminders(): Promise<number> {
+  const { data, error } = await createSupabaseAdminClient().schema("api").rpc("auction_notify_due");
+  if (error) throw new Error(`auction_notify_due failed: ${error.code}`);
+  return Number(data ?? 0);
+}
+
 /**
  * Auction refund worker (§7.8): claim → provider refund with a stable idempotency key → record outcome.
  * A deposit is REFUNDED only when the provider confirms it.

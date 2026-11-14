@@ -39,7 +39,7 @@ Legend: ● granted by default · ○ not granted · S = sensitive (reason + aud
 | `finance.reports.export` | ● | ○ | ○ | ○ | ● | ○ | ○ | ○ |
 | `sellers.manage` | ● | ● | ○ | ○ | ○ | ● | ○ | ○ |
 | `sellers.settlements` (S) | ● | ○ | ○ | ○ | ● | ○ | ○ | ○ |
-| `support.tickets` | ● | ● | ○ | ○ | ○ | ○ | ● | ○ |
+| `support.tickets` (also: notification delivery log, TD-65) | ● | ● | ○ | ○ | ○ | ○ | ● | ○ |
 | `cms.content.manage` | ● | ● | ○ | ○ | ○ | ○ | ○ | ● |
 | `cms.theme.edit` | ● | ○ | ○ | ○ | ○ | ○ | ○ | ● |
 | `cms.theme.publish` (S) | ● | ○ | ○ | ○ | ○ | ○ | ○ | ○ |

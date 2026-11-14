@@ -43,7 +43,7 @@ OD-01 … OD-15 (DECISION_LOG.md). Live payments need OD-02/OD-03; the PoolX con
   - [x] 3.7d shipments with carrier/tracking/https link; member confirms delivery; staff delivery with evidence; auto-complete
   - [x] 3.7e disputes: member reports; NO_ACTION (orders.manage) or REFUND (refunds.manual, ≤ refundable)
 - [ ] 3.14 Seller settlement payouts (pay `poolx:seller_payable` to sellers; settlement records) — with Phase 6 finance
-- [ ] 3.15 Member notifications for lock/adjustment/shipment/dispute outcomes — Phase 8 notification service
+- [x] 3.15 Member notifications (joined, contribution, milestones, target, shipment, delivery, refunds, completion) — Phase 8
 - [x] 3.8 `/account/poolx` + menu entry; `/admin/poolx/*` gated by `poolx.*` permissions
 - [x] 3.9 Tests: pgTAP 54 new; unit 18 new; PoolX e2e 8 journeys
 - [ ] 3.10 Seller verification UI (`sellers.manage`) — fold into Phase 6 seller management
@@ -63,7 +63,7 @@ OD-01 … OD-15 (DECISION_LOG.md). Live payments need OD-02/OD-03; the PoolX con
 - [ ] 4.9 Inspection report + RC verification staff UI
 - [ ] 4.10 Seller self-listing flow (needs OD-13 and seller KYC OD-05)
 - [x] 4.11 Acceptance test 20 (theme / CMS changes cannot alter business data) — pgTAP `0007_cms_theme.test.sql`
-- [ ] 4.12 Outbid / won / refund notifications — Phase 8
+- [x] 4.12 Outbid / won / lost / refund / deposit / overdue notifications — Phase 8
 - [ ] 4.13 Schedule `/api/cron/auctions` every minute once hosting is chosen (OD-06)
 
 ## Phase 6 — Central admin
@@ -92,3 +92,18 @@ See PROJECT_ROADMAP.md phases 7–10.
 - [ ] 7.8 Images in CMS content and blog covers — needs media pipeline 4.8
 - [ ] 7.9 Optional second approver for theme publishing (owner decision; currently reason + audit)
 - [ ] 7.10 Visual review of the three templates in light/dark at 320/768/1440 (with 1.16)
+
+## Phase 8 — Notifications
+- [x] 8.1 Migration 0014: event catalogue (28 events), preferences, notifications, deliveries, error log; module triggers
+- [x] 8.2 Delivery worker + `/api/cron/notifications`; retries with back-off; SKIPPED when a channel is not configured
+- [x] 8.3 E-mail adapter interface; `mailpit` test inbox (dev/test only); SMS / WhatsApp disabled
+- [x] 8.4 `/account/notifications` inbox + preferences; menu entries
+- [x] 8.5 `/admin/notifications` delivery log, trigger errors, re-send with reason
+- [x] 8.6 Auction reminders (starting soon / ending soon) from the auction job
+- [x] 8.7 Tests: pgTAP 0008 (80, every event from its real source), unit (9), Playwright `notifications.spec.ts` (2)
+- [ ] 8.8 Real e-mail provider adapter — **blocked on OD-07** (provider, sender domain, SPF/DKIM)
+- [ ] 8.9 SMS / WhatsApp adapters — **blocked on OD-07** and phone verification (2.6)
+- [ ] 8.10 Schedule `/api/cron/notifications` every minute (OD-06)
+- [ ] 8.11 Unread badge in the site header (request-time fetch inside Suspense)
+- [ ] 8.12 Retention policy for old notifications / deliveries (owner decision with the DPDP review)
+- [ ] 8.13 Notify sellers about PoolX pool events once PoolX sellers have accounts (sellers are records only today)

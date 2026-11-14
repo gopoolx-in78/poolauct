@@ -21,7 +21,7 @@
 4. Record provider refund id; map provider status → `REFUND_PROCESSING` / `REFUNDED` / `REFUND_FAILED`.
 5. `REFUNDED` is set **only** on provider-confirmed `processed` status (webhook or authenticated fetch). Ledger journal (Dr deposit liability / Cr gateway clearing) is posted in the same transaction with idempotency key = refund id.
 6. Failures: classify recoverable (timeouts, 5xx, rate limit) vs non-recoverable (invalid payment, already fully refunded → reconcile). Recoverable → exponential backoff (1m, 5m, 30m, 2h, 12h; max 5) then `REFUND_FAILED` + admin alert. Non-recoverable → `REFUND_FAILED`, alert finance, no auto-retry.
-7. Notifications: eligible, initiated, completed, failed (no payment identifiers beyond masked reference).
+7. Notifications: eligible, initiated, completed, failed (no payment identifiers beyond masked reference). — implemented in Phase 8 (refund triggers; "failed" is sent once per refund).
 
 ### Reconciliation (`/api/cron/reconcile`, hourly)
 - Any refund in `REFUND_INITIATED/PROCESSING` older than 30 min → fetch provider status.

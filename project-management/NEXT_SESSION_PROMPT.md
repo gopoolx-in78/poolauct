@@ -1,27 +1,33 @@
 # Next Session Prompt
 
 **Project:** Dual marketplace — PoolX (group buying) + Auctions (second-hand assets, mandatory refundable deposits). Parent brand pending (OD-01); interim name "PoolX & Auctions".
-**Current phase:** Phase 7 (Theme & CMS) — built and verified locally.
-**Last completed milestone:** versioned site design (allowlist + contrast validated in SQL and zod), editor with live preview, draft / publish / rollback, homepage sections, banners, nav / footer, pages (`/info/[slug]`), blog, FAQ, SEO settings; acceptance test 20.
-**Git:** branch `phase-7-theme-cms` (from `master` at `c371a8f`) — Phase 7 work may be uncommitted; check `git status` / `git log`. Not merged to `master`. No remote.
-**Database changes:** migrations 0001–0013 (DATABASE_SCHEMA.md "Applied migrations").
-**Tests:** unit 68 · pgTAP 363 · integration 3 (`pnpm test:integration`, needs local stack + `.env.local`) · build · e2e (full suite with `--workers=1`, TD-38) — see TESTING_REPORT.
-**Known gaps:** featured pools / auctions picker (7.7); images anywhere (media pipeline 4.8); inspection/RC staff UI; seller self-listing; seller settlements (OD-03); notifications (Phase 8); Razorpay (OD-02) — no live payments; cron schedule (OD-06); deposit values OD-04, bidder KYC OD-05, forfeiture policy OD-11.
+**Current phase:** Phase 8 (Notifications) — built and verified locally.
+**Last completed milestone:** central notification service — 28 PoolX / auction events raised by database triggers, in-app inbox, preferences, e-mail delivery worker with retries (Mailpit test inbox locally), admin delivery log, auction reminders.
+**Git:** branch `phase-8-notifications` (from `master` at `9a43f93`) — Phase 8 work may be uncommitted; check `git status` / `git log`. Not merged to `master`. No remote.
+**Database changes:** migrations 0001–0014 (DATABASE_SCHEMA.md "Applied migrations").
+**Tests:** unit 77 · pgTAP 443 · integration 3 · build · e2e (full suite with `--workers=1`, TD-38) — see TESTING_REPORT.
+**Local env:** `.env.local` needs `EMAIL_PROVIDER=mailpit`, `EMAIL_FROM`, `MAILPIT_URL` for e-mail locally (see `.env.example`).
+**Known gaps:** real e-mail provider / SMS / WhatsApp (OD-07); cron schedules (OD-06); header unread badge (8.11); notification retention (8.12); featured picker (7.7); images (media pipeline 4.8); inspection/RC staff UI; seller self-listing; seller settlements (OD-03); Razorpay (OD-02) — no live payments; deposit values OD-04, bidder KYC OD-05, forfeiture policy OD-11.
 
 ## Start-of-session protocol
 Read AGENTS.md (Next.js 16 docs in `node_modules/next/dist/docs/`), PROJECT_OVERVIEW, CURRENT_STATUS, PENDING_TASKS, this file →
 `git status` → `pnpm exec supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime` → `pnpm test:db`
-(expect 363/363) → report status.
+(expect 443/443) → report status.
 
 ## Next exact tasks (ask the owner which first)
-1. **Commit Phase 7** (if not yet) and merge to `master` when the owner asks.
-2. **Media pipeline (shared, 4.8 / 3.11 / 7.8):** Storage buckets `public-media` / `private-docs` with RLS on `storage.objects`,
-   `core.media_assets`, signed uploads with magic-byte MIME check, WebP re-encode, required alt text; galleries on auctions and
-   pools; blog covers. Unblocks the KYC verification queue (6.10) and inspection/RC UI (4.9).
-3. **Phase 8 — Notifications** (outbox processor, in-app, email adapter; SMS/WhatsApp disabled until configured).
-4. Small Phase 7 follow-ups: featured pools / auctions homepage picker (7.7); visual review of the three templates (7.10).
+1. **Commit Phase 8** (if not yet) and merge to `master` when the owner asks.
+2. **Phase 9 — Testing & hardening:** OWASP ZAP baseline, axe on account/admin pages, responsive review at 320/768/1440
+   (1.16, 7.10), Lighthouse baseline (1.15), request size / method limits, timeouts, log redaction, dependency audit; fix findings.
+3. **Media pipeline (shared, 4.8 / 3.11 / 7.8):** Storage buckets with RLS, signed uploads with magic-byte check, WebP re-encode,
+   alt text; galleries on auctions and pools; blog covers. Unblocks KYC queue (6.10) and inspection/RC UI (4.9).
+4. **Search (R-H2, §16):** PoolX and auction filters (price, discount, progress, location, brand, model, year, ending time, seller).
+5. Small follow-ups: header unread badge (8.11); featured pools / auctions picker (7.7).
 
 ## Patterns to follow
+- Notifications: add an event by inserting it into `core.notification_events` (new migration), raising it from a trigger in the
+  module schema with `core.notify(user, event, reference, data, link)` inside a `begin … exception when others` block, adding its
+  wording to `src/modules/notifications/catalog.ts` (the unit test compares both lists), and extending pgTAP 0008's flow.
+- Data in notifications: amounts as paise **text**, masked references only, internal links only.
 - Theme: add a control by extending **both** `cms.theme_config_problem` (new migration) and `themeConfigSchema`, then the compiler
   and editor; keep `DEFAULT_THEME` valid (unit test) and regenerate the pgTAP default config if needed. Never accept raw CSS.
 - CMS reads: `src/modules/cms/server/queries.ts` (`"use cache"` + `cacheTag`); admin actions call `updateTag(CMS_TAGS.*)`.

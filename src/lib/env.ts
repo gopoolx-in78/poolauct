@@ -34,6 +34,10 @@ export const serverSchema = z
     SANDBOX_WEBHOOK_SECRET: z.string().min(32).optional(),
     CRON_SECRET: z.string().min(32).optional(),
     FIELD_ENCRYPTION_KEY: z.string().optional(),
+    // E-mail delivery (OD-07). "mailpit" is the local test inbox — dev/test only, like the sandbox payment adapter.
+    EMAIL_PROVIDER: z.enum(["none", "mailpit"]).default("none"),
+    EMAIL_FROM: z.email().optional(),
+    MAILPIT_URL: z.url().optional(),
   })
   .superRefine((env, ctx) => {
     // TD-06: the sandbox payment adapter must never run in production.
@@ -50,6 +54,19 @@ export const serverSchema = z
         path: ["SANDBOX_WEBHOOK_SECRET"],
         message: "SANDBOX_WEBHOOK_SECRET (32+ chars) is required for the sandbox payment provider.",
       });
+    }
+    if (env.APP_ENV === "production" && env.EMAIL_PROVIDER === "mailpit") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["EMAIL_PROVIDER"],
+        message: "The mailpit test inbox is not allowed when APP_ENV=production.",
+      });
+    }
+    if (env.EMAIL_PROVIDER === "mailpit") {
+      for (const key of ["EMAIL_FROM", "MAILPIT_URL"] as const) {
+        if (!env[key])
+          ctx.addIssue({ code: "custom", path: [key], message: `${key} is required for EMAIL_PROVIDER=mailpit.` });
+      }
     }
     if (env.PAYMENT_PROVIDER === "razorpay") {
       for (const key of ["RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET", "RAZORPAY_WEBHOOK_SECRET"] as const) {

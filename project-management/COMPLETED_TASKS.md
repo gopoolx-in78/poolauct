@@ -62,3 +62,11 @@
 | 2026-11-14 | 8 | Delivery worker, e-mail adapter (Mailpit test inbox), cron route, auction reminders | pgTAP worker tests; Playwright e-mail received in Mailpit |
 | 2026-11-14 | 8 | Inbox, preferences, admin delivery log | Playwright `notifications.spec.ts` ✔; browser check at 375 px and desktop |
 | 2026-11-14 | 8 | Full verification run | lint ✔ · typecheck ✔ · format ✔ (`--end-of-line auto`) · unit ✔ 77/77 · pgTAP ✔ 443/443 (notifications file 80) · integration ✔ 3/3 · build ✔ · `notifications.spec.ts` ✔ 2/2 · full e2e: 54 passed, 1 failed, 1 did not run, 30 skipped by design. The failure was the PoolX "request a custom pool" test hitting its 60 s timeout while Playwright closed a second browser context (`Target.disposeBrowserContext` protocol error) after the approval had already succeeded; the next test in that serial file did not run. Rerun of `poolx.spec.ts`: **8 passed, 0 failed** (8 skipped by design). Net: every test that is not skipped by design passed on current code. |
+| 2026-11-14 | 8 | Phase 8 committed (`c0a18fd`) and merged to `master` (fast-forward) | git log |
+| 2026-11-14 | 9 | 9.1 Signed-in accessibility / overflow sweep (36 pages × 3 widths) | `a11y-private.spec.ts` 2/2 |
+| 2026-11-14 | 9 | 9.2 Fixed mobile overflow on `/admin/sellers` and `/admin/finance/ledger` (BUG-003/004) | sweep 2/2 |
+| 2026-11-14 | 9 | 9.3 Webhook body cap while streaming + e2e | `foundation.spec.ts` 28/28 |
+| 2026-11-14 | 9 | 9.4 15 s timeout on server Supabase requests | typecheck; payment e2e 9 passed |
+| 2026-11-14 | 9 | 9.5 / 9.6 Log redaction review; dependency audit | review; `pnpm audit` |
+| 2026-11-14 | 9 | 9.8 / 1.15 Lighthouse baseline, 7 public pages (local production build) | TESTING_REPORT table |
+| 2026-11-14 | 9 | 9.7 OWASP ZAP baseline: FAIL 0 / WARN 7 triaged; CORP header added | ZAP report; `foundation.spec.ts` 28/28 |

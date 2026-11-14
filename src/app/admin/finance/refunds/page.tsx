@@ -89,7 +89,7 @@ async function Refunds({ searchParams }: Pick<PageProps<"/admin/finance/refunds"
       {list.items.length === 0 ? (
         <EmptyState className="mt-8" title="No refunds match" />
       ) : (
-        <div className="mt-6 overflow-x-auto">
+        <div className="relative mt-6 overflow-x-auto">
           <table className="w-full min-w-[64rem] text-left text-sm">
             <caption className="sr-only">Refunds</caption>
             <thead className="text-ink-muted text-xs uppercase">

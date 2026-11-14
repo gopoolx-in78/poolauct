@@ -6,8 +6,8 @@ OD-01 … OD-15 (DECISION_LOG.md). Live payments need OD-02/OD-03; the PoolX con
 ## Phase 1 leftovers
 - [x] 1.4b DB verified: migration 0001 applied, pgTAP 12/12, health reports database ok
 - [ ] 1.13b Push to a private remote so CI runs (owner to provide/approve remote)
-- [ ] 1.15 Lighthouse baseline (LCP/INP/CLS) on production build; record in TESTING_REPORT
-- [ ] 1.16 Visual review of pages in light/dark at 320/768/1440 (now incl. auth + account pages)
+- [x] 1.15 Lighthouse baseline on production build — recorded in TESTING_REPORT (Phase 9, local); staging re-measure in 9.13
+- [~] 1.16 Visual review at 320/768/1440 — automated part done in Phase 9 (overflow + one h1 + axe on 6 public and 36 signed-in pages, `a11y-private.spec.ts`); manual light/dark look-over still open
 - [ ] Toast, Tabs, Table, Pagination primitives — build when first used rather than as unused code
 
 ## Phase 2 — Auth & users
@@ -91,7 +91,7 @@ See PROJECT_ROADMAP.md phases 7–10.
 - [ ] 7.7 Featured pools / auctions picker for the homepage (R-B5)
 - [ ] 7.8 Images in CMS content and blog covers — needs media pipeline 4.8
 - [ ] 7.9 Optional second approver for theme publishing (owner decision; currently reason + audit)
-- [ ] 7.10 Visual review of the three templates in light/dark at 320/768/1440 (with 1.16)
+- [ ] 7.10 Visual review of the three templates in light/dark at 320/768/1440 (with 1.16; automated overflow/axe checks cover the published theme only)
 
 ## Phase 8 — Notifications
 - [x] 8.1 Migration 0014: event catalogue (28 events), preferences, notifications, deliveries, error log; module triggers
@@ -107,3 +107,18 @@ See PROJECT_ROADMAP.md phases 7–10.
 - [ ] 8.11 Unread badge in the site header (request-time fetch inside Suspense)
 - [ ] 8.12 Retention policy for old notifications / deliveries (owner decision with the DPDP review)
 - [ ] 8.13 Notify sellers about PoolX pool events once PoolX sellers have accounts (sellers are records only today)
+
+## Phase 9 — Testing & hardening (in progress)
+- [x] 9.1 axe (WCAG 2.2 AA, serious/critical) + one-h1 + horizontal-overflow sweep of 9 account and 27 admin pages at 320 / 768 / 1440 (`tests/e2e/a11y-private.spec.ts`) — 0 accessibility violations
+- [x] 9.2 Fix overflow found by the sweep: `/admin/sellers` (BUG-003), `/admin/finance/ledger` (BUG-004); every horizontal scroll box is now `relative` (TD-67)
+- [x] 9.3 Payment webhook body limit enforced while streaming (chunked bodies without Content-Length) + e2e test; wrong method → 405
+- [x] 9.4 15 s timeout on server-side Supabase requests (user and service-role clients) (TD-66)
+- [x] 9.5 Log redaction review: server logs carry error codes / internal ids only — no e-mails, tokens, card or payment data
+- [x] 9.6 `pnpm audit`: production dependencies clean; 1 moderate in dev tooling (`minimatch` via `eslint-config-next`) — accepted, unchanged
+- [x] 9.7 OWASP ZAP baseline against the production build — FAIL 0, WARN 7 (triaged in TESTING_REPORT); fixed missing Cross-Origin-Resource-Policy; COEP deliberately not set (TD-68)
+- [x] 9.8 Lighthouse baseline (1.15) on the production build — 7 public pages: a11y / best practices / SEO 100, CLS good, perf 57–80 (local, noisy); see TESTING_REPORT
+- [ ] 9.9 Database statement timeout for `service_role` jobs (anon / authenticated have Supabase defaults) — confirm on the hosted project
+- [ ] 9.10 Re-evaluate CSP nonces for private areas (2.10)
+- [ ] 9.11 Fresh `supabase db reset` + full pgTAP and full e2e as the Phase 9 regression run
+- [ ] 9.12 Manual light/dark visual review (1.16 / 7.10)
+- [ ] 9.13 Performance: reduce first-load JS and main-thread work (TBT ~0.7–1.4 s, LCP 2.4–3.7 s under mobile throttling); re-measure on staging and set Lighthouse budgets

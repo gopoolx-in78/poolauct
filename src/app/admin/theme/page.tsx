@@ -146,7 +146,7 @@ async function Theme({ searchParams }: Pick<PageProps<"/admin/theme">, "searchPa
         {o.versions.length === 0 ? (
           <p className="text-ink-muted mt-2 text-sm">No versions yet.</p>
         ) : (
-          <div className="mt-4 overflow-x-auto">
+          <div className="relative mt-4 overflow-x-auto">
             <table className="w-full min-w-[52rem] text-left text-sm">
               <caption className="sr-only">Theme versions</caption>
               <thead className="text-ink-muted text-xs uppercase">

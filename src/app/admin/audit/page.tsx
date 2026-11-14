@@ -99,7 +99,7 @@ async function Audit({ searchParams }: Pick<PageProps<"/admin/audit">, "searchPa
               {e.before || e.after ? (
                 <details className="mt-1">
                   <summary className="cursor-pointer text-xs">Details</summary>
-                  <pre className="bg-ink/5 mt-1 overflow-x-auto p-2 text-xs">
+                  <pre className="bg-ink/5 relative mt-1 overflow-x-auto p-2 text-xs">
                     {JSON.stringify({ before: e.before, after: e.after }, null, 2)}
                   </pre>
                 </details>

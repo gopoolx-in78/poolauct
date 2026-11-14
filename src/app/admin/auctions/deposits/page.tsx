@@ -150,7 +150,7 @@ async function Deposits({ searchParams }: Pick<PageProps<"/admin/auctions/deposi
         <h2 id="recent-h" className="text-2xl">
           Recent deposits
         </h2>
-        <div className="mt-4 overflow-x-auto">
+        <div className="relative mt-4 overflow-x-auto">
           <table className="w-full min-w-[64rem] text-left text-sm">
             <caption className="sr-only">Most recently updated deposits</caption>
             <thead className="text-ink-muted text-xs uppercase">

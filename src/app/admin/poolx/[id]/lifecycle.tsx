@@ -118,7 +118,7 @@ export async function LifecycleSection({
             Final price {pool.finalUnitPricePaise ? formatINR(paise(pool.finalUnitPricePaise)) : "—"} per{" "}
             {pool.unitLabel} · {adjustments.length} price-adjustment refund{adjustments.length === 1 ? "" : "s"}
           </p>
-          <div className="mt-3 overflow-x-auto">
+          <div className="relative mt-3 overflow-x-auto">
             <table className="w-full min-w-[46rem] text-left text-sm">
               <caption className="sr-only">Orders for this pool</caption>
               <thead className="text-ink-muted text-xs uppercase">

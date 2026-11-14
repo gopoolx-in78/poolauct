@@ -58,7 +58,7 @@ async function Content({ searchParams }: Pick<PageProps<"/admin/content">, "sear
       {docs.length === 0 ? (
         <EmptyState className="mt-8" title={kind === "POST" ? "No blog posts yet" : "No pages yet"} />
       ) : (
-        <div className="mt-6 overflow-x-auto">
+        <div className="relative mt-6 overflow-x-auto">
           <table className="w-full min-w-[48rem] text-left text-sm">
             <caption className="sr-only">{KIND_LABEL[kind]}</caption>
             <thead className="text-ink-muted text-xs uppercase">

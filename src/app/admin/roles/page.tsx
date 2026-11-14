@@ -72,7 +72,7 @@ async function Roles({ searchParams }: Pick<PageProps<"/admin/roles">, "searchPa
         <h2 id="matrix-h" className="text-2xl">
           Permission matrix
         </h2>
-        <div className="mt-4 overflow-x-auto">
+        <div className="relative mt-4 overflow-x-auto">
           <table className="w-full min-w-[64rem] text-left text-xs">
             <caption className="sr-only">Permissions granted to each staff role</caption>
             <thead>

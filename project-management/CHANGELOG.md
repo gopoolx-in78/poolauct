@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-14 — Session 1 (Phase 9: testing & hardening, part 1) — branch `phase-9-hardening`
+- Tests: Playwright `a11y-private.spec.ts` (2) — axe + one h1 + no horizontal overflow on 9 account and 27 admin pages at
+  320 / 768 / 1440; `foundation.spec.ts` gains a webhook body-limit test (declared, chunked, wrong method).
+- Fixes: `/admin/sellers` and `/admin/finance/ledger` overflowed at 320 px (BUG-003, BUG-004); all `overflow-x-auto` boxes
+  are `relative` (TD-67).
+- Hardening: payment webhook reads the body with a 64 KB byte cap while streaming; server Supabase clients time out after
+  15 s (TD-66); `Cross-Origin-Resource-Policy: same-origin` header (TD-68).
+- Baselines: Lighthouse 12.8.2 on 7 public pages; OWASP ZAP baseline FAIL 0 / WARN 7 (triaged).
+
 ## 2026-11-14 — Session 1 (Phase 8: notifications) — branch `phase-8-notifications`
 - Migration 0014: `core.notification_events` (28 seeded), `notification_preferences`, `notifications`, `notification_deliveries`,
   `notification_errors`; `core.notify`, `core.notify_subscribers`, `core.mask_reference`; triggers on `poolx.pools`, `requests`,

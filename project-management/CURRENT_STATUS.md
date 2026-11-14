@@ -1,12 +1,26 @@
 # Current Status
 
 **Date:** 2026-11-14
-**Phase:** 8 — Notifications — **built and verified locally** (central notification service; all 28 PoolX and auction
-events of §15 raised by their real sources; in-app inbox; e-mail delivery worker with retries and a delivery log;
-preferences; SMS / WhatsApp disabled until a provider is approved). Phase 7 committed (`9a43f93`) and merged to `master`.
-**Git:** branch `phase-8-notifications` (from `master` at `9a43f93`). All Phase 8 work is **uncommitted**. No remote.
+**Phase:** 9 — Testing & hardening — **in progress** (part 1 done: signed-in accessibility / responsive sweep,
+two mobile layout fixes, webhook body limit, Supabase request timeouts, log and dependency review). Phase 8 committed
+(`c0a18fd`) and merged to `master`.
+**Git:** branch `phase-9-hardening` (from `master` at `c0a18fd`). Phase 9 work is **uncommitted**. No remote.
 
 ## What exists and is verified
+### Phase 9 so far (this session)
+- **Signed-in sweep:** `tests/e2e/a11y-private.spec.ts` checks 9 account and 27 admin pages at 320 / 768 / 1440 for one h1, no
+  horizontal scrolling and no serious/critical axe (WCAG 2.2 AA) violations. Found and fixed `/admin/sellers` and
+  `/admin/finance/ledger` overflowing on phones (BUG-003/004, TD-67).
+- **Hardening:** payment webhook refuses bodies over 64 KB even without a Content-Length; server Supabase requests time out
+  after 15 s (TD-66); server logs reviewed (codes / ids only); `pnpm audit` production clean.
+- **Lighthouse baseline (local):** 7 public pages — accessibility, best practices and SEO 100; CLS good; performance 57–80
+  (main-thread script work and LCP 2.4–3.7 s under mobile throttling; follow-up 9.13).
+- **ZAP baseline:** FAIL 0 · WARN 7 · PASS 61 after a Docker restart (memory-capped run). Added
+  `Cross-Origin-Resource-Policy: same-origin`; the other warnings are triaged as accepted or false positives (TD-68,
+  TESTING_REPORT).
+- **Still open:** performance work (9.13), DB statement timeout for jobs, CSP nonce re-check, fresh `db reset` +
+  full regression, manual light/dark review.
+
 ### Earlier phases
 Foundation (1), accounts/RBAC/staff MFA (2), payments core + ledger + full PoolX lifecycle (3) — see CHANGELOG and git history.
 
@@ -80,6 +94,9 @@ Foundation (1), accounts/RBAC/staff MFA (2), payments core + ledger + full PoolX
 - **Admin:** `/admin/auctions` list, create/edit draft (item, vehicle, bidding, mandatory deposit), publish, cancel (platform /
   seller withdrew, refunds all), close-now for ended auctions; `/admin/auctions/deposits` dashboard (liability, by-state counts,
   failed-refund retry); `/admin/auctions/defaults` (extend / refund / forfeit proposal); `/admin/auctions/policy` (min/max with reason).
+
+## Verification (local, 2026-11-14, Phase 9 part 1)
+lint ✔ · typecheck ✔ · format ✔ · unit ✔ 77/77 · build ✔ · `a11y-private.spec.ts` ✔ 2/2 (36 signed-in pages × 3 widths, 0 axe violations) · `foundation.spec.ts` ✔ 28/28 · `poolx.spec.ts` + `auction.spec.ts` ✔ 9 passed. Lighthouse baseline recorded (7 pages). ZAP ✔ FAIL 0 / WARN 7 (triaged); `foundation.spec.ts` rerun ✔ 28/28 with the CORP header. Not run: full e2e, pgTAP (no SQL change).
 
 ## Verification (local, 2026-11-14, Phase 8)
 lint ✔ · typecheck ✔ · format ✔ (`--end-of-line auto`) · unit ✔ 77/77 · pgTAP ✔ 443/443 (notifications file 80) · integration ✔ 3/3 · build ✔ · `notifications.spec.ts` ✔ 2/2 · full e2e: 54 passed, 1 failed, 1 did not run, 30 skipped by design. The failure was the PoolX "request a custom pool" test hitting its 60 s timeout while Playwright closed a second browser context (`Target.disposeBrowserContext` protocol error) after the approval had already succeeded; the next test in that serial file did not run. Rerun of `poolx.spec.ts`: **8 passed, 0 failed** (8 skipped by design). Net: every test that is not skipped by design passed on current code.

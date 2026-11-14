@@ -135,7 +135,7 @@ async function Edit({ params, searchParams }: PageProps<"/admin/content/[id]">) 
         <h2 id="rev-h" className="text-2xl">
           Revision history
         </h2>
-        <div className="mt-4 overflow-x-auto">
+        <div className="relative mt-4 overflow-x-auto">
           <table className="w-full min-w-[40rem] text-left text-sm">
             <caption className="sr-only">Revisions</caption>
             <thead className="text-ink-muted text-xs uppercase">

@@ -43,7 +43,7 @@ async function Pools() {
       {pools.length === 0 ? (
         <EmptyState className="mt-8" title="No pools yet" />
       ) : (
-        <div className="mt-8 overflow-x-auto">
+        <div className="relative mt-8 overflow-x-auto">
           <table className="w-full min-w-[48rem] text-left text-sm">
             <caption className="sr-only">All PoolX pools</caption>
             <thead className="text-ink-muted text-xs uppercase">

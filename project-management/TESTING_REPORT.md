@@ -9,11 +9,57 @@ Last updated: 2026-11-14
 | DB / RLS / invariants | pgTAP via `supabase test db` | `supabase/tests` | ✔ active (443 assertions) |
 | Integration / API | Vitest integration suite against the local stack (`pnpm test:integration`): concurrent bidding with 8 real users (acceptance 8); webhooks covered in Playwright + pgTAP | `tests/integration`, `tests/e2e`, `supabase/tests` | ✔ active |
 | E2E + a11y + SEO + headers + auth | Playwright 1.65 + @axe-core/playwright 4.14; Mailpit for email links; RFC 6238 TOTP helper for MFA | `tests/e2e` | ✔ active (Chromium desktop 1440 + Pixel 7; auth journeys desktop-only) |
-| Security | OWASP ZAP baseline, gitleaks, pnpm audit | CI | audit run locally; gitleaks/ZAP in CI only |
-| Performance | Lighthouse CI | CI | not yet |
+| Security | OWASP ZAP baseline, gitleaks, pnpm audit | CI | audit run locally (Phase 9); ZAP baseline run locally (Phase 9: 0 FAIL, 7 WARN triaged); gitleaks in CI only |
+| Performance | Lighthouse 12.8.2 (local baseline, Phase 9); Lighthouse CI | CI | local baseline recorded; budgets after staging measurement |
 | Backup | restore drill | DEPLOYMENT_GUIDE | Phase 10 |
 
 ## Run log
+
+### 2026-11-14 — Phase 9 part 1 (hardening)
+| Command | Result |
+|---|---|
+| `pnpm lint` / `tsc --noEmit` / `prettier --check . --end-of-line auto` | ✔ |
+| `pnpm test` | ✔ 77/77 |
+| `pnpm audit --prod` | ✔ no known vulnerabilities; full `pnpm audit`: 1 moderate (`minimatch` via `eslint-config-next`, dev only) |
+| `pnpm build` | ✔ |
+| `playwright test tests/e2e/a11y-private.spec.ts` (desktop project; sets 320 / 768 / 1440 itself) | First run timed out (`networkidle` never settles on some pages — replaced by waiting for loading placeholders to clear). Second run stopped at sign-up while the local auth service stalled under load from other projects' containers. Third run: 0 accessibility violations; overflow at 320 px on `/admin/sellers` (188 px) and `/admin/finance/ledger` (21 px). After the fixes: **2/2 passed** |
+| `playwright test tests/e2e/foundation.spec.ts` | ✔ 28/28 (both projects; rerun ✔ 28/28 after adding the CORP header assertion) incl. new webhook body-limit test: 70 KB with Content-Length → 413, 70 KB chunked without Content-Length → 413, GET → 405 |
+| `playwright test poolx.spec.ts auction.spec.ts --workers=1` | ✔ 9 passed, 9 skipped by design (payments flow through the changed webhook reader) |
+| Not run in this part | full e2e suite, pgTAP (no SQL changed), integration, fresh `db reset` |
+
+#### Lighthouse 12.8.2 baseline (1.15) — local production build, mobile profile (simulated 4× CPU / slow 4G)
+Run against `next start` on this PC while other projects' Docker containers were loading it, so absolute timings are noisy
+(a rerun of `/` scored 70 instead of 58, `/poolx` 80 instead of 57). Re-measure on staging before setting budgets.
+
+| Page | Perf | A11y | Best practices | SEO | FCP | LCP | CLS | TBT |
+|---|---|---|---|---|---|---|---|---|
+| `/` | 58 (rerun 70) | 100 | 100 | 100 | 1.6 s | 3.1 s (rerun 3.7 s) | 0 | 10,840 ms (rerun 820 ms — first-run outlier) |
+| `/poolx` | 57 (rerun 80) | 100 | 100 | 100 | 3.0 s | 3.6 s (rerun 2.6 s) | 0.031 | 1,440 ms (rerun 660 ms) |
+| `/auctions` | 68 | 100 | 100 | 100 | 1.3 s | 3.7 s | 0.004 | 950 ms |
+| `/auctions/browse` | 80 | 100 | 100 | 100 | 1.0 s | 2.4 s | 0.003 | 730 ms |
+| `/how-it-works` | 78 | 100 | 100 | 100 | 1.2 s | 2.6 s | 0 | 770 ms |
+| `/faq` | 70 | 100 | 100 | 100 | 1.2 s | 3.7 s | 0 | 810 ms |
+| `/blog` | 67 | 100 | 100 | 100 | 0.8 s | 3.6 s | 0 | 1,110 ms |
+
+Findings: accessibility, best practices and SEO are 100 everywhere; CLS is good everywhere. Performance is held back by
+main-thread work — about 1.2–1.6 s script evaluation and ~1 s style & layout under the 4× CPU throttle, 360–390 KiB of JS,
+~59 KiB of it unused on first load. LCP 2.4–3.7 s is above the 2.5 s "good" line on most pages. Follow-up 9.13.
+
+#### OWASP ZAP baseline (stable image) — local production build, 2026-11-14
+First attempt aborted: Docker Desktop's engine failed (HTTP 500) mid-scan with ~50 containers from six local projects in
+3.7 GB. After the owner restarted Docker, the PoolX Supabase stack was restarted (host port forwarding had not recovered) and
+ZAP was rerun capped at a 1 GB container / 512 MB Java heap (`-v <dir>/jvm/.ZAP_JVM.properties:/home/zap/.ZAP/.ZAP_JVM.properties`).
+Result: **FAIL 0 · WARN 7 · PASS 61**.
+
+| Alert | Risk (confidence) | Triage |
+|---|---|---|
+| Absence of Anti-CSRF Tokens (10202) — `/login`, `/register`, `/forgot-password`, `/reset-password` | Medium (Low) | False positive: Next.js Server Actions are POST-only with an Origin / Host check; no cookie-authenticated GET mutations exist. Accepted |
+| CSP: script-src 'unsafe-inline' (10055) | Medium (High) | Known risk decision TD-16 (nonces incompatible with PPR shells); no third-party script origins allowed. Tracked as 9.10 |
+| CSP: style-src 'unsafe-inline' (10055) | Medium (High) | Needed for Next.js / theme CSS variables; styles cannot execute script. Accepted |
+| Cross-Origin-Resource-Policy missing (90004) | Low (Medium) | **Fixed:** `Cross-Origin-Resource-Policy: same-origin` on every response (e2e asserts it) |
+| Cross-Origin-Embedder-Policy missing (90004) | Low (Medium) | Not set on purpose: COEP would block the payment provider's checkout window (OD-02). Accepted (TD-68) |
+| User Controllable HTML Element Attribute (10031) — `next`, `view`, server-action fields | Informational | Values are React-escaped; `next` is re-validated server-side by `safeNextPath` (unit-tested). No action |
+| Authentication Request Identified (10111), Content-Type Header Missing on 307/308 redirects (10019), Non-Storable / Storable Content (10049) | Informational | Expected behaviour. No action |
 
 ### 2026-11-14 — Phase 8 (notifications)
 | Command | Result |

@@ -28,7 +28,9 @@ const components: Components = {
     <blockquote className="border-rule text-ink-muted mt-4 border-l-4 pl-4">{children}</blockquote>
   ),
   code: ({ children }) => <code className="bg-secondary rounded px-1 font-mono text-sm">{children}</code>,
-  pre: ({ children }) => <pre className="bg-secondary mt-4 overflow-x-auto rounded p-4 text-sm">{children}</pre>,
+  pre: ({ children }) => (
+    <pre className="bg-secondary relative mt-4 overflow-x-auto rounded p-4 text-sm">{children}</pre>
+  ),
   hr: () => <hr className="border-rule mt-8" />,
   a: ({ href, children }) => {
     const target = safeHref(href ?? "");

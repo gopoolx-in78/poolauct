@@ -227,7 +227,7 @@ async function Activity({ searchParams }: { searchParams: PageProps<"/account/po
         {a.refunds.length === 0 ? (
           <p className="text-ink-muted mt-2 text-sm">No refunds.</p>
         ) : (
-          <div className="mt-4 overflow-x-auto">
+          <div className="relative mt-4 overflow-x-auto">
             <table className="w-full min-w-[36rem] text-left text-sm">
               <caption className="sr-only">Your PoolX refunds</caption>
               <thead className="text-ink-muted text-xs uppercase">

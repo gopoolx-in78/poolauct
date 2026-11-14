@@ -69,6 +69,9 @@
 | TD-63 | 2026-11-14 | E-mail adapters: `EMAIL_PROVIDER=none` (default) or `mailpit` — the local Supabase test inbox, dev/test only and refused when `APP_ENV=production` (same rule as the sandbox payment adapter). A real provider adapter waits for OD-07; no new dependency was added. | Never fake integrations |
 | TD-64 | 2026-11-14 | "Payment overdue" fires when the closing job moves an unpaid invoice from ISSUED to DEFAULT_REVIEW (the job never uses the OVERDUE status). "Auction starting" = reminder ≤ 60 min before start; "ending soon" = ≤ 15 min before end; each once per auction per user (anti-snipe extensions do not repeat it). "Bidding activated" fires when a PAID deposit meets a LIVE auction (either order). | Matches the implemented auction lifecycle |
 | TD-65 | 2026-11-14 | The delivery log reuses the existing `support.tickets` permission (Super Admin, Admin, Customer Support) instead of adding a new permission. | Support investigates "I didn't get the e-mail"; no RBAC matrix change |
+| TD-66 | 2026-11-14 | Server-side Supabase clients (user and service-role) abort a request after 15 s unless the caller passes its own signal. | A stalled database / API call must not hang a page render or a cron job indefinitely; 15 s is above every normal query here |
+| TD-67 | 2026-11-14 | Every horizontal scroll box (`overflow-x-auto`) is also `relative`, so absolutely positioned screen-reader-only labels inside tables stay clipped by it. | Fixes the BUG-003 class of mobile overflow at the source |
+| TD-68 | 2026-11-14 | Send `Cross-Origin-Resource-Policy: same-origin` on every response; do **not** send `Cross-Origin-Embedder-Policy`. ZAP's anti-CSRF warning on auth forms is a false positive (Server Actions check Origin). | COEP would block the payment provider's checkout window (OD-02); CORP costs nothing for a same-origin app |
 
 ## Approvals
 | Date | Item | By |

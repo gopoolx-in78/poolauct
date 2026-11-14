@@ -89,7 +89,30 @@ test("security headers are present", async ({ request }) => {
   expect(h["x-content-type-options"]).toBe("nosniff");
   expect(h["x-frame-options"]).toBe("DENY");
   expect(h["referrer-policy"]).toBe("strict-origin-when-cross-origin");
+  expect(h["cross-origin-resource-policy"]).toBe("same-origin");
   expect(h["x-powered-by"]).toBeUndefined();
+});
+
+test("payment webhooks refuse oversized bodies, including chunked ones without a Content-Length", async ({
+  baseURL,
+}) => {
+  const big = new Uint8Array(70 * 1024).fill(0x61);
+  const url = `${baseURL}/api/webhooks/payments/sandbox`;
+  const declared = await fetch(url, { method: "POST", body: big });
+  expect(declared.status).toBe(413);
+  const chunked = await fetch(url, {
+    method: "POST",
+    body: new ReadableStream({
+      start(controller) {
+        for (let i = 0; i < 7; i++) controller.enqueue(big.subarray(i * 10240, (i + 1) * 10240));
+        controller.close();
+      },
+    }),
+    duplex: "half",
+  } as RequestInit & { duplex: "half" });
+  expect(chunked.status).toBe(413);
+  const wrongMethod = await fetch(url, { method: "GET" });
+  expect(wrongMethod.status).toBe(405);
 });
 
 test("unknown routes return a branded 404", async ({ page }) => {

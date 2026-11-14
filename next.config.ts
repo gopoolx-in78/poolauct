@@ -37,6 +37,9 @@ const securityHeaders = [
     value: "camera=(), microphone=(), geolocation=(), payment=(self), usb=(), interest-cohort=()",
   },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  // Other sites may not embed our responses (ZAP 90004). COEP is deliberately not set: require-corp / credentialless
+  // would block the payment provider's checkout window once Razorpay is live (OD-02).
+  { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
   ...(isDev ? [] : [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" }]),
 ];
 

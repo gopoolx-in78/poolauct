@@ -95,7 +95,7 @@ async function Payments({ searchParams }: Pick<PageProps<"/admin/finance/payment
       {list.items.length === 0 ? (
         <EmptyState className="mt-8" title="No payments match" />
       ) : (
-        <div className="mt-6 overflow-x-auto">
+        <div className="relative mt-6 overflow-x-auto">
           <table className="w-full min-w-[64rem] text-left text-sm">
             <caption className="sr-only">Payment attempts</caption>
             <thead className="text-ink-muted text-xs uppercase">

@@ -85,7 +85,7 @@ async function Users({ searchParams }: Pick<PageProps<"/admin/users">, "searchPa
       {list.items.length === 0 ? (
         <EmptyState className="mt-8" title="No matching users" />
       ) : (
-        <div className="mt-6 overflow-x-auto">
+        <div className="relative mt-6 overflow-x-auto">
           <table className="w-full min-w-[56rem] text-left text-sm">
             <caption className="sr-only">Users</caption>
             <thead className="text-ink-muted text-xs uppercase">

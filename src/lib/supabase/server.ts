@@ -12,6 +12,13 @@ export function supabaseConfig() {
   return { url, anonKey };
 }
 
+/** Upper bound for one server-side Supabase request, so a stalled call cannot hang a page render or a job. */
+export const SUPABASE_REQUEST_TIMEOUT_MS = 15_000;
+
+/** `fetch` that aborts after {@link SUPABASE_REQUEST_TIMEOUT_MS} unless the caller passed its own signal. */
+export const fetchWithTimeout: typeof fetch = (input, init) =>
+  fetch(input, { ...init, signal: init?.signal ?? AbortSignal.timeout(SUPABASE_REQUEST_TIMEOUT_MS) });
+
 /**
  * Per-request Supabase client acting as the signed-in user (RLS applies).
  * Reads cookies, so callers must be request-time code behind a <Suspense> boundary, a server action or a route handler.
@@ -20,6 +27,7 @@ export async function createSupabaseServerClient() {
   const { url, anonKey } = supabaseConfig();
   const cookieStore = await cookies();
   return createServerClient(url, anonKey, {
+    global: { fetch: fetchWithTimeout },
     cookies: {
       getAll() {
         return cookieStore.getAll();

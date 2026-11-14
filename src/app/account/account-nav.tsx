@@ -23,7 +23,7 @@ export function AccountNav() {
   const pathname = usePathname();
   return (
     <nav aria-label="Account" className="min-w-0">
-      <ul className="flex gap-1 overflow-x-auto md:flex-col">
+      <ul className="relative flex gap-1 overflow-x-auto md:flex-col">
         {accountLinks.map((l) => {
           const active = pathname === l.href;
           return (

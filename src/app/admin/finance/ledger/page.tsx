@@ -83,7 +83,7 @@ async function LedgerView({ searchParams }: Pick<PageProps<"/admin/finance/ledge
         <h2 id="tb-h" className="text-2xl">
           Trial balance
         </h2>
-        <div className="mt-3 overflow-x-auto">
+        <div className="relative mt-3 overflow-x-auto">
           <table className="w-full min-w-[48rem] text-left text-sm">
             <caption className="sr-only">Trial balance for {DOMAIN_LABEL[domain]}</caption>
             <thead className="text-ink-muted text-xs uppercase">
@@ -143,18 +143,20 @@ async function LedgerView({ searchParams }: Pick<PageProps<"/admin/finance/ledge
                   {formatIST(j.postedAt)} · {j.referenceType} {j.referenceId.slice(0, 8)}
                 </span>
               </div>
-              <table className="mt-2 w-full text-xs">
-                <caption className="sr-only">Entries for journal {j.kind}</caption>
-                <tbody className="font-mono">
-                  {j.entries.map((e, i) => (
-                    <tr key={i}>
-                      <td className={e.creditPaise !== "0" ? "pl-6" : ""}>{e.account}</td>
-                      <td className="text-right">{e.debitPaise !== "0" ? formatINR(paise(e.debitPaise)) : ""}</td>
-                      <td className="text-right">{e.creditPaise !== "0" ? formatINR(paise(e.creditPaise)) : ""}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="relative mt-2 overflow-x-auto">
+                <table className="w-full text-xs">
+                  <caption className="sr-only">Entries for journal {j.kind}</caption>
+                  <tbody className="font-mono">
+                    {j.entries.map((e, i) => (
+                      <tr key={i}>
+                        <td className={e.creditPaise !== "0" ? "pl-6" : ""}>{e.account}</td>
+                        <td className="text-right">{e.debitPaise !== "0" ? formatINR(paise(e.debitPaise)) : ""}</td>
+                        <td className="text-right">{e.creditPaise !== "0" ? formatINR(paise(e.creditPaise)) : ""}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </li>
           ))}
         </ul>

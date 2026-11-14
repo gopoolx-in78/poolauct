@@ -29,8 +29,8 @@ OTP expiry (3600 s) ◐ · TOTP MFA required for staff, enforced in `core.has_pe
 phone OTP ⚑ OD-07 (SMS provider) · reauthentication UI for in-place password change: not built (TD-25)
 
 ## API & backend
-zod validation on all Phase 2 inputs ☑ (`tests/unit/validation.test.ts`) · ownership checks ☑ · rate limiting ◐ · request size limits ☐ · method validation ☐ · CORS restricted (same-origin only) ☐ ·
-webhook HMAC (timing-safe) + 300 s replay window + event-id de-duplication ☑ (unit + pgTAP + e2e) · timeouts (HTTP 10s, DB statement_timeout) ☐ · validate third-party responses ☐ · never trust client prices/roles/status ☑ for PoolX and auctions (deposit, bid validity and invoice totals computed in SQL; status only via verified webhook; bids row-locked + idempotent — pgTAP + concurrency integration test) · cron route Bearer secret, timing-safe ☑ (e2e)
+zod validation on all Phase 2 inputs ☑ (`tests/unit/validation.test.ts`) · ownership checks ☑ · rate limiting ◐ · request size limits ☑ (webhook 64 KB byte cap while streaming, e2e; server actions use the Next.js 1 MB default) · method validation ☑ (route handlers export only their methods → 405, e2e) · CORS restricted (same-origin only) ☐ ·
+webhook HMAC (timing-safe) + 300 s replay window + event-id de-duplication ☑ (unit + pgTAP + e2e) · timeouts ◐ (outbound e-mail 10 s; server Supabase requests 15 s — TD-66; DB `statement_timeout` for service_role jobs pending 9.9) · log redaction ☑ (codes / internal ids only — Phase 9 review) · validate third-party responses ☐ · never trust client prices/roles/status ☑ for PoolX and auctions (deposit, bid validity and invoice totals computed in SQL; status only via verified webhook; bids row-locked + idempotent — pgTAP + concurrency integration test) · cron route Bearer secret, timing-safe ☑ (e2e)
 
 ## Data protection
 Service-role key server-only (`server-only` import + ESLint restricted import) ◐ · secrets via env, `.env*` gitignored ☑ · secret scanning in CI (gitleaks) ☐ ·
@@ -56,11 +56,12 @@ delivery worker and reminder job service-role only; cron route Bearer secret ☑
 (unit) · trigger failures cannot block financial transactions ☑ (design + pgTAP "no trigger errors") · re-send audited with reason ☑ (pgTAP)
 
 ## Headers
+Phase 9: `Cross-Origin-Resource-Policy: same-origin` added (ZAP 90004, e2e); COEP intentionally absent (TD-68). OWASP ZAP baseline 2026-11-14: FAIL 0 / WARN 7, all triaged (TESTING_REPORT).
 CSP ◐ verified present (`tests/e2e/foundation.spec.ts`) — `script-src 'unsafe-inline'` accepted risk TD-16, no third-party script origins, `object-src 'none'`, `frame-ancestors 'none'`, `base-uri`/`form-action 'self'` ·
 X-Frame-Options DENY ☑ · X-Content-Type-Options ☑ · Referrer-Policy ☑ · Permissions-Policy ☑ (header set) · COOP ◐ · HSTS ◐ (prod only, unverified until deployed) · `X-Powered-By` removed ☑ ·
 `X-Robots-Tag: noindex` on /account, /admin, /seller, /api ◐ (verified on /api/health)
 
-## Dependency status (2026-11-13)
+## Dependency status (2026-11-14, re-checked in Phase 9)
 `pnpm audit`: 1 moderate — `minimatch` <11.0.1 ReDoS via `eslint-config-next` (dev tooling only, not shipped). Accept until upstream bumps; CI fails on high/critical.
 
 ## Ops

@@ -75,7 +75,7 @@ async function PreferencesForm({
         {groups.map((g) => (
           <fieldset key={g.domain} className="min-w-0">
             <legend className="font-display text-2xl">{g.title}</legend>
-            <div className="mt-4 overflow-x-auto">
+            <div className="relative mt-4 overflow-x-auto">
               <table className="w-full min-w-[18rem] text-left text-sm">
                 <thead className="text-ink-muted">
                   <tr className="border-rule border-b">

@@ -90,7 +90,7 @@ function SellerTable({
       {sellers.length === 0 ? (
         <EmptyState className="mt-4" title="No sellers yet" />
       ) : (
-        <div className="mt-4 overflow-x-auto">
+        <div className="relative mt-4 overflow-x-auto">
           <table className="w-full min-w-[60rem] text-left text-sm">
             <caption className="sr-only">{title}</caption>
             <thead className="text-ink-muted text-xs uppercase">

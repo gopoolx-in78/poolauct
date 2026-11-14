@@ -3,9 +3,9 @@
 **Project:** Dual marketplace — PoolX (group buying) + Auctions (second-hand assets, mandatory refundable deposits). Parent brand pending (OD-01); interim name "PoolX & Auctions".
 **Current phase:** Phase 10 (Deployment & launch) — part 1 merged (launch gate, error reporting, restore drill, runbooks); part 2: hosting decided (Hostinger KVM VPS + Supabase Cloud Mumbai, TD-73) and `deploy/` server files written. Nothing deployed yet.
 **Last completed milestone:** central notification service — 28 PoolX / auction events raised by database triggers, in-app inbox, preferences, e-mail delivery worker with retries (Mailpit test inbox locally), admin delivery log, auction reminders.
-**Git:** `master` at `56d5682` (Phase 10 parts 1–2, media pipeline, blog covers, unread badge, featured listings, article images, combined search); branch `phase-10-sweep-stability` holds an a11y-sweep test fix (may be uncommitted — check `git status`). No remote.
+**Git:** `master` at `c4efedc` (Phase 10 parts 1–2, media pipeline, blog covers, unread badge, featured listings, article images, combined search, a11y sweep fix); branch `phase-10-sitemap-paging` holds the sitemap paging fix BUG-006 (may be uncommitted — check `git status`). No remote.
 **Database changes:** migrations 0001–0020 (DATABASE_SCHEMA.md "Applied migrations").
-**Tests:** unit 99 · pgTAP 546 · integration 3 · build · e2e (full suite with `--workers=1`, TD-38) — see TESTING_REPORT.
+**Tests:** unit 104 · pgTAP 546 · integration 3 · build · e2e (full suite with `--workers=1`, TD-38) — see TESTING_REPORT.
 **Local env:** `.env.local` needs `EMAIL_PROVIDER=mailpit`, `EMAIL_FROM`, `MAILPIT_URL` for e-mail locally (see `.env.example`).
 **Known gaps:** real e-mail provider / SMS / WhatsApp (OD-07); cron schedules (files ready in `deploy/cron`, install on the VPS); notification retention (8.12); private KYC documents (4.8b, OD-05 / OD-09); inspection/RC staff UI; seller self-listing; seller settlements (OD-03); Razorpay (OD-02) — no live payments; deposit values OD-04, bidder KYC OD-05, forfeiture policy OD-11.
 
@@ -15,7 +15,9 @@ Read AGENTS.md (Next.js 16 docs in `node_modules/next/dist/docs/`), PROJECT_OVER
 (expect 546/546) → report status.
 
 ## Next exact tasks (ask the owner which first)
-1. **Commit the a11y sweep fix** (branch `phase-10-sweep-stability`) when the owner asks; merge to `master` when asked.
+1. **Commit the sitemap paging fix** (branch `phase-10-sitemap-paging`) when the owner asks; merge to `master` when asked.
+   Full e2e suite last passed 69/69 runnable here. If a run shows `ERR_CONNECTION_REFUSED` or empty Supabase error
+   codes, check free memory (other projects' Docker stacks); wait 5 minutes between account-creating runs.
 2. **First staging deploy** once the owner has bought the Hostinger VPS and created the staging Supabase project (Mumbai):
    follow DEPLOYMENT_GUIDE "Hostinger VPS" step by step (the owner does purchases, DNS and anything needing their
    credentials); prove `nginx -t`, the systemd unit, `deploy.sh`, `rollback.sh` and the cron runner on the real server;

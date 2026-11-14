@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-14 — Session 1 (Phase 10: sitemap paging) — branch `phase-10-sitemap-paging`
+- Sitemap reads every page of pools, auctions, posts and pages (`src/lib/read-all.ts`, max 5,000 per type) instead of
+  only the first page (BUG-006). Unit tests `read-all.test.ts` (5).
+
 ## 2026-11-14 — Session 1 (Phase 10: test stability) — branch `phase-10-sweep-stability`
 - `a11y-private.spec.ts`: the one-h1 check waits for streamed content (up to 10 s) instead of counting instantly, and
   reports the count it found.

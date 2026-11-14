@@ -4,9 +4,10 @@
 **Phase:** 10 — Deployment & launch — **in progress**. Part 1 (launch gate, error reporting, restore drill, runbooks)
 committed and merged to `master` (`265ed70`). Part 2 (Hostinger VPS deploy files) merged (`de2b837`). Media pipeline merged
 (`ddea3aa`); blog / page covers (`15e9038`), header unread badge (`e2ea492`) and homepage featured listings (`08a884b`)
-images inside articles (`c7f7541`) and combined search (`56d5682`) merged. A test-stability fix for the a11y sweep is on
-branch `phase-10-sweep-stability` — **uncommitted**. Nothing is deployed; no server or Supabase project exists yet.
-**Git:** `master` at `56d5682`; branch `phase-10-sweep-stability` with uncommitted work. No remote.
+images inside articles (`c7f7541`), combined search (`56d5682`) and the a11y sweep fix (`c4efedc`) merged. Sitemap
+paging fix (BUG-006) on branch `phase-10-sitemap-paging` — **uncommitted**. Nothing is deployed; no server or Supabase
+project exists yet. Full e2e suite: 69 passed, 0 failed (39 single-project skips) on this branch.
+**Git:** `master` at `c4efedc`; branch `phase-10-sitemap-paging` with uncommitted work. No remote.
 
 ## What exists and is verified
 ### Combined search (this session, merged)

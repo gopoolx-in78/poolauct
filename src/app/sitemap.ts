@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { connection } from "next/server";
 import { site } from "@/config/site";
+import { readAll } from "@/lib/read-all";
 import { listCategories, listPools } from "@/modules/poolx/server/queries";
 import { listAuctionCategories, listAuctions } from "@/modules/auction/server/queries";
 import { getPublicDocuments, getPublicFaqs } from "@/modules/cms/server/queries";
@@ -18,6 +19,9 @@ export const staticPublicPaths = [
   "/contact",
 ] as const;
 
+/** Most URLs per listing type; a sitemap file may hold 50,000 in total. */
+const MAX_PER_TYPE = 5000;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   await connection();
   const fixed: MetadataRoute.Sitemap = staticPublicPaths.map((path) => ({
@@ -30,11 +34,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const [categories, pools, auctionCategories, auctions, posts, pages, faqs] = await Promise.all([
       listCategories(),
-      listPools({ limit: 48 }),
+      readAll((limit, offset) => listPools({ limit, offset }), 48, MAX_PER_TYPE),
       listAuctionCategories(),
-      listAuctions({ view: "all", limit: 48 }),
-      getPublicDocuments("POST", 100, 0),
-      getPublicDocuments("PAGE", 100, 0),
+      readAll((limit, offset) => listAuctions({ view: "all", limit, offset }), 48, MAX_PER_TYPE),
+      readAll((limit, offset) => getPublicDocuments("POST", limit, offset), 100, MAX_PER_TYPE),
+      readAll((limit, offset) => getPublicDocuments("PAGE", limit, offset), 100, MAX_PER_TYPE),
       getPublicFaqs(),
     ]);
     // FAQ and blog index pages are listed only once they have published content (they are noindex while empty).
@@ -42,16 +46,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ...(faqs.length > 0
         ? [{ url: new URL("/faq", site.url).toString(), changeFrequency: "monthly" as const, priority: 0.5 }]
         : []),
-      ...(posts.total > 0
+      ...(posts.length > 0
         ? [{ url: new URL("/blog", site.url).toString(), changeFrequency: "weekly" as const, priority: 0.5 }]
         : []),
-      ...posts.items.map((d) => ({
+      ...posts.map((d) => ({
         url: new URL(`/blog/${d.slug}`, site.url).toString(),
         lastModified: d.publishedAt,
         changeFrequency: "monthly" as const,
         priority: 0.5,
       })),
-      ...pages.items.map((d) => ({
+      ...pages.map((d) => ({
         url: new URL(`/info/${d.slug}`, site.url).toString(),
         lastModified: d.publishedAt,
         changeFrequency: "monthly" as const,
@@ -62,7 +66,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: "daily" as const,
         priority: 0.6,
       })),
-      ...pools.items.map((p) => ({
+      ...pools.map((p) => ({
         url: new URL(`/poolx/pools/${p.slug}`, site.url).toString(),
         changeFrequency: "hourly" as const,
         priority: 0.8,
@@ -72,7 +76,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: "daily" as const,
         priority: 0.6,
       })),
-      ...auctions.items.map((a) => ({
+      ...auctions.map((a) => ({
         url: new URL(`/auctions/${a.slug}`, site.url).toString(),
         changeFrequency: "hourly" as const,
         priority: 0.8,

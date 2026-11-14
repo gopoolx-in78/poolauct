@@ -15,6 +15,15 @@ Last updated: 2026-11-14
 
 ## Run log
 
+### 2026-11-14 — Full e2e suite on `master` (`c4efedc`) and sitemap fix
+| Command | Result |
+|---|---|
+| `pnpm build` + `playwright test --workers=1` (full suite, both projects) | 40 passed · 21 failed · 39 skipped · 8 not run (26 min). (1) `media` article-image test: Supabase Auth's local per-IP sign-up limit ("Too many attempts"). (2–21) from the notifications test onwards every request got `ERR_CONNECTION_REFUSED` — the app server on :3100 stopped with no error output. At the time the machine had 1.2 GB of 7.9 GB memory free and another project's local Supabase stack was in a restart loop (not touched) |
+| Rerun of the failed specs (media, notifications, poolx-lifecycle, poolx, search, foundation; both projects) | 46 passed · 1 failed · 17 skipped — the failure was real: the sitemap lacked a new pool (BUG-006, 65 visible pools locally vs a 48-item cap) |
+| After the fix: `pnpm test`, lint, `tsc`, build; `poolx` + `foundation` (desktop) | ✔ unit 104/104 (new `read-all.test.ts`, 5); sitemap test passes; 18 passed · 1 failed — the webhook test could not register (Supabase Auth sign-up limit again) |
+| `poolx.spec.ts` (desktop) after a 5-minute wait | 2 passed · 1 failed — "failed payment can be retried": sign-in redirect lost the session; the server logged `get_my_account failed { code: '' }` (no database error code: the request to the local Supabase stack itself failed). Same environment pressure as above; not chased further |
+| Full suite again on `phase-10-sitemap-paging` after the owner stopped other projects' containers (`pnpm build` + `playwright test --workers=1`, both projects) | ✔ **69 passed · 0 failed · 39 skipped** (single-project tests by design) in 14.5 min — every runnable test passes, including the new featured, search, cover, article-image and badge journeys and the sitemap check |
+
 ### 2026-11-14 — Phase 10 combined search
 | Command | Result |
 |---|---|

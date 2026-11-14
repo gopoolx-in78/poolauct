@@ -3,12 +3,18 @@
 **Date:** 2026-11-14
 **Phase:** 10 — Deployment & launch — **in progress**. Part 1 (launch gate, error reporting, restore drill, runbooks)
 committed and merged to `master` (`265ed70`). Part 2 (Hostinger VPS deploy files) merged (`de2b837`). Media pipeline merged
-(`ddea3aa`); blog / page covers (`15e9038`) and header unread badge (`e2ea492`) merged. Homepage featured listings built
-on branch `phase-10-featured` — **uncommitted**. Nothing is deployed; no server or Supabase project exists yet.
-**Git:** `master` at `e2ea492`; branch `phase-10-featured` with uncommitted work. No remote.
+(`ddea3aa`); blog / page covers (`15e9038`), header unread badge (`e2ea492`) and homepage featured listings (`08a884b`)
+merged. Images inside articles built on branch `phase-10-body-images` — **uncommitted**. Nothing is deployed; no server
+or Supabase project exists yet.
+**Git:** `master` at `08a884b`; branch `phase-10-body-images` with uncommitted work. No remote.
 
 ## What exists and is verified
-### Homepage featured listings (this session, branch `phase-10-featured`, uncommitted)
+### Images inside articles (this session, branch `phase-10-body-images`, uncommitted)
+- Content managers upload images to a page or post and paste a short code into the text where each should appear. Only
+  that document's own uploaded images are shown, with the alt text given at upload; links to images elsewhere on the web
+  are dropped. Up to 30 per page or post (7.8b, TD-77).
+
+### Homepage featured listings (this session, merged)
 - Content managers with MFA pick up to 6 pools and 6 auctions at /admin/content/featured. The homepage shows an
   "Open now" section with their live cards, but only for listings that are open right now; ended or unpublished ones
   drop off by themselves and the section disappears when none are open. Every change is audited (7.7, TD-76).

@@ -86,3 +86,4 @@
 - [x] 7.8 Cover images for CMS pages and blog posts (TD-75) — pgTAP 0012 (16), media e2e 3/3 — 2026-11-14
 - [x] 8.11 Header unread badge — notifications e2e 2/2 — 2026-11-14
 - [x] 7.7 Homepage featured pools / auctions (TD-76) — pgTAP 0013 (20), featured e2e — 2026-11-14
+- [x] 7.8b Images inside article bodies (TD-77) — pgTAP 0014 (15), unit markdown 8 — 2026-11-14

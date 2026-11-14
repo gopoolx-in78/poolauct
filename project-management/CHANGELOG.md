@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-14 — Session 1 (Phase 10: article images) — branch `phase-10-body-images`
+- Migration 0020: `cms.document_images`, `api.cms_admin_image_{add,remove,list}`, `images` in `api.cms_public_document`;
+  pgTAP `0014_cms_body_images.test.sql` (15).
+- Markdown renderer: `![alt](media:<id>)` for the document's own images (sanitiser allows only the `media:` scheme);
+  `POST /api/media` target `cms-image`; "Article images" section on the admin content page with copyable code and
+  removal; the admin preview shows the images.
+- Tests: 3 new unit tests in `markdown.test.ts`; fourth `media.spec.ts` journey.
+
 ## 2026-11-14 — Session 1 (Phase 10: featured listings) — branch `phase-10-featured`
 - Migration 0019: `cms.featured_listings`, staff `api.cms_admin_featured_*`, public `api.cms_featured`,
   `api.poolx_pools_by_slugs`, `api.auction_by_slugs`; pgTAP `0013_featured_listings.test.sql` (20).

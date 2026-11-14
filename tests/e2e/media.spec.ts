@@ -180,3 +180,60 @@ test("content managers set, replace and remove a blog cover; the post and blog l
   await expect(anon.getByRole("heading", { level: 1 })).toHaveText(postTitle);
   await expect(anon.getByRole("article").getByRole("img")).toHaveCount(0);
 });
+
+test("content managers place uploaded images in an article; only the post's own images are shown", async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  test.setTimeout(180_000);
+  const email = uniqueEmail("body-image-staff");
+  await registerAndConfirm(page, baseURL!, email, "Body Image Staff");
+  await becomeStaffWithMfa(page, email, "content_manager");
+  const postSlug = `e2e-body-image-${suffix}`;
+  const profile = sql(`select id from core.profiles where email = '${email}'`);
+  const docId =
+    sql(`insert into cms.documents (kind, slug, status, latest_revision, published_revision, first_published_at,
+      published_at, created_by, updated_by)
+    values ('POST', '${postSlug}', 'PUBLISHED', 1, 1, now(), now(), '${profile}', '${profile}') returning id`).split(
+      "\n",
+    )[0]!;
+  sql(`insert into cms.document_revisions (document_id, revision, title, summary, body, created_by)
+    values ('${docId}', 1, 'E2E body image post ${suffix}', 'A post used by the body image test', 'First version.', '${profile}')`);
+
+  await page.goto(`/admin/content/${docId}`);
+  const section = page.getByRole("region", { name: "Article images" });
+  const upload = section.getByRole("form", { name: "Add a photo" });
+  await upload
+    .getByLabel(/^Photo/)
+    .setInputFiles({ name: "inside.jpg", mimeType: "image/jpeg", buffer: await photo(30, 90, 160) });
+  await upload.getByLabel(/^Alt text/).fill("Volunteers sorting pooled parcels");
+  await upload.getByRole("button", { name: "Upload image" }).click();
+  await expect(upload.getByRole("status")).toHaveText("Image added.");
+  const code = await section.getByLabel(/^Code to paste/).inputValue();
+  expect(code).toMatch(/^!\[Volunteers sorting pooled parcels\]\(media:[0-9a-f-]{36}\)$/);
+
+  await page
+    .getByRole("textbox", { name: "Content", exact: true })
+    .fill(`Intro paragraph.\n\n${code}\n\n![tracker](https://tracker.example/pixel.png)\n\nClosing paragraph.`);
+  await page.getByRole("button", { name: "Save new revision" }).click();
+  await expect(page.getByText("Saved as a new revision.")).toBeVisible();
+  await page.getByRole("button", { name: "Publish revision 2" }).click();
+  await expect(page.getByText("Published. Visitors now see this revision.")).toBeVisible();
+
+  const anon = await (await browser.newContext()).newPage();
+  await anon.goto(`/blog/${postSlug}`);
+  const img = anon.getByRole("article").getByRole("img", { name: "Volunteers sorting pooled parcels" });
+  await expect(img).toBeVisible();
+  await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBe(1200);
+  // the external tracker image is not rendered
+  await expect(anon.getByRole("article").getByRole("img")).toHaveCount(1);
+  const src = (await img.getAttribute("src"))!;
+
+  await section.getByRole("button", { name: "Remove image: Volunteers sorting pooled parcels" }).click();
+  await expect(page.getByText("Image removed.")).toBeVisible();
+  expect((await page.request.get(src)).status()).toBeGreaterThanOrEqual(400);
+  await anon.reload();
+  await expect(anon.getByText("Closing paragraph.")).toBeVisible();
+  await expect(anon.getByRole("article").getByRole("img")).toHaveCount(0);
+});

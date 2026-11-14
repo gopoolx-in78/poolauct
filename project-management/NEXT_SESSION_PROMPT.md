@@ -3,34 +3,37 @@
 **Project:** Dual marketplace — PoolX (group buying) + Auctions (second-hand assets, mandatory refundable deposits). Parent brand pending (OD-01); interim name "PoolX & Auctions".
 **Current phase:** Phase 10 (Deployment & launch) — part 1 merged (launch gate, error reporting, restore drill, runbooks); part 2: hosting decided (Hostinger KVM VPS + Supabase Cloud Mumbai, TD-73) and `deploy/` server files written. Nothing deployed yet.
 **Last completed milestone:** central notification service — 28 PoolX / auction events raised by database triggers, in-app inbox, preferences, e-mail delivery worker with retries (Mailpit test inbox locally), admin delivery log, auction reminders.
-**Git:** `master` at `e2ea492` (Phase 10 parts 1–2, media pipeline, blog covers, unread badge); branch `phase-10-featured` holds homepage featured listings (may be uncommitted — check `git status`). No remote.
-**Database changes:** migrations 0001–0019 (DATABASE_SCHEMA.md "Applied migrations").
-**Tests:** unit 96 · pgTAP 531 · integration 3 · build · e2e (full suite with `--workers=1`, TD-38) — see TESTING_REPORT.
+**Git:** `master` at `08a884b` (Phase 10 parts 1–2, media pipeline, blog covers, unread badge, featured listings); branch `phase-10-body-images` holds images inside articles (may be uncommitted — check `git status`). No remote.
+**Database changes:** migrations 0001–0020 (DATABASE_SCHEMA.md "Applied migrations").
+**Tests:** unit 99 · pgTAP 546 · integration 3 · build · e2e (full suite with `--workers=1`, TD-38) — see TESTING_REPORT.
 **Local env:** `.env.local` needs `EMAIL_PROVIDER=mailpit`, `EMAIL_FROM`, `MAILPIT_URL` for e-mail locally (see `.env.example`).
-**Known gaps:** real e-mail provider / SMS / WhatsApp (OD-07); cron schedules (files ready in `deploy/cron`, install on the VPS); notification retention (8.12); images inside article bodies (7.8b); private KYC documents (4.8b, OD-05 / OD-09); inspection/RC staff UI; seller self-listing; seller settlements (OD-03); Razorpay (OD-02) — no live payments; deposit values OD-04, bidder KYC OD-05, forfeiture policy OD-11.
+**Known gaps:** real e-mail provider / SMS / WhatsApp (OD-07); cron schedules (files ready in `deploy/cron`, install on the VPS); notification retention (8.12); private KYC documents (4.8b, OD-05 / OD-09); inspection/RC staff UI; seller self-listing; seller settlements (OD-03); Razorpay (OD-02) — no live payments; deposit values OD-04, bidder KYC OD-05, forfeiture policy OD-11.
 
 ## Start-of-session protocol
 Read AGENTS.md (Next.js 16 docs in `node_modules/next/dist/docs/`), PROJECT_OVERVIEW, CURRENT_STATUS, PENDING_TASKS, this file →
 `git status` → `pnpm exec supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime` → `pnpm test:db`
-(expect 531/531) → report status.
+(expect 546/546) → report status.
 
 ## Next exact tasks (ask the owner which first)
-1. **Commit the featured listings** (branch `phase-10-featured`) when the owner asks; merge to `master` when asked.
+1. **Commit the article images** (branch `phase-10-body-images`) when the owner asks; merge to `master` when asked.
 2. **First staging deploy** once the owner has bought the Hostinger VPS and created the staging Supabase project (Mumbai):
    follow DEPLOYMENT_GUIDE "Hostinger VPS" step by step (the owner does purchases, DNS and anything needing their
    credentials); prove `nginx -t`, the systemd unit, `deploy.sh`, `rollback.sh` and the cron runner on the real server;
    then hosted restore drill (10.13) and uptime monitor (10.9).
 3. **Other owner decisions:** domain (OD-01), error tracker (OD-08), analytics + consent, Git remote (1.13b), live payments
    (OD-02/03), e-mail provider (OD-07), deposit values (OD-04). Then `pnpm launch:check` green and the final audit.
-4. **Media follow-ups:** images inside article bodies (7.8b); private document uploads after OD-05 / OD-09.
+4. **Media follow-ups:** private document uploads after OD-05 / OD-09.
 5. **Optional follow-ups:** a combined cross-module search page (per-module search, filters, sort and pagination already
-   exist, R-H2); images inside article bodies (7.8b); notification retention (8.12).
+   exist, R-H2); notification retention (8.12, needs a retention period from the owner).
 
 ## Patterns to follow
 - Media: never let a client write to Storage or choose a path. Uploads go through `POST /api/media` (re-encode with
   `processImage`, `storeImage`, then the module's `*_admin_media_add` with the user's session; delete files if SQL fails).
   Show images with `mediaSrc()` + `next/image` `unoptimized` and the stored width / height. CMS covers: target `cms`;
   the route deletes replaced files and calls `revalidateTag(CMS_TAGS.docs, { expire: 0 })` (server actions use `updateTag`).
+  Article images: target `cms-image`; never widen the Markdown sanitiser beyond the `media:` image scheme.
+- E2E: Supabase Auth limits sign-ups per IP for a few minutes on the local stack; after many account-creating runs in a
+  row, wait before rerunning ("Too many attempts" on /register).
 - VPS: production settings live only in `/etc/poolx/poolx.env`; the app listens on 127.0.0.1:3000 behind Nginx, which
   overwrites X-Forwarded-For (keep it that way — rate limits trust the first hop). Shell files in `deploy/` must stay LF.
 - Launch gate: add a production requirement to `checkLaunchEnv` (unit test) or to `api.launch_readiness()` (new migration + pgTAP 0010).

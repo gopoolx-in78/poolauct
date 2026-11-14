@@ -9,7 +9,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireStaff } from "@/modules/core/server/auth";
 import type { Media } from "@/modules/core/media";
 import { AdminCrumbs, Flash, qp } from "../../admin-kit";
-import { CoverManager } from "../../media-manager";
+import { BodyImageManager, CoverManager } from "../../media-manager";
 import { documentStatusAction } from "../actions";
 import { KIND_LABEL, type AdminDocument } from "../content-types";
 import { DocumentForm } from "../document-form";
@@ -22,6 +22,7 @@ const NOTICES: Record<string, string> = {
   unpublish: "Unpublished. It is no longer visible to visitors.",
   restore: "Earlier revision copied as the newest revision. Publish it to make it live.",
   "cover-removed": "Cover image removed.",
+  "image-removed": "Image removed.",
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -41,10 +42,12 @@ async function Edit({ params, searchParams }: PageProps<"/admin/content/[id]">) 
   if (!UUID.test(id)) notFound();
   const sp = await searchParams;
   const supabase = await createSupabaseServerClient();
-  const [{ data }, { data: cover }] = await Promise.all([
+  const [{ data }, { data: cover }, { data: imageRows }] = await Promise.all([
     supabase.schema("api").rpc("cms_admin_get_document", { p_id: id }),
     supabase.schema("api").rpc("cms_admin_cover_get", { p_document: id }),
+    supabase.schema("api").rpc("cms_admin_image_list", { p_document: id }),
   ]);
+  const images = (imageRows ?? []) as Media[];
   const d = data as AdminDocument | null;
   if (!d || !d.latest) notFound();
   const path = `${d.kind === "POST" ? "/blog/" : "/info/"}${d.slug}`;
@@ -76,6 +79,7 @@ async function Edit({ params, searchParams }: PageProps<"/admin/content/[id]">) 
       </p>
       <Flash notice={NOTICES[qp(sp, "notice") ?? ""]} error={qp(sp, "error")} />
       <CoverManager documentId={d.id} cover={(cover ?? null) as Media | null} />
+      <BodyImageManager documentId={d.id} items={images} />
 
       <section aria-labelledby="publish-h" className="border-rule mt-6 grid gap-4 border p-5 md:grid-cols-2">
         <div>
@@ -133,7 +137,11 @@ async function Edit({ params, searchParams }: PageProps<"/admin/content/[id]">) 
           <div className="border-rule mt-4 rounded border p-5">
             <p className="font-display text-3xl">{d.latest.title}</p>
             {d.latest.summary ? <p className="text-ink-muted mt-2">{d.latest.summary}</p> : null}
-            <Markdown source={d.latest.body} className="mt-4" />
+            <Markdown
+              source={d.latest.body}
+              images={Object.fromEntries(images.map((m) => [m.id, m]))}
+              className="mt-4"
+            />
           </div>
         </section>
       </div>

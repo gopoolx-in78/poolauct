@@ -15,6 +15,16 @@ Last updated: 2026-11-14
 
 ## Run log
 
+### 2026-11-14 — Phase 10 images inside articles
+| Command | Result |
+|---|---|
+| `pnpm lint` / `tsc --noEmit` / `prettier --check . --end-of-line auto` / `pnpm build` | ✔ |
+| `pnpm test` | ✔ 99/99 — 3 new in `markdown.test.ts` (own image shown with stored size and alt; unknown id, external, protocol-relative, relative, data, javascript: and query-suffixed sources dropped; nothing without the image list) |
+| `pnpm test:db` | ✔ 14 files, 546 assertions — new `0014_cms_body_images.test.sql` (15: RLS, anon / customer / other staff / non-MFA refused, add, alt required, unknown document, staff list, published post shows only its own images, drafts not public, remove once, removed image disappears, audit) |
+| `playwright test tests/e2e/media.spec.ts --project=desktop-chromium` | first run: 3 passed · 1 failed — the cover test could not register ("Too many attempts": Supabase Auth's per-IP sign-up limit after many account-creating runs; the app's own sign-up bucket is reset by the helper). Rerun a few minutes later: ✔ 4/4 — new journey uploads an article image, pastes its code with an external tracker image, publishes; the post shows only the uploaded image (1200 px loaded); removing it deletes the file and takes it off the post |
+| `playwright test tests/e2e/cms.spec.ts --project=desktop-chromium` | ✔ 3/3 (script, raw `<img>` and `javascript:` links still neutralised) |
+| Visual check | not done separately for article images (same image styling as the cover hero, checked earlier) |
+
 ### 2026-11-14 — Phase 10 homepage featured listings
 | Command | Result |
 |---|---|

@@ -16,10 +16,11 @@ const TARGETS = {
   auction: { permission: "auction.listings.manage", rpc: "auction_admin_media_add", param: "p_auction" },
   pool: { permission: "poolx.pools.manage", rpc: "poolx_admin_media_add", param: "p_pool" },
   cms: { permission: "cms.content.manage", rpc: "cms_admin_cover_set", param: "p_document" },
+  "cms-image": { permission: "cms.content.manage", rpc: "cms_admin_image_add", param: "p_document" },
 } as const;
 
 const fieldsSchema = z.object({
-  target: z.enum(["auction", "pool", "cms"]),
+  target: z.enum(["auction", "pool", "cms", "cms-image"]),
   id: z.uuid(),
   alt: z.string().trim().min(3, "Describe the photo in at least 3 characters.").max(200),
 });
@@ -28,7 +29,8 @@ const noStore = { "Cache-Control": "no-store" };
 const fail = (status: number, error: string) => Response.json({ error }, { status, headers: noStore });
 
 /**
- * Staff photo upload (TD-74, TD-75). multipart/form-data with `target` (auction | pool | cms), `id`, `alt` and `file`.
+ * Staff photo upload (TD-74, TD-75, TD-77). multipart/form-data with `target` (auction | pool | cms | cms-image), `id`,
+ * `alt` and `file`.
  * The image is re-encoded server-side; the database call runs with the staff member's own session, so permissions,
  * MFA and the draft-only rule are enforced in SQL as well as here.
  */
@@ -94,6 +96,7 @@ export async function POST(request: Request) {
       revalidateTag(CMS_TAGS.docs, { expire: 0 });
       return Response.json({ media }, { status: 201, headers: noStore });
     }
+    if (parsed.data.target === "cms-image") revalidateTag(CMS_TAGS.docs, { expire: 0 });
     return Response.json({ media: data }, { status: 201, headers: noStore });
   } catch (error) {
     if (mediaId) await deleteStoredImage(mediaId);

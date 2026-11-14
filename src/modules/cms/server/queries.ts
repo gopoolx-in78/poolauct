@@ -56,6 +56,8 @@ export type DocumentSummary = {
 };
 export type PublicDocument = DocumentSummary & {
   body: string;
+  /** The document's own images for `![alt](media:<id>)` in the body (TD-77). */
+  images: Record<string, Media>;
   seoTitle: string | null;
   seoDescription: string | null;
 };

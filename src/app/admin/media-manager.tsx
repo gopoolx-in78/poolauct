@@ -6,7 +6,7 @@ import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { FormField, Input } from "@/components/ui/form-field";
 import { MEDIA_ACCEPT, MEDIA_MAX_PER_LISTING, mediaSrc, type Media } from "@/modules/core/media";
-import { removeCoverAction, removeMediaAction, updateMediaAction } from "./media-actions";
+import { removeBodyImageAction, removeCoverAction, removeMediaAction, updateMediaAction } from "./media-actions";
 
 type Props = {
   target: "auction" | "pool";
@@ -125,7 +125,7 @@ export function UploadForm({
   label = "Upload photo",
   done = "Photo added.",
 }: {
-  target: "auction" | "pool" | "cms";
+  target: "auction" | "pool" | "cms" | "cms-image";
   ownerId: string;
   label?: string;
   done?: string;
@@ -224,6 +224,52 @@ export function CoverManager({ documentId, cover }: { documentId: string; cover:
         label={cover ? "Replace cover" : "Upload cover"}
         done="Cover saved."
       />
+    </section>
+  );
+}
+
+/** Images for a page / post body (TD-77): upload with alt text, copy the Markdown code into the body, remove. */
+export function BodyImageManager({ documentId, items }: { documentId: string; items: Media[] }) {
+  return (
+    <section aria-labelledby="body-images-h" className="mt-6">
+      <h2 id="body-images-h" className="text-2xl">
+        Article images
+      </h2>
+      <p className="text-ink-muted mt-1 text-sm">
+        Upload an image, then paste its code into the content where it should appear. Images show on the site only in
+        this page or post, with the alt text given here. Removing an image takes it off the published version at once.
+      </p>
+      {items.length === 0 ? (
+        <p className="mt-4 text-sm">No article images yet.</p>
+      ) : (
+        <ul className="mt-4 grid gap-4 sm:grid-cols-2">
+          {items.map((m) => (
+            <li key={m.id} className="border-rule grid gap-3 border p-3">
+              <Image
+                src={mediaSrc(m.thumb.path)}
+                alt={m.alt}
+                width={m.thumb.width}
+                height={m.thumb.height}
+                unoptimized
+                className="bg-ink/5 w-full"
+              />
+              <FormField label="Code to paste" hint="Select and copy it into the content.">
+                {(a11y) => (
+                  <Input {...a11y} readOnly value={`![${m.alt}](media:${m.id})`} className="font-mono text-sm" />
+                )}
+              </FormField>
+              <form action={removeBodyImageAction}>
+                <input type="hidden" name="documentId" value={documentId} />
+                <input type="hidden" name="mediaId" value={m.id} />
+                <Button type="submit" variant="danger" size="sm" aria-label={`Remove image: ${m.alt}`}>
+                  Remove
+                </Button>
+              </form>
+            </li>
+          ))}
+        </ul>
+      )}
+      <UploadForm target="cms-image" ownerId={documentId} label="Upload image" done="Image added." />
     </section>
   );
 }

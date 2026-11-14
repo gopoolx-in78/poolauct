@@ -62,7 +62,7 @@ export function DocumentForm({ d }: { d: DocumentDefaults }) {
       />
       <FormField
         label="Content"
-        hint="Markdown: ## headings, **bold**, *italic*, lists, > quotes and [links](/poolx). HTML and images are not allowed and will be removed."
+        hint="Markdown: ## headings, **bold**, *italic*, lists, > quotes and [links](/poolx). Images: upload them under “Article images” and paste the code shown there. HTML and other images are removed."
         error={state.fieldErrors?.body}
         required
       >

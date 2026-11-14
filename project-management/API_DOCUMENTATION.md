@@ -235,14 +235,15 @@ Routes: `GET /api/cron/notifications` (Bearer `CRON_SECRET`, every minute) → `
 | `api.auction_media(p_slug)` / `api.poolx_pool_media(p_slug)` | anyone | photos of a published auction / publicly visible pool |
 | `api.auction_media_covers(p_slugs)` / `api.poolx_media_covers(p_slugs)` | anyone | `{ slug: firstPhoto }` for list cards (≤ 60 slugs) |
 | `api.cms_admin_featured_list()` / `api.cms_admin_featured_add(p_module, p_slug)` / `api.cms_admin_featured_move(p_id, p_move)` / `api.cms_admin_featured_remove(p_id)` | staff with `cms.content.manage` at aal2 | list `[{ id, module, slug, position }]`; add returns the row (ALREADY_FEATURED, TOO_MANY_FEATURED at 6, INVALID_MODULE, INVALID_SLUG); move `up` / `down`; remove (NOT_FOUND) |
+| `api.cms_admin_image_add(p_document, p)` / `api.cms_admin_image_remove(p_media)` / `api.cms_admin_image_list(p_document)` | staff with `cms.content.manage` at aal2 | add returns the image (TOO_MANY_IMAGES at 30, DOCUMENT_NOT_FOUND, INVALID_ALT); remove returns the document id (NOT_FOUND) and the server deletes the files; list = ACTIVE images in upload order |
 | `api.cms_featured()` | anyone | `{ poolx: [slug], auction: [slug] }` in order |
 | `api.poolx_pools_by_slugs(p_slugs)` / `api.auction_by_slugs(p_slugs)` | anyone | list-card JSON for the slugs that are open now (pool ACTIVE before its deadline; auction LIVE / SCHEDULED), in the given order, ≤ 12 |
 | `api.cms_admin_cover_set(p_document, p)` | staff with `cms.content.manage` at aal2 | `{ media, replacedId }` — sets or replaces the cover; called by `POST /api/media` (target `cms`), which then deletes the replaced files |
 | `api.cms_admin_cover_remove(p_document)` | same | removed media id or null; the server action deletes the files |
 | `api.cms_admin_cover_get(p_document)` | same | current cover or null |
-| `api.cms_public_documents(...)` / `api.cms_public_document(...)` | anyone | now also `cover` (photo or null) |
+| `api.cms_public_documents(...)` / `api.cms_public_document(...)` | anyone | now also `cover` (photo or null); `cms_public_document` also `images` `{ id: photo }` (TD-77) |
 | `GET /api/notifications/unread` (route) | signed-in user | `{ unread }` (no-store, private) for the header badge; 401 without a session, 503 if the count cannot be read |
-| `POST /api/media` (route) | staff at aal2, same origin | multipart `target` (auction / pool / cms), `id`, `alt`, `file` (JPEG / PNG / WebP ≤ 10 MB) → 201 `{ media }`; 400 invalid image or details, 403 not allowed / cross-site, 413 too large, 429 over 60 uploads / hour |
+| `POST /api/media` (route) | staff at aal2, same origin | multipart `target` (auction / pool / cms / cms-image), `id`, `alt`, `file` (JPEG / PNG / WebP ≤ 10 MB) → 201 `{ media }`; 400 invalid image or details, 403 not allowed / cross-site, 413 too large, 429 over 60 uploads / hour |
 | `api.launch_readiness()` | service_role only | `{ ok, checks: [{ key, ok, detail }] }` — deposit policy set by staff, no `.test` accounts, no sandbox payments, Super Admin with MFA, RLS on all application tables, service-role timeouts. Counts only. |
 
 ## Error codes (initial)

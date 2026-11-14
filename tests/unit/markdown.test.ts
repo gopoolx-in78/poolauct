@@ -51,3 +51,45 @@ describe("CMS Markdown (XSS)", () => {
     expect(render("# Big title")).not.toContain("<h1");
   });
 });
+
+describe("CMS Markdown images (TD-77)", () => {
+  const id = "c2000000-0000-4000-8000-000000000001";
+  const other = "c2000000-0000-4000-8000-000000000002";
+  const images = {
+    [id]: {
+      id,
+      alt: "Members unpacking a pooled delivery",
+      display: { path: `${id}/display.webp`, width: 1600, height: 900 },
+      thumb: { path: `${id}/thumb.webp`, width: 480, height: 270 },
+    },
+  };
+  const withImages = (source: string) => renderToStaticMarkup(createElement(Markdown, { source, images }));
+
+  it("shows the document's own image with its stored size and alt text", () => {
+    const html = withImages(`Intro\n\n![typed alt](media:${id})`);
+    expect(html).toMatch(/<img[^>]+alt="Members unpacking a pooled delivery"/);
+    expect(html).toMatch(new RegExp(`src="[^"]*/storage/v1/object/public/public-media/${id}/display\\.webp"`));
+    expect(html).toContain('width="1600"');
+    expect(html).toContain('height="900"');
+    expect(html).not.toContain("typed alt");
+  });
+
+  it("drops unknown, external, relative, data and script image sources", () => {
+    for (const src of [
+      `media:${other}`,
+      "https://tracker.example/pixel.png",
+      "//evil.example/a.png",
+      "a.png",
+      "data:image/png;base64,AAAA",
+      "javascript:alert(1)",
+      `media:${id}?x=1`,
+    ]) {
+      const html = withImages(`![x](${src})`);
+      expect(html, src).not.toMatch(/<img/i);
+    }
+  });
+
+  it("shows nothing without the document's image list", () => {
+    expect(render(`![x](media:${id})`)).not.toMatch(/<img/i);
+  });
+});

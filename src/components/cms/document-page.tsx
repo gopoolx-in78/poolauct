@@ -88,7 +88,7 @@ export async function DocumentView({ kind, slug }: { kind: DocumentKind; slug: s
             className="bg-ink/5 mt-6 w-full"
           />
         ) : null}
-        <Markdown source={doc.body} className="mt-6 text-lg" />
+        <Markdown source={doc.body} images={doc.images ?? {}} className="mt-6 text-lg" />
       </article>
     </Container>
   );

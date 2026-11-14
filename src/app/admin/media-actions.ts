@@ -59,3 +59,17 @@ export async function removeCoverAction(formData: FormData) {
   }
   redirect(outcome(`/admin/content/${id}`, error, "cover-removed"));
 }
+
+/** Removes an image from a page / post body (TD-77): SQL marks it REMOVED, then the files are deleted. */
+export async function removeBodyImageAction(formData: FormData) {
+  const documentId = z.uuid().parse(str(formData, "documentId"));
+  const mediaId = z.uuid().parse(str(formData, "mediaId"));
+  await requireStaff(`/admin/content/${documentId}`, "cms.content.manage");
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.schema("api").rpc("cms_admin_image_remove", { p_media: mediaId });
+  if (!error) {
+    await deleteStoredImage(mediaId);
+    updateTag(CMS_TAGS.docs);
+  }
+  redirect(outcome(`/admin/content/${documentId}`, error, "image-removed"));
+}

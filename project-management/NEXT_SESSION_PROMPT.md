@@ -3,7 +3,7 @@
 **Project:** Dual marketplace — PoolX (group buying) + Auctions (second-hand assets, mandatory refundable deposits). Parent brand pending (OD-01); interim name "PoolX & Auctions".
 **Current phase:** Phase 10 (Deployment & launch) — part 1 merged (launch gate, error reporting, restore drill, runbooks); part 2: hosting decided (Hostinger KVM VPS + Supabase Cloud Mumbai, TD-73) and `deploy/` server files written. Nothing deployed yet.
 **Last completed milestone:** central notification service — 28 PoolX / auction events raised by database triggers, in-app inbox, preferences, e-mail delivery worker with retries (Mailpit test inbox locally), admin delivery log, auction reminders.
-**Git:** `master` at `c7f7541` (Phase 10 parts 1–2, media pipeline, blog covers, unread badge, featured listings, article images); branch `phase-10-search` holds the combined search page (may be uncommitted — check `git status`). No remote.
+**Git:** `master` at `56d5682` (Phase 10 parts 1–2, media pipeline, blog covers, unread badge, featured listings, article images, combined search); branch `phase-10-sweep-stability` holds an a11y-sweep test fix (may be uncommitted — check `git status`). No remote.
 **Database changes:** migrations 0001–0020 (DATABASE_SCHEMA.md "Applied migrations").
 **Tests:** unit 99 · pgTAP 546 · integration 3 · build · e2e (full suite with `--workers=1`, TD-38) — see TESTING_REPORT.
 **Local env:** `.env.local` needs `EMAIL_PROVIDER=mailpit`, `EMAIL_FROM`, `MAILPIT_URL` for e-mail locally (see `.env.example`).
@@ -15,7 +15,7 @@ Read AGENTS.md (Next.js 16 docs in `node_modules/next/dist/docs/`), PROJECT_OVER
 (expect 546/546) → report status.
 
 ## Next exact tasks (ask the owner which first)
-1. **Commit the combined search** (branch `phase-10-search`) when the owner asks; merge to `master` when asked.
+1. **Commit the a11y sweep fix** (branch `phase-10-sweep-stability`) when the owner asks; merge to `master` when asked.
 2. **First staging deploy** once the owner has bought the Hostinger VPS and created the staging Supabase project (Mumbai):
    follow DEPLOYMENT_GUIDE "Hostinger VPS" step by step (the owner does purchases, DNS and anything needing their
    credentials); prove `nginx -t`, the systemd unit, `deploy.sh`, `rollback.sh` and the cron runner on the real server;
@@ -32,6 +32,7 @@ Read AGENTS.md (Next.js 16 docs in `node_modules/next/dist/docs/`), PROJECT_OVER
   Show images with `mediaSrc()` + `next/image` `unoptimized` and the stored width / height. CMS covers: target `cms`;
   the route deletes replaced files and calls `revalidateTag(CMS_TAGS.docs, { expire: 0 })` (server actions use `updateTag`).
   Article images: target `cms-image`; never widen the Markdown sanitiser beyond the `media:` image scheme.
+- E2E: don't filter `a11y-private.spec.ts` with `-g`: the admin test signs in with the account the first test creates.
 - E2E: Supabase Auth limits sign-ups per IP for a few minutes on the local stack; after many account-creating runs in a
   row, wait before rerunning ("Too many attempts" on /register).
 - VPS: production settings live only in `/etc/poolx/poolx.env`; the app listens on 127.0.0.1:3000 behind Nginx, which

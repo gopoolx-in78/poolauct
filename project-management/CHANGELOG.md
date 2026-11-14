@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-14 — Session 1 (Phase 10: test stability) — branch `phase-10-sweep-stability`
+- `a11y-private.spec.ts`: the one-h1 check waits for streamed content (up to 10 s) instead of counting instantly, and
+  reports the count it found.
+
 ## 2026-11-14 — Session 1 (Phase 10: combined search) — branch `phase-10-search`
 - `/search` page: one query over pools and auctions (6 each, links to the module result pages, empty state, noindex).
 - Header search link (desktop) and "Search" in the mobile menu; between 1024 and 1279 px the user menu shows only its

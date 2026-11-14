@@ -72,7 +72,13 @@ async function sweep(page: Page, paths: string[]) {
       // Pages stream behind Suspense: wait for loading placeholders to clear rather than for network idle (some pages
       // keep connections open).
       await expect(page.locator("main .animate-pulse")).toHaveCount(0, { timeout: 20_000 });
-      if ((await page.locator("h1").count()) !== 1) findings.push({ path, width, problem: "expected exactly one h1" });
+      // The page's content can still be streaming in just after the placeholder clears (seen once on /admin/roles at
+      // 320 px): allow it to settle, then require exactly one h1.
+      try {
+        await expect(page.locator("h1")).toHaveCount(1, { timeout: 10_000 });
+      } catch {
+        findings.push({ path, width, problem: `expected exactly one h1, found ${await page.locator("h1").count()}` });
+      }
       const overflow = await page.evaluate(
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
       );

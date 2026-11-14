@@ -22,6 +22,8 @@ Last updated: 2026-11-14
 | `playwright test search, foundation --workers=1` (both projects) | ✔ 32 passed · 2 skipped (by design) — header link to /search, noindex, search by a unique word finds the pool, no auction section when none match, axe clean, empty state with links; mobile menu reaches /search without horizontal overflow; public pages unchanged |
 | Visual check (temporary Playwright screenshots) | results at 1280 px light and 375 px dark |
 | Auction results on /search | not covered by a new e2e (no auction fixture helper); they use the same `listAuctions` search the auction specs cover |
+| Header at 1024 / 1280 px signed in with a long name (temporary screenshot check) | first version: no overflow, but the nav labels wrapped to two lines at 1024 px; fixed by showing only the user icon below 1280 px (name kept as the accessible name); recheck: one-line nav, no overflow |
+| `playwright test notifications, a11y-private --project=desktop-chromium` (after the commit) | 3 passed · 1 failed — the admin sweep reported "expected exactly one h1" on `/admin/roles` at 320 px only. The full a11y spec rerun passed 2/2, so the finding was intermittent: the sweep counted headings the moment the loading placeholder cleared, while content was still streaming in. Hardened the sweep to wait up to 10 s for exactly one h1 (a real missing / duplicate h1 still fails, now with the count); rerun ✔ 2 passed · 2 skipped (mobile by design). Notifications ✔ 2/2 (user menu still opened by the member's name) |
 
 ### 2026-11-14 — Phase 10 images inside articles
 | Command | Result |

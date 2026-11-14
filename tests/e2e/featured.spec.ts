@@ -26,7 +26,7 @@ test("content managers feature open pools on the homepage, re-order and remove t
   for (const slug of [first.slug, second.slug, closed.slug]) {
     await form.getByLabel(/^Listing web address name/).fill(slug);
     await form.getByRole("button", { name: "Feature" }).click();
-    await expect(page.getByRole("main").getByText(slug, { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: `Remove from featured: ${slug}` })).toBeVisible();
   }
   await form.getByLabel(/^Listing web address name/).fill(first.slug);
   await form.getByRole("button", { name: "Feature" }).click();

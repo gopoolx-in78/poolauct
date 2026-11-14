@@ -15,6 +15,16 @@ Last updated: 2026-11-14
 
 ## Run log
 
+### 2026-11-14 — Phase 10 homepage featured listings
+| Command | Result |
+|---|---|
+| `pnpm lint` / `tsc --noEmit` / `prettier --check` (changed files) / `pnpm build` | ✔ |
+| `pnpm test` | ✔ 96/96 |
+| `pnpm test:db` | ✔ 13 files, 531 assertions — new `0013_featured_listings.test.sql` (20: RLS, anon / customer / other staff / non-MFA refused, duplicate, invalid module and slug, 6-per-marketplace cap, order, move, public slugs in order, draft / unknown / closed pools and draft / unknown auctions left out, remove, audit) |
+| `playwright test featured, a11y-private, foundation, cms --workers=1` (both projects) | 33 passed · 2 failed · 6 skipped · 1 not run. Failures: (1) the signed-in account a11y sweep could not register its test user — "Too many attempts" (registration rate limit after many accounts created this session; the sweep never reached its pages); (2) `featured.spec.ts` — a test bug I introduced when hardening a wait (a not-shown listing prints its slug twice → strict-mode error). The admin a11y sweep, which includes `/admin/content/featured`, passed in light and dark |
+| Rerun after fixing the test: `featured.spec.ts` + `a11y-private.spec.ts --project=desktop-chromium` | ✔ 3/3 — feature three pools (one closed → "Not shown"), duplicate refused, axe clean, homepage "Open now" shows only open pools in order, re-order, remove, section disappears, 6 audit rows; both a11y sweeps clean |
+| Visual check (temporary Playwright screenshots) | admin page at 1280 px; homepage section at 1280 px light and 375 px dark |
+
 ### 2026-11-14 — Phase 10 header unread badge
 | Command | Result |
 |---|---|

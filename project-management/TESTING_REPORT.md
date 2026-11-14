@@ -15,6 +15,15 @@ Last updated: 2026-11-14
 
 ## Run log
 
+### 2026-11-14 — Phase 10 header unread badge
+| Command | Result |
+|---|---|
+| `pnpm lint` / `tsc --noEmit` / `prettier --check src tests --end-of-line auto` / `pnpm build` | ✔ |
+| `playwright test notifications, a11y-private, foundation, auth --workers=1` (first version, badge rendered on the server only) | 44 passed · 1 failed · 16 skipped · 1 not run — the a11y sweep (axe, overflow, light + dark) passed with the bell in the header; the notifications test failed because the header kept the count from before the payment: the root layout is not re-rendered on client navigation. Fixed by re-reading the count in the browser on navigation / tab focus |
+| `playwright test tests/e2e/notifications.spec.ts --project=desktop-chromium` (final) | ✔ 2/2 — badge after navigating to the inbox, cleared after "Mark all as read", 401 for signed-out callers |
+| Visual check (temporary Playwright screenshot) | header at 375 px dark and 1440 px light with a 3-unread badge |
+| a11y-private sweep on the final version / full e2e suite | not rerun (markup of the bell unchanged since the passing sweep) |
+
 ### 2026-11-14 — Phase 10 blog covers
 | Command | Result |
 |---|---|

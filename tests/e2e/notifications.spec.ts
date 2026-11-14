@@ -40,6 +40,8 @@ test("a pool payment is notified in the app and by e-mail; the user manages read
   page,
   baseURL,
 }) => {
+  // the header badge endpoint needs a session
+  expect((await fetch(`${baseURL}/api/notifications/unread`)).status).toBe(401);
   const unauthorized = await fetch(`${baseURL}/api/cron/notifications`, { headers: { authorization: "Bearer wrong" } });
   expect(unauthorized.status).toBe(401);
 
@@ -55,6 +57,9 @@ test("a pool payment is notified in the app and by e-mail; the user manages read
   await page.getByRole("button", { name: "Nina Notify" }).click();
   await page.getByRole("navigation", { name: "Account menu" }).getByRole("link", { name: "Notifications" }).click();
   await expect(page).toHaveURL(/\/account\/notifications$/);
+  // the header bell re-reads the unread count on navigation (8.11)
+  await expect(page.getByRole("banner").getByRole("link", { name: /^Notifications, \d+ unread$/ })).toBeVisible();
+  await expect(page.getByRole("banner").getByTestId("unread-badge")).toHaveText(/^\d+$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Notifications");
   const list = page.getByRole("main").getByRole("list").last();
   await expect(list).toContainText(`You joined ${pool.title}`);
@@ -66,6 +71,9 @@ test("a pool payment is notified in the app and by e-mail; the user manages read
   await expect(page.getByRole("button", { name: "Mark “Contribution confirmed” as read" })).toHaveCount(0);
   await page.getByRole("button", { name: "Mark all as read" }).click();
   await expect(page.getByRole("link", { name: "Unread (0)" })).toBeVisible();
+  // the header badge clears with the inbox
+  await expect(page.getByRole("banner").getByRole("link", { name: "Notifications", exact: true })).toBeVisible();
+  await expect(page.getByRole("banner").getByTestId("unread-badge")).toHaveCount(0);
   await page.getByRole("link", { name: "Unread (0)" }).click();
   await expect(page.getByText("You’re all caught up")).toBeVisible();
 

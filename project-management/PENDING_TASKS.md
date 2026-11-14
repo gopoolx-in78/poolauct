@@ -106,7 +106,7 @@ See PROJECT_ROADMAP.md phases 7–10.
 - [ ] 8.8 Real e-mail provider adapter — **blocked on OD-07** (provider, sender domain, SPF/DKIM)
 - [ ] 8.9 SMS / WhatsApp adapters — **blocked on OD-07** and phone verification (2.6)
 - [ ] 8.10 Schedule `/api/cron/notifications` every minute — in `deploy/cron/poolx.cron`; install on the VPS (10.10)
-- [ ] 8.11 Unread badge in the site header (request-time fetch inside Suspense)
+- [x] 8.11 Unread badge in the site header (bell link; server count, re-read on navigation / tab focus) — 2026-11-14
 - [ ] 8.12 Retention policy for old notifications / deliveries (owner decision with the DPDP review)
 - [ ] 8.13 Notify sellers about PoolX pool events once PoolX sellers have accounts (sellers are records only today)
 

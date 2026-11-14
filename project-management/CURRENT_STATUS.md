@@ -3,12 +3,17 @@
 **Date:** 2026-11-14
 **Phase:** 10 — Deployment & launch — **in progress**. Part 1 (launch gate, error reporting, restore drill, runbooks)
 committed and merged to `master` (`265ed70`). Part 2 (Hostinger VPS deploy files) merged (`de2b837`). Media pipeline merged
-(`ddea3aa`). Blog / page covers built on branch `phase-10-cms-covers` — **uncommitted**. Nothing is deployed; no server or
-Supabase project exists yet.
-**Git:** `master` at `ddea3aa`; branch `phase-10-cms-covers` with uncommitted cover work. No remote.
+(`ddea3aa`); blog / page covers merged (`15e9038`). Header unread badge built on branch `phase-10-unread-badge` —
+**uncommitted**. Nothing is deployed; no server or Supabase project exists yet.
+**Git:** `master` at `15e9038`; branch `phase-10-unread-badge` with uncommitted work. No remote.
 
 ## What exists and is verified
-### Blog / page covers (this session, branch `phase-10-cms-covers`, uncommitted)
+### Header unread badge (this session, branch `phase-10-unread-badge`, uncommitted)
+- Signed-in users see a bell next to their name; it shows the number of unread in-app notifications ("99+" above 99),
+  is announced as "Notifications, N unread" and links to the inbox. The count refreshes on every page change and when
+  the tab is shown again (8.11).
+
+### Blog / page covers (this session, merged)
 - Content managers with MFA can upload, replace and remove one cover image per page or blog post (same upload checks and
   WebP re-encoding as listing photos). Published posts show it as a hero image and in link previews (Open Graph / Twitter);
   the blog list shows thumbnails. Images inside article text are not supported yet (7.8b). TD-75.

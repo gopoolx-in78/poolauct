@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-14 — Session 1 (Phase 10: header unread badge) — branch `phase-10-unread-badge`
+- Header bell link to the inbox with an unread badge (8.11): `NotificationsLink` (client) gets the first count from the
+  server (`api.notifications_unread_count`) and re-reads `GET /api/notifications/unread` on navigation and tab focus,
+  because the root layout is not re-rendered on client navigation.
+- Tests: `notifications.spec.ts` checks the badge, its clearing after "Mark all as read" and the 401 for signed-out callers.
+
 ## 2026-11-14 — Session 1 (Phase 10: blog covers) — branch `phase-10-cms-covers`
 - Migration 0018: `cms.document_covers`, `api.cms_admin_cover_{set,remove,get}`, public document functions return `cover`;
   pgTAP `0012_cms_covers.test.sql` (16).

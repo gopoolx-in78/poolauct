@@ -3,11 +3,11 @@
 **Project:** Dual marketplace — PoolX (group buying) + Auctions (second-hand assets, mandatory refundable deposits). Parent brand pending (OD-01); interim name "PoolX & Auctions".
 **Current phase:** Phase 10 (Deployment & launch) — part 1 merged (launch gate, error reporting, restore drill, runbooks); part 2: hosting decided (Hostinger KVM VPS + Supabase Cloud Mumbai, TD-73) and `deploy/` server files written. Nothing deployed yet.
 **Last completed milestone:** central notification service — 28 PoolX / auction events raised by database triggers, in-app inbox, preferences, e-mail delivery worker with retries (Mailpit test inbox locally), admin delivery log, auction reminders.
-**Git:** `master` at `ddea3aa` (Phase 10 parts 1–2 + media pipeline); branch `phase-10-cms-covers` holds blog / page covers (may be uncommitted — check `git status`). No remote.
+**Git:** `master` at `15e9038` (Phase 10 parts 1–2, media pipeline, blog covers); branch `phase-10-unread-badge` holds the header unread badge (may be uncommitted — check `git status`). No remote.
 **Database changes:** migrations 0001–0018 (DATABASE_SCHEMA.md "Applied migrations").
 **Tests:** unit 96 · pgTAP 511 · integration 3 · build · e2e (full suite with `--workers=1`, TD-38) — see TESTING_REPORT.
 **Local env:** `.env.local` needs `EMAIL_PROVIDER=mailpit`, `EMAIL_FROM`, `MAILPIT_URL` for e-mail locally (see `.env.example`).
-**Known gaps:** real e-mail provider / SMS / WhatsApp (OD-07); cron schedules (files ready in `deploy/cron`, install on the VPS); header unread badge (8.11); notification retention (8.12); featured picker (7.7); images inside article bodies (7.8b); private KYC documents (4.8b, OD-05 / OD-09); inspection/RC staff UI; seller self-listing; seller settlements (OD-03); Razorpay (OD-02) — no live payments; deposit values OD-04, bidder KYC OD-05, forfeiture policy OD-11.
+**Known gaps:** real e-mail provider / SMS / WhatsApp (OD-07); cron schedules (files ready in `deploy/cron`, install on the VPS); notification retention (8.12); featured picker (7.7); images inside article bodies (7.8b); private KYC documents (4.8b, OD-05 / OD-09); inspection/RC staff UI; seller self-listing; seller settlements (OD-03); Razorpay (OD-02) — no live payments; deposit values OD-04, bidder KYC OD-05, forfeiture policy OD-11.
 
 ## Start-of-session protocol
 Read AGENTS.md (Next.js 16 docs in `node_modules/next/dist/docs/`), PROJECT_OVERVIEW, CURRENT_STATUS, PENDING_TASKS, this file →
@@ -15,7 +15,7 @@ Read AGENTS.md (Next.js 16 docs in `node_modules/next/dist/docs/`), PROJECT_OVER
 (expect 511/511) → report status.
 
 ## Next exact tasks (ask the owner which first)
-1. **Commit the blog covers** (branch `phase-10-cms-covers`) when the owner asks; merge to `master` when asked.
+1. **Commit the header unread badge** (branch `phase-10-unread-badge`) when the owner asks; merge to `master` when asked.
 2. **First staging deploy** once the owner has bought the Hostinger VPS and created the staging Supabase project (Mumbai):
    follow DEPLOYMENT_GUIDE "Hostinger VPS" step by step (the owner does purchases, DNS and anything needing their
    credentials); prove `nginx -t`, the systemd unit, `deploy.sh`, `rollback.sh` and the cron runner on the real server;
@@ -23,7 +23,8 @@ Read AGENTS.md (Next.js 16 docs in `node_modules/next/dist/docs/`), PROJECT_OVER
 3. **Other owner decisions:** domain (OD-01), error tracker (OD-08), analytics + consent, Git remote (1.13b), live payments
    (OD-02/03), e-mail provider (OD-07), deposit values (OD-04). Then `pnpm launch:check` green and the final audit.
 4. **Media follow-ups:** images inside article bodies (7.8b); private document uploads after OD-05 / OD-09.
-5. **Search (R-H2, §16)** and small follow-ups: header unread badge (8.11); featured picker (7.7).
+5. **Small follow-ups:** featured picker (7.7). Search (R-H2) already exists per module (query, category, sort / view,
+   pagination, empty states); a combined cross-module search page is optional.
 
 ## Patterns to follow
 - Media: never let a client write to Storage or choose a path. Uploads go through `POST /api/media` (re-encode with
@@ -42,6 +43,8 @@ Read AGENTS.md (Next.js 16 docs in `node_modules/next/dist/docs/`), PROJECT_OVER
 - Data in notifications: amounts as paise **text**, masked references only, internal links only.
 - Theme: add a control by extending **both** `cms.theme_config_problem` (new migration) and `themeConfigSchema`, then the compiler
   and editor; keep `DEFAULT_THEME` valid (unit test) and regenerate the pgTAP default config if needed. Never accept raw CSS.
+- Root layout (header) is not re-rendered on client navigation: per-user header data must refresh in the browser
+  (see `notifications-link.tsx`) or be invalidated by a server action.
 - CMS reads: `src/modules/cms/server/queries.ts` (`"use cache"` + `cacheTag`); admin actions call `updateTag(CMS_TAGS.*)`.
 - HTTP surface = `api.*` functions only; explicit grants; pgTAP permission checks (`set local role anon` for anon assertions).
 - Integrity/constraint trigger functions are SECURITY DEFINER (TD-40). Same-event triggers fire alphabetically — name guards so

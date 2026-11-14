@@ -12,7 +12,7 @@ const base =
   "active:translate-y-px";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-ink text-paper hover:bg-ink/85",
+  primary: "bg-brand text-brand-ink hover:bg-brand/85",
   accent: "bg-accent text-accent-ink hover:bg-accent/85",
   secondary: "border border-ink text-ink hover:bg-ink hover:text-paper",
   ghost: "text-ink hover:bg-ink/5",

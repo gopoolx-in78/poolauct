@@ -41,6 +41,13 @@ Suspension ends all sessions and removes every staff permission incl. RLS reads 
 last Super Admin protected ☑ (pgTAP) · permission edits audited with reason ☑ (pgTAP) · CSV exports: permission + aal2 + 404 otherwise ☑ (e2e),
 formula injection neutralised ☑ (unit), range-limited and audited ☑ (pgTAP) · admin routes server-checked per permission ☑ (e2e)
 
+## Theme & CMS (Phase 7)
+Theme config allowlisted in SQL (CHECK) and zod; no raw CSS / HTML / JS accepted ☑ (pgTAP + unit) · compiler emits allowlisted
+custom properties only and refuses `<` / `\` ☑ (unit) · menu / banner / footer links internal-only ☑ (pgTAP + unit + e2e) ·
+WCAG contrast ≥ 4.5 enforced ☑ (pgTAP + unit) · Markdown without raw HTML, images or unsafe URLs ☑ (unit + e2e) · admin tokens
+pinned (`[data-admin]`) ☑ (unit) · CMS cannot touch business data ☑ (acceptance 20, pgTAP) · every publish / rollback /
+content change audited ☑ (pgTAP + e2e) · theme publish needs `cms.theme.publish` (content managers cannot) ☑ (pgTAP + e2e)
+
 ## Headers
 CSP ◐ verified present (`tests/e2e/foundation.spec.ts`) — `script-src 'unsafe-inline'` accepted risk TD-16, no third-party script origins, `object-src 'none'`, `frame-ancestors 'none'`, `base-uri`/`form-action 'self'` ·
 X-Frame-Options DENY ☑ · X-Content-Type-Options ☑ · Referrer-Policy ☑ · Permissions-Policy ☑ (header set) · COOP ◐ · HSTS ◐ (prod only, unverified until deployed) · `X-Powered-By` removed ☑ ·

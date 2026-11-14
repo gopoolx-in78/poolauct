@@ -6,14 +6,22 @@ import type { NavItem } from "@/config/site";
 import { cn } from "@/lib/cn";
 
 /** Pure link list; `pathname` is null while the current URL is not yet known (prerendered shell). */
-export function MainNavLinks({ items, pathname }: { items: NavItem[]; pathname: string | null }) {
+export function MainNavLinks({
+  items,
+  pathname,
+  className,
+}: {
+  items: NavItem[];
+  pathname: string | null;
+  className?: string;
+}) {
   return (
-    <nav aria-label="Main" className="hidden lg:block">
+    <nav aria-label="Main" className={className ?? "hidden lg:block"}>
       <ul className="flex items-center gap-1">
         {items.map((item) => {
           const active = pathname !== null && (item.href === "/" ? pathname === "/" : pathname.startsWith(item.href));
           return (
-            <li key={item.href}>
+            <li key={`${item.href}|${item.label}`}>
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
@@ -32,7 +40,7 @@ export function MainNavLinks({ items, pathname }: { items: NavItem[]; pathname: 
   );
 }
 
-export function MainNav({ items }: { items: NavItem[] }) {
+export function MainNav({ items, className }: { items: NavItem[]; className?: string }) {
   const pathname = usePathname();
-  return <MainNavLinks items={items} pathname={pathname} />;
+  return <MainNavLinks items={items} pathname={pathname} className={className} />;
 }

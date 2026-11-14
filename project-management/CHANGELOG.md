@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-11-14 — Session 1 (Phase 7: theme & CMS) — branch `phase-7-theme-cms`
+- Migration 0013: `cms.theme_versions`, `cms.documents`, `cms.document_revisions` (append-only), `cms.faqs`, `cms.seo_entries`;
+  validators `cms.theme_config_problem`, `has_exact_keys`, `is_plain_text`, `is_internal_href`, `is_hex`, `contrast`;
+  public API `cms_public_site`, `cms_public_faqs`, `cms_public_documents`, `cms_public_document`, `cms_public_seo`; staff API
+  `cms_theme_*`, `cms_admin_*` (all audited).
+- Theme: `src/modules/theme` (schema, templates, compiler, `ADMIN_THEME_CSS`); `globals.css` font / scale / brand-ink /
+  secondary tokens; IBM Plex Serif added; header / footer / banners driven by the published design; primary button uses
+  `bg-brand text-brand-ink`.
+- Pages: `/faq`, `/blog`, `/blog/[slug]`, `/info/[slug]`; homepage sections in configured order; SEO overrides on public pages;
+  admin `/admin/theme`, `/admin/theme/editor`, `/admin/content` (+ new, [id], faqs), `/admin/seo`.
+- Dependencies: `react-markdown` 10.1.0, `rehype-sanitize` 6.0.0.
+- Tests: pgTAP `0007_cms_theme.test.sql` (71); unit `theme.test.ts` (12), `markdown.test.ts` (5); Playwright `cms.spec.ts` (3).
+- Test fixes: two pgTAP assertions assumed an empty dev database (blog post count; number of auctions closed by the job) —
+  now scoped to the test's own rows.
+
 ## 2026-11-13 — Session 1 (Phase 6: central admin) — branch `phase-6-admin`
 - Migration 0012: `has_permission` checks profile status; suspension columns + CHECK; `user_roles.revoke_reason`; new security
   event kinds; `ledger.account_balance`; `api.admin_metrics`, `admin_list_users`, `admin_get_user`, `admin_set_user_status`,

@@ -122,6 +122,29 @@ Routes: `/admin`, `/admin/users`, `/admin/users/[id]`, `/admin/roles`, `/admin/s
 `/admin/audit` (server actions in each folder's `actions.ts`, redirecting with `?notice=` / `?error=`);
 `GET /admin/finance/exports/csv?kind=&domain=&from=YYYY-MM-DD&to=YYYY-MM-DD` → `text/csv` (404 without permission, 400 invalid).
 
+### Phase 7 — theme & CMS (implemented)
+Public functions are granted to `anon` and `authenticated` and return published data only. Staff functions are SECURITY
+DEFINER, `authenticated` only, checked with `core.require_permission`, and write `core.audit_logs`.
+
+| Function | Permission | Notes |
+|---|---|---|
+| `cms_public_site()` | public | published design `{id, config, publishedAt}` or null (site falls back to the shipped design) |
+| `cms_public_faqs()` / `cms_public_seo()` | public | published FAQs; SEO overrides by route key |
+| `cms_public_documents(p_kind, p_limit, p_offset)` / `cms_public_document(p_kind, p_slug)` | public | `{total, items}`; one published document with body |
+| `cms_theme_overview()` | `cms.theme.edit` or `cms.theme.publish` | published, draft, version history |
+| `cms_theme_save_draft(p_config, p_label)` | `cms.theme.edit` | `INVALID_THEME: <problem>` |
+| `cms_theme_discard_draft(p_reason)` | `cms.theme.edit` | |
+| `cms_theme_publish(p_note)` | `cms.theme.publish` | note ≥ 10; audited `cms.theme.published` |
+| `cms_theme_rollback(p_version, p_reason)` | `cms.theme.publish` | publishes a copy as a new version; `INVALID_REQUEST` if already live, `NOT_FOUND` if never published |
+| `cms_admin_list_documents(p_kind)` / `cms_admin_get_document(p_id)` | `cms.content.manage` | with revisions |
+| `cms_admin_save_document(p_id, p_kind, p_slug, p_title, p_summary, p_body, p_seo_title, p_seo_description, p_note)` | `cms.content.manage` | new revision; `INVALID_SLUG`, `SLUG_TAKEN`, `SLUG_LOCKED` |
+| `cms_admin_document_action(p_id, p_action PUBLISH/UNPUBLISH/RESTORE, p_revision, p_reason)` | `cms.content.manage` | |
+| `cms_admin_list_faqs()` / `cms_admin_save_faq(p_id, p_topic, p_question, p_answer, p_sort, p_status)` | `cms.content.manage` | audited `cms.faq.saved` |
+| `cms_admin_list_seo()` / `cms_admin_save_seo(p_route, p_title, p_description)` | `seo.manage` | audited `cms.seo.saved` |
+
+Routes: public `/faq`, `/blog`, `/blog/[slug]`, `/info/[slug]`; admin `/admin/theme`, `/admin/theme/editor`, `/admin/content`
+(+ `/new`, `/[id]`, `/faqs`), `/admin/seo` (server actions in each folder's `actions.ts`; publish actions call `updateTag`).
+
 ## Planned contracts
 > All endpoints: JSON, zod-validated, typed responses `{ data } | { error: { code, message } }`, no internal details in errors.
 > Mutations: authenticated, Origin-checked, rate-limited, `Idempotency-Key` header required for payment/bid/refund mutations.

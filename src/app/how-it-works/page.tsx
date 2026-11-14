@@ -1,14 +1,20 @@
 import { ButtonLink } from "@/components/ui/button";
 import { Breadcrumbs, Container, SectionHeading } from "@/components/ui/primitives";
 import { site } from "@/config/site";
+import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
+import { seoFor } from "@/modules/cms/server/queries";
 
-export const metadata = pageMetadata({
+const META = {
   title: "How it works — PoolX buying pools and online auctions",
   description:
     "Step-by-step guide to joining a PoolX buying pool and to bidding in an online auction, including contributions, deposits and refunds.",
   path: "/how-it-works",
-});
+};
+
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({ ...META, ...(await seoFor("how-it-works", META)) });
+}
 
 const poolx = [
   "Find a pool and read its tiers, deadline, contribution and withdrawal rules.",

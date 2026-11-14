@@ -92,6 +92,16 @@ async function AdminHome() {
       ],
     },
     {
+      title: "Design & content",
+      links: [
+        { href: "/admin/theme", label: "Theme & homepage", show: has("cms.theme.edit", "cms.theme.publish") },
+        { href: "/admin/content?kind=PAGE", label: "Pages", show: has("cms.content.manage") },
+        { href: "/admin/content?kind=POST", label: "Blog posts", show: has("cms.content.manage") },
+        { href: "/admin/content/faqs", label: "FAQs", show: has("cms.content.manage") },
+        { href: "/admin/seo", label: "SEO", show: has("seo.manage") },
+      ],
+    },
+    {
       title: "Finance & audit",
       links: [
         { href: "/admin/finance/payments", label: "Payments", show: has("finance.ledger.read") },

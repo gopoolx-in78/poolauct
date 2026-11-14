@@ -217,7 +217,7 @@ update auction.auctions set ends_at = clock_timestamp() - interval '1 second' wh
 select throws_ok($$ select pg_temp.bid('b2000000-0000-0000-0000-00000000000b', (select v::uuid from t where k = 'fixed'), 70000000, 'bob-late-xxxxx') $$,
   'P0001', 'AUCTION_NOT_LIVE: this auction is not accepting bids', 'Test 9: a bid after closing time is rejected');
 set local role service_role;
-select is(api.auction_close_due(), 1, 'the scheduled job closes the ended auction');
+select ok(api.auction_close_due() >= 1, 'the scheduled job closes the ended auction (other due auctions in a dev database may close too)');
 reset role;
 select is(auction.close_auction((select v::uuid from t where k = 'fixed')), 'WON', 'closing again is idempotent');
 select is((select count(*)::int from auction.results where auction_id = (select v::uuid from t where k = 'fixed')), 1, 'exactly one result');

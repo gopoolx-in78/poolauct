@@ -2,8 +2,9 @@
 
 /*
  * Design tokens — see project-management/DESIGN_SYSTEM.md.
- * Public tokens may later be overridden by the theme manager (allowlisted keys only).
- * Admin UI must use the fixed `--admin-*` set (added in Phase 6), never these overridable tokens.
+ * The published theme (theme manager, Phase 7) overrides the allowlisted tokens below via a compiled <style> in the
+ * root layout. The admin area re-pins the shipped values on [data-admin] (TD-13). Utilities read tokens with var()
+ * at the element, so scoped overrides work for colours, fonts and type sizes.
  */
 :root {
   color-scheme: light;
@@ -14,6 +15,8 @@
   --color-ink-muted: #55534d;
   --color-rule: #d9d5cc;
   --color-brand: #141412;
+  --color-brand-ink: #f7f5f0;
+  --color-secondary: #efebe3;
 
   --color-poolx: #0b7a57;
   --color-poolx-ink: #ffffff;
@@ -30,6 +33,10 @@
   --color-accent-ink: var(--color-paper);
 
   --radius: 4px;
+  --theme-font-display: var(--font-fraunces), Georgia, serif;
+  --theme-font-text: var(--font-plex-sans), system-ui, sans-serif;
+  --heading-scale: 1;
+  --body-scale: 1;
   --shadow-overlay: 0 8px 24px rgb(0 0 0 / 0.12);
 
   --duration-micro: 120ms;
@@ -47,6 +54,8 @@
     --color-ink-muted: #a8a59c;
     --color-rule: #2c2b27;
     --color-brand: #f2f0ea;
+    --color-brand-ink: #0e0e0c;
+    --color-secondary: #1d1c19;
     --color-poolx: #3ddc97;
     --color-poolx-ink: #06281c;
     --color-auction: #ff8a4c;
@@ -68,6 +77,8 @@
   --color-ink-muted: #a8a59c;
   --color-rule: #2c2b27;
   --color-brand: #f2f0ea;
+  --color-brand-ink: #0e0e0c;
+  --color-secondary: #1d1c19;
   --color-poolx: #3ddc97;
   --color-poolx-ink: #06281c;
   --color-auction: #ff8a4c;
@@ -90,6 +101,24 @@
   --color-accent-ink: var(--color-auction-ink);
 }
 
+/* Module landing-page hero styles (theme manager: PoolX / Auction theme settings). */
+[data-hero="tinted"] {
+  background: color-mix(in srgb, var(--color-accent) 6%, var(--color-paper));
+}
+[data-hero="solid"] {
+  --hero-bg: var(--color-accent);
+  --hero-fg: var(--color-accent-ink);
+  background: var(--hero-bg);
+}
+/* Text on a solid hero uses the module's validated accent/ink pair; cards inside keep their own colours. */
+[data-hero="solid"] [data-hero-text] {
+  color: var(--hero-fg);
+  --color-ink: var(--hero-fg);
+  --color-ink-muted: var(--hero-fg);
+  --color-accent: var(--hero-fg);
+  --color-accent-ink: var(--hero-bg);
+}
+
 @theme inline {
   --color-paper: var(--color-paper);
   --color-surface: var(--color-surface);
@@ -97,6 +126,8 @@
   --color-ink-muted: var(--color-ink-muted);
   --color-rule: var(--color-rule);
   --color-brand: var(--color-brand);
+  --color-brand-ink: var(--color-brand-ink);
+  --color-secondary: var(--color-secondary);
   --color-poolx: var(--color-poolx);
   --color-poolx-ink: var(--color-poolx-ink);
   --color-auction: var(--color-auction);
@@ -109,9 +140,20 @@
   --color-info: var(--color-info);
   --color-focus: var(--color-focus);
 
-  --font-display: var(--font-fraunces), Georgia, serif;
-  --font-sans: var(--font-plex-sans), system-ui, sans-serif;
+  --font-display: var(--theme-font-display);
+  --font-sans: var(--theme-font-text);
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  /* Type sizes follow the theme's body / heading scale (1 = Tailwind defaults). */
+  --text-sm: calc(0.875rem * var(--body-scale));
+  --text-base: calc(1rem * var(--body-scale));
+  --text-lg: calc(1.125rem * var(--body-scale));
+  --text-2xl: calc(1.5rem * var(--heading-scale));
+  --text-3xl: calc(1.875rem * var(--heading-scale));
+  --text-4xl: calc(2.25rem * var(--heading-scale));
+  --text-5xl: calc(3rem * var(--heading-scale));
+  --text-6xl: calc(3.75rem * var(--heading-scale));
+  --text-7xl: calc(4.5rem * var(--heading-scale));
 
   --radius-DEFAULT: var(--radius);
   --radius-sm: var(--radius);
@@ -133,14 +175,15 @@
   body {
     background: var(--color-paper);
     color: var(--color-ink);
-    font-family: var(--font-sans);
+    font-family: var(--theme-font-text);
+    font-size: calc(1rem * var(--body-scale));
     line-height: 1.5;
     overflow-x: hidden;
   }
   h1,
   h2,
   h3 {
-    font-family: var(--font-display);
+    font-family: var(--theme-font-display);
     line-height: 1.1;
     letter-spacing: -0.01em;
     text-wrap: balance;

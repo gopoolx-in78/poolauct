@@ -1,9 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { Fraunces, IBM_Plex_Mono, IBM_Plex_Sans, IBM_Plex_Serif } from "next/font/google";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { SiteBanners } from "@/components/layout/site-banners";
 import { SiteHeader, SkipLink } from "@/components/layout/site-header";
 import { themeInitScript } from "@/components/layout/theme-toggle";
 import { site } from "@/config/site";
+import { getSiteDesign } from "@/modules/cms/server/queries";
+import { ADMIN_THEME_CSS, compileThemeCss } from "@/modules/theme/compile";
+import { DEFAULT_THEME } from "@/modules/theme/schema";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -18,6 +22,14 @@ const plexSans = IBM_Plex_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   display: "swap",
+});
+
+const plexSerif = IBM_Plex_Serif({
+  variable: "--font-plex-serif",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  display: "swap",
+  preload: false, // only used when a published theme selects it
 });
 
 const plexMono = IBM_Plex_Mono({
@@ -47,23 +59,42 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+/** Published theme as CSS variables; falls back to the shipped design if it ever fails validation. */
+function themeCss(config: typeof DEFAULT_THEME) {
+  try {
+    return compileThemeCss(config);
+  } catch {
+    return compileThemeCss(DEFAULT_THEME);
+  }
+}
+
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const { config } = await getSiteDesign();
   return (
     <html
       lang="en-IN"
       suppressHydrationWarning
-      className={`${fraunces.variable} ${plexSans.variable} ${plexMono.variable} antialiased`}
+      data-default-scheme={config.colorScheme}
+      className={`${fraunces.variable} ${plexSans.variable} ${plexSerif.variable} ${plexMono.variable} antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        {/* Compiled from allowlisted, validated tokens only (src/modules/theme/compile.ts). */}
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `${themeCss(config)}
+${ADMIN_THEME_CSS}`,
+          }}
+        />
       </head>
       <body className="flex min-h-dvh flex-col">
         <SkipLink />
-        <SiteHeader />
+        <SiteHeader design={config} />
+        <SiteBanners banners={config.banners} />
         <main id="main" className="flex-1">
           {children}
         </main>
-        <SiteFooter />
+        <SiteFooter design={config} />
       </body>
     </html>
   );

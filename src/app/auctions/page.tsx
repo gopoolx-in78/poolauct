@@ -5,6 +5,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { Breadcrumbs, Container, EmptyState, SectionHeading, Skeleton } from "@/components/ui/primitives";
 import { site } from "@/config/site";
 import { formatINR, rupees, subPaise } from "@/lib/money";
+import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 import { requestNow } from "@/lib/time";
 import {
@@ -13,13 +14,18 @@ import {
   listAuctions,
   type AuctionView,
 } from "@/modules/auction/server/queries";
+import { getSiteDesign, seoFor } from "@/modules/cms/server/queries";
 
-export const metadata = pageMetadata({
+const META = {
   title: "Online auctions for used cars and second-hand assets",
   description:
     "Bid in online auctions for used cars, motorcycles, commercial vehicles, electronics, machinery and more. Every auction uses a refundable participation deposit.",
   path: "/auctions",
-});
+};
+
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({ ...META, ...(await seoFor("auctions", META)) });
+}
 
 // Worked example from the published deposit rules. Illustrative — not a live auction.
 const example = {
@@ -43,7 +49,8 @@ const steps = [
   ["Result", "Not the winner? Your full deposit is refunded. Winner? It is credited against your final invoice."],
 ] as const;
 
-export default function AuctionsPage() {
+export default async function AuctionsPage() {
+  const { config } = await getSiteDesign();
   return (
     <div data-module="auction">
       <Container className="pt-6">
@@ -56,8 +63,12 @@ export default function AuctionsPage() {
         />
       </Container>
 
-      <section aria-labelledby="auction-hero" className="border-rule border-b">
-        <Container className="py-12 md:py-20">
+      <section
+        aria-labelledby="auction-hero"
+        data-hero={config.modules.auction.heroStyle}
+        className="border-rule border-b"
+      >
+        <Container className="py-12 md:py-20" data-hero-text>
           <p className="text-accent font-mono text-xs tracking-[0.2em] uppercase">Auctions · Second-hand assets</p>
           <h1 id="auction-hero" className="mt-4 max-w-4xl text-5xl md:text-7xl">
             Discover it. Inspect it. Bid on it.

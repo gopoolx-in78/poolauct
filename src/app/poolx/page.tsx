@@ -6,16 +6,22 @@ import { ButtonLink } from "@/components/ui/button";
 import { Breadcrumbs, Container, EmptyState, Progress, SectionHeading, Skeleton } from "@/components/ui/primitives";
 import { site } from "@/config/site";
 import { applyBps, formatINR, rupees, subPaise } from "@/lib/money";
+import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
 import { formatIST, requestNow, timeLeft } from "@/lib/time";
+import { getSiteDesign, seoFor } from "@/modules/cms/server/queries";
 import { getPublicStats, listCategories, listPools } from "@/modules/poolx/server/queries";
 
-export const metadata = pageMetadata({
+const META = {
   title: "PoolX — Join buying pools and unlock bulk prices together",
   description:
     "PoolX lets people, businesses and housing societies combine their purchasing demand so pools can unlock quantity-based discount tiers from verified sellers.",
   path: "/poolx",
-});
+};
+
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({ ...META, ...(await seoFor("poolx", META)) });
+}
 
 const steps = [
   [
@@ -34,7 +40,8 @@ const steps = [
   ["Direct delivery", "Each member’s order is delivered individually, with tracking where the seller supports it."],
 ] as const;
 
-export default function PoolXPage() {
+export default async function PoolXPage() {
+  const { config } = await getSiteDesign();
   return (
     <div data-module="poolx">
       <Container className="pt-6">
@@ -47,9 +54,9 @@ export default function PoolXPage() {
         />
       </Container>
 
-      <section aria-labelledby="poolx-hero" className="border-rule border-b">
+      <section aria-labelledby="poolx-hero" data-hero={config.modules.poolx.heroStyle} className="border-rule border-b">
         <Container className="grid gap-12 py-12 md:py-20 lg:grid-cols-[3fr_2fr] lg:items-end">
-          <div>
+          <div data-hero-text>
             <p className="text-accent font-mono text-xs tracking-[0.2em] uppercase">PoolX · Group buying</p>
             <h1 id="poolx-hero" className="mt-4 text-5xl md:text-7xl">
               Power of People.

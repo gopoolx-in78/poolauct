@@ -1,12 +1,12 @@
 # Testing Report
 
-Last updated: 2026-11-13
+Last updated: 2026-11-14
 
 ## Planned suites
 | Suite | Tool | Location | Status |
 |---|---|---|---|
 | Unit | Vitest 5.1 | `tests/unit` | ✔ active |
-| DB / RLS / invariants | pgTAP via `supabase test db` | `supabase/tests` | ✔ active (292 assertions) |
+| DB / RLS / invariants | pgTAP via `supabase test db` | `supabase/tests` | ✔ active (363 assertions) |
 | Integration / API | Vitest integration suite against the local stack (`pnpm test:integration`): concurrent bidding with 8 real users (acceptance 8); webhooks covered in Playwright + pgTAP | `tests/integration`, `tests/e2e`, `supabase/tests` | ✔ active |
 | E2E + a11y + SEO + headers + auth | Playwright 1.65 + @axe-core/playwright 4.14; Mailpit for email links; RFC 6238 TOTP helper for MFA | `tests/e2e` | ✔ active (Chromium desktop 1440 + Pixel 7; auth journeys desktop-only) |
 | Security | OWASP ZAP baseline, gitleaks, pnpm audit | CI | audit run locally; gitleaks/ZAP in CI only |
@@ -14,6 +14,18 @@ Last updated: 2026-11-13
 | Backup | restore drill | DEPLOYMENT_GUIDE | Phase 10 |
 
 ## Run log
+
+### 2026-11-14 — Phase 7 (theme & CMS)
+| Command | Result |
+|---|---|
+| `pnpm lint` / `typecheck` | ✔ |
+| `prettier --check . --end-of-line auto` | ✔ (19 new/changed files were reformatted first) |
+| `pnpm test` | ✔ 68/68 — new `theme.test.ts` (12: unknown keys incl. a deposit switch rejected, CSS injection / non-hex colours, internal links only, markup in text, contrast, hero section required, fallback, templates keep content, compiler emits allowlisted properties only and refuses invalid input, admin scope) and `markdown.test.ts` (5: `javascript:` / `data:` / protocol-relative links removed, raw HTML and script dropped, images dropped, external links get `rel`, no second h1) |
+| `pnpm test:db` | ✔ 7 files, 363 assertions — new `0007_cms_theme.test.sql` (71): permissions per role (content manager cannot publish themes, customer / anon denied); allowlist rejections with exact messages (unknown key, deposit switch, CSS injection, uppercase hex, low contrast, external / `javascript:` links, markup, missing hero, duplicate sections, too many banners); one draft / one live; publish needs a note; rollback creates a new live copy and refuses the live or never-published version; documents: slug rules, revisions append-only, publish / unpublish / restore, published slug locked; FAQ plain text; SEO route allowlist and lengths; audit rows; **acceptance test 20** (fingerprint of all business tables identical before and after every CMS operation; no cms function references business tables; no FK into them). Two older assertions were made robust to leftover dev data (blog count; auctions closed by the job). Runs were interrupted several times by `DbConnectError` while other projects' Docker containers were crash-looping; the final run passed. |
+| `pnpm test:integration` | ✔ 3/3 |
+| `pnpm build` | ✔ (76 static pages) |
+| `playwright test tests/e2e/cms.spec.ts` | ✔ 3/3 — super admin: baseline publish, `javascript:` link blocked, publish new heading → shown on `/`, restore earlier version → baseline back on `/`, audit rows; content manager: post with `<script>` / `<img onerror>` published as harmless text, FAQ shown on `/faq`, cannot publish a theme; customer: admin CMS pages denied |
+| `playwright test --workers=1` (full) | first pass 32 passed, 15 failed, 7 did not run, 28 skipped by design — the PoolX lifecycle test hit its 240 s timeout while the local server stalled, after which the server on :3100 refused every connection (all 14 later failures were ERR_CONNECTION_REFUSED; TD-38 environment, other projects' Docker containers crash-looping). Rerun of the affected specs (foundation, poolx, poolx-lifecycle, both projects): **35 passed, 9 skipped by design, 0 failed**. Net: every test that is not skipped by design passed on current code. |
 
 ### 2026-11-13 — Phase 6 (central admin)
 | Command | Result |

@@ -8,19 +8,24 @@ const STORAGE_KEY = "theme-preference";
 const order: Mode[] = ["system", "light", "dark"];
 const listeners = new Set<() => void>();
 
+const isMode = (v: string | null): v is Mode => v === "system" || v === "light" || v === "dark";
+
+/** The viewer's saved choice, else the site default chosen in the theme manager. */
 function read(): Mode {
+  let saved: string | null = null;
   try {
-    const v = localStorage.getItem(STORAGE_KEY);
-    return v === "light" || v === "dark" ? v : "system";
+    saved = localStorage.getItem(STORAGE_KEY);
   } catch {
-    return "system";
+    // Storage unavailable — fall through to the site default.
   }
+  if (isMode(saved)) return saved;
+  const fallback = document.documentElement.getAttribute("data-default-scheme");
+  return isMode(fallback) ? fallback : "system";
 }
 
 function write(mode: Mode) {
   try {
-    if (mode === "system") localStorage.removeItem(STORAGE_KEY);
-    else localStorage.setItem(STORAGE_KEY, mode);
+    localStorage.setItem(STORAGE_KEY, mode); // "system" is stored too, so it overrides a non-system site default
   } catch {
     // Storage unavailable (private mode etc.) — preference applies to this page view only.
   }
@@ -52,5 +57,8 @@ export function ThemeToggle() {
   );
 }
 
-/** Inline script applied before paint to avoid a theme flash. Contains no user input. */
-export const themeInitScript = `try{var t=localStorage.getItem("${STORAGE_KEY}");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}`;
+/**
+ * Inline script applied before paint to avoid a theme flash. Contains no user input: the site default is read from the
+ * enum-validated data-default-scheme attribute.
+ */
+export const themeInitScript = `try{var d=document.documentElement,t=null;try{t=localStorage.getItem("${STORAGE_KEY}")}catch(e){}if(t!=="system"&&t!=="light"&&t!=="dark")t=d.getAttribute("data-default-scheme");if(t==="light"||t==="dark")d.setAttribute("data-theme",t)}catch(e){}`;

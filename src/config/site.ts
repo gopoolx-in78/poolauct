@@ -15,12 +15,5 @@ export const site = {
 
 export type NavItem = { href: string; label: string };
 
-/** Main menu (master prompt §4). Every entry must resolve to a real page. */
-export const mainNav: NavItem[] = [
-  { href: "/", label: "Home" },
-  { href: "/poolx", label: "PoolX" },
-  { href: "/auctions", label: "Auctions" },
-  { href: "/how-it-works", label: "How It Works" },
-  { href: "/about", label: "About Us" },
-  { href: "/contact", label: "Contact Us" },
-];
+// The main menu, footer links and banners are part of the published site design (theme manager, Phase 7):
+// see DEFAULT_THEME in src/modules/theme/schema.ts for the shipped defaults.

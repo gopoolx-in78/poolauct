@@ -62,7 +62,7 @@ OD-01 … OD-15 (DECISION_LOG.md). Live payments need OD-02/OD-03; the PoolX con
 - [ ] 4.8 Media pipeline (Storage buckets, signed uploads, re-encode) — images for auctions and pools (also 3.11)
 - [ ] 4.9 Inspection report + RC verification staff UI
 - [ ] 4.10 Seller self-listing flow (needs OD-13 and seller KYC OD-05)
-- [ ] 4.11 Acceptance test 20 (theme change cannot alter deposit/bid rules) — with Phase 7 theme engine
+- [x] 4.11 Acceptance test 20 (theme / CMS changes cannot alter business data) — pgTAP `0007_cms_theme.test.sql`
 - [ ] 4.12 Outbid / won / refund notifications — Phase 8
 - [ ] 4.13 Schedule `/api/cron/auctions` every minute once hosting is chosen (OD-06)
 
@@ -80,3 +80,15 @@ OD-01 … OD-15 (DECISION_LOG.md). Live payments need OD-02/OD-03; the PoolX con
 
 ## Later phases
 See PROJECT_ROADMAP.md phases 7–10.
+
+## Phase 7 — Theme & CMS
+- [x] 7.1 Migration 0013: theme versions, documents + revisions, FAQs, SEO entries; SQL allowlist + contrast validator; audited API
+- [x] 7.2 Theme module: zod schema, templates, CSS compiler; admin pinned to shipped tokens
+- [x] 7.3 Theme editor with live light/dark preview; draft / publish (note) / discard / restore earlier version
+- [x] 7.4 Homepage section order + visibility, hero text, banners, menu and footer links, module visibility and hero style
+- [x] 7.5 Pages (`/info/[slug]`), blog, FAQ, SEO settings for 8 public routes; sitemap
+- [x] 7.6 Tests: pgTAP 71 (incl. acceptance 20), unit theme 12 + Markdown XSS 5, Playwright `cms.spec.ts` 3
+- [ ] 7.7 Featured pools / auctions picker for the homepage (R-B5)
+- [ ] 7.8 Images in CMS content and blog covers — needs media pipeline 4.8
+- [ ] 7.9 Optional second approver for theme publishing (owner decision; currently reason + audit)
+- [ ] 7.10 Visual review of the three templates in light/dark at 320/768/1440 (with 1.16)

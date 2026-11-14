@@ -59,8 +59,19 @@ Button (primary/secondary/ghost/danger; loading & disabled), Link, Input, Select
 Card, Badge/StatusPill, Progress (bar + ring), Countdown (display-only), Price (INR formatter, strike-through reference), Tabs, Dialog (focus trap),
 Drawer (mobile nav), Toast, Table (responsive, caption, sortable headers), Pagination, EmptyState, Skeleton, Breadcrumbs, Stat, Alert, Stepper.
 
-## Theme-manager allowlist
-Colours above (hex validated), font choice from an enumerated list of self-hosted families, type-scale ratio (1.125–1.333),
-radius (0–12px), header layout (`classic|centered|split`), footer layout (`columns|compact`), homepage section order/visibility,
-banners, hero content, module themes (accent + hero style), default colour scheme (`system|light|dark`), templates (`editorial|bold|minimal`).
-Validation rejects anything else; values are emitted as `:root{--token:value}` by a compiler that escapes and type-checks each value.
+## Theme-manager allowlist (implemented, Phase 7 — `src/modules/theme/schema.ts`, `cms.theme_config_problem`)
+- **Template:** `editorial | bold | minimal` (sets fonts, scales, radius, header / footer layout, hero styles; keeps text, links, colours).
+- **Default colour scheme:** `system | light | dark`.
+- **Palettes (light and dark, lowercase `#rrggbb`):** paper, surface, secondary, ink, inkMuted, rule, primary, primaryInk,
+  accent, poolx, poolxInk, auction, auctionInk — contrast ≥ 4.5 for ink / inkMuted on paper, surface, secondary;
+  primaryInk on primary; accent on paper; module ink on module colour; module colour on paper and surface.
+- **Fonts:** display `fraunces | plex-serif | plex-sans`; text `plex-sans | plex-serif` (all self-hosted via `next/font`).
+- **Type scales:** heading and body `compact | standard | large`. **Radius:** 0, 2, 4, 6, 8 or 12 px.
+- **Header:** `classic | centered | split`, sticky on/off. **Footer:** `columns | compact`, tagline ≤ 160.
+- **Menu:** 1–8 internal links. **Footer groups:** ≤ 4 groups of 1–6 internal links.
+- **Hero:** eyebrow ≤ 60, heading 1–120, subheading ≤ 300 (plain text).
+- **Modules:** PoolX / Auctions visible on the homepage, hero style `plain | tinted | solid`.
+- **Homepage sections:** hero, marketplaces, principles, how, faq, blog — each once, any order, hero always on.
+- **Banners:** ≤ 3, message, optional link label + internal link, tone `info | success | warning`, on/off.
+Values compile to custom properties (`--color-*`, `--theme-font-display|text`, `--heading-scale`, `--body-scale`, `--radius`)
+in `:root:root` blocks for light, dark-by-preference and forced dark. Admin re-declares the shipped values under `[data-admin]`.

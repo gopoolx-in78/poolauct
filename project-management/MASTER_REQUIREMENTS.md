@@ -22,9 +22,9 @@ Status legend: ☐ not started · ◐ in progress · ☑ verified · ⚑ needs o
 |---|---|---|
 | R-B1 | Editorial/modern marketplace design; documented tokens; light + dark via CSS variables | ☐ |
 | R-B2 | Distinct PoolX and Auction accents under parent brand | ☐ |
-| R-B3 | Super Admin theme manager: 20 controls (§4 list) incl. live preview, draft/publish, versions, rollback | ☐ |
-| R-B4 | Safeguards: allowlisted CSS vars, no JS/SQL/HTML/unsafe CSS, no effect on business logic, stable admin UI, publish logged | ☐ |
-| R-B5 | CMS: homepage sections order/enable, banners, featured pools/auctions, headings, CTAs, footer, nav, SEO, preview, draft/publish, all changes logged & reversible | ☐ |
+| R-B3 | Super Admin theme manager: 20 controls (§4 list) incl. live preview, draft/publish, versions, rollback | ☑ (Phase 7, local) |
+| R-B4 | Safeguards: allowlisted CSS vars, no JS/SQL/HTML/unsafe CSS, no effect on business logic, stable admin UI, publish logged | ☑ (pgTAP + unit; acceptance 20) |
+| R-B5 | CMS: homepage sections order/enable, banners, featured pools/auctions, headings, CTAs, footer, nav, SEO, preview, draft/publish, all changes logged & reversible | ◐ (all but featured pools / auctions picker) |
 | R-B6 | No gradient blobs, no glassmorphism navbar, display + text font pairing, 8px grid, single radius, motion language (PoolX doc) | ☐ |
 
 ## C. PoolX (§5) — see POOLX_REQUIREMENTS.md

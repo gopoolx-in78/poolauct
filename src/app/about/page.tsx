@@ -1,12 +1,18 @@
 import { Breadcrumbs, Container } from "@/components/ui/primitives";
 import { site } from "@/config/site";
+import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
+import { seoFor } from "@/modules/cms/server/queries";
 
-export const metadata = pageMetadata({
+const META = {
   title: "About us",
   description: `About ${site.name}: a group-buying marketplace and an online auction marketplace operating under one account system.`,
   path: "/about",
-});
+};
+
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({ ...META, ...(await seoFor("about", META)) });
+}
 
 export default function AboutPage() {
   return (

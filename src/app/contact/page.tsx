@@ -1,12 +1,18 @@
 import { Breadcrumbs, Container, EmptyState } from "@/components/ui/primitives";
 import { site } from "@/config/site";
+import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
+import { seoFor } from "@/modules/cms/server/queries";
 
-export const metadata = pageMetadata({
+const META = {
   title: "Contact us",
   description: `How to get in touch with ${site.name} about buying pools, auctions, your account or selling with us.`,
   path: "/contact",
-});
+};
+
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({ ...META, ...(await seoFor("contact", META)) });
+}
 
 export default function ContactPage() {
   return (

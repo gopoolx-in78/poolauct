@@ -54,7 +54,7 @@ export function MobileNav({ items }: { items: NavItem[] }) {
             {items.map((item) => {
               const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
               return (
-                <li key={item.href}>
+                <li key={`${item.href}|${item.label}`}>
                   <Link
                     href={item.href}
                     aria-current={active ? "page" : undefined}

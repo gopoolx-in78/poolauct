@@ -20,7 +20,7 @@ Planned additions below are installed only when the phase that needs them starts
 | @sentry/nextjs | error monitoring (OD-08) |
 | lucide-react | icons |
 | clsx, tailwind-merge | class composition |
-| react-markdown + rehype-sanitize | safe CMS Markdown |
+| react-markdown 10.1.0 + rehype-sanitize 6.0.0 | safe CMS Markdown (installed Phase 7) |
 | sharp | image re-encoding |
 
 ## Dev

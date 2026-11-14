@@ -242,6 +242,7 @@ Routes: `GET /api/cron/notifications` (Bearer `CRON_SECRET`, every minute) → `
 | `api.cms_admin_cover_remove(p_document)` | same | removed media id or null; the server action deletes the files |
 | `api.cms_admin_cover_get(p_document)` | same | current cover or null |
 | `api.cms_public_documents(...)` / `api.cms_public_document(...)` | anyone | now also `cover` (photo or null); `cms_public_document` also `images` `{ id: photo }` (TD-77) |
+| `GET /search?q=` (page) | anyone | combined results: up to 6 pools (`poolx_list_pools`) and 6 live / upcoming auctions (`auction_list`), links to the full module results; `noindex` |
 | `GET /api/notifications/unread` (route) | signed-in user | `{ unread }` (no-store, private) for the header badge; 401 without a session, 503 if the count cannot be read |
 | `POST /api/media` (route) | staff at aal2, same origin | multipart `target` (auction / pool / cms / cms-image), `id`, `alt`, `file` (JPEG / PNG / WebP ≤ 10 MB) → 201 `{ media }`; 400 invalid image or details, 403 not allowed / cross-site, 413 too large, 429 over 60 uploads / hour |
 | `api.launch_readiness()` | service_role only | `{ ok, checks: [{ key, ok, detail }] }` — deposit policy set by staff, no `.test` accounts, no sandbox payments, Super Admin with MFA, RLS on all application tables, service-role timeouts. Counts only. |

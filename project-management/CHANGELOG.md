@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-14 — Session 1 (Phase 10: combined search) — branch `phase-10-search`
+- `/search` page: one query over pools and auctions (6 each, links to the module result pages, empty state, noindex).
+- Header search link (desktop) and "Search" in the mobile menu; between 1024 and 1279 px the user menu shows only its
+  icon (the name stays its accessible name) so the nav labels do not wrap.
+- Tests: `tests/e2e/search.spec.ts` (desktop journey + mobile menu, no horizontal overflow).
+
 ## 2026-11-14 — Session 1 (Phase 10: article images) — branch `phase-10-body-images`
 - Migration 0020: `cms.document_images`, `api.cms_admin_image_{add,remove,list}`, `images` in `api.cms_public_document`;
   pgTAP `0014_cms_body_images.test.sql` (15).

@@ -58,7 +58,7 @@ R-G5 no live payments before credentials, webhooks, legal review, settlement arr
 
 ## H. Notifications, search (§15–§16)
 R-H1 central notification service, PoolX + Auction event lists, in-app + email (+SMS/WhatsApp when configured), preferences, delivery tracking — ◐ built (Phase 8); e-mail provider / SMS / WhatsApp pending OD-07 ·
-R-H2 PoolX + Auction search with filters/sort/pagination/empty states
+R-H2 PoolX + Auction search with filters/sort/pagination/empty states — ☑ per module, plus combined `/search` (TD-78)
 
 ## I. Non-functional (§17–§21, §25, Appendix A/B)
 R-I1 Security controls list §17 + OWASP ASVS 5.0.0 baseline → SECURITY_CHECKLIST.md ·

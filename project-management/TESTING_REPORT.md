@@ -15,6 +15,14 @@ Last updated: 2026-11-14
 
 ## Run log
 
+### 2026-11-14 — Phase 10 combined search
+| Command | Result |
+|---|---|
+| `pnpm lint` / `tsc --noEmit` / `prettier --check` / `pnpm build` | ✔ |
+| `playwright test search, foundation --workers=1` (both projects) | ✔ 32 passed · 2 skipped (by design) — header link to /search, noindex, search by a unique word finds the pool, no auction section when none match, axe clean, empty state with links; mobile menu reaches /search without horizontal overflow; public pages unchanged |
+| Visual check (temporary Playwright screenshots) | results at 1280 px light and 375 px dark |
+| Auction results on /search | not covered by a new e2e (no auction fixture helper); they use the same `listAuctions` search the auction specs cover |
+
 ### 2026-11-14 — Phase 10 images inside articles
 | Command | Result |
 |---|---|

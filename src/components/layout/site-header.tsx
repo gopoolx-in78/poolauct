@@ -1,3 +1,4 @@
+import { Search } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { site } from "@/config/site";
@@ -29,6 +30,15 @@ function Nav({ items, className }: { items: ThemeConfig["nav"]; className?: stri
 function Actions({ items }: { items: ThemeConfig["nav"] }) {
   return (
     <div className="flex items-center justify-end gap-1">
+      {/* On small screens search is in the menu, keeping the header row within 320 px. */}
+      <Link
+        href="/search"
+        aria-label="Search pools and auctions"
+        title="Search"
+        className="hover:bg-ink/5 hidden size-11 items-center justify-center rounded lg:inline-flex"
+      >
+        <Search aria-hidden="true" className="size-5" />
+      </Link>
       <ThemeToggle />
       {/* Reads the session: streams in behind Suspense so the rest of the header stays in the static shell. */}
       <Suspense fallback={<UserMenuFallback />}>

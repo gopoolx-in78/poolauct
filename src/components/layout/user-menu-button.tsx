@@ -52,7 +52,7 @@ export function UserMenuButton({ name, isStaff }: { name: string; isStaff: boole
         className="hover:bg-ink/5 inline-flex h-11 max-w-[12rem] items-center gap-2 rounded px-3 text-sm font-medium"
       >
         <CircleUser aria-hidden="true" className="size-5 shrink-0" />
-        <span className="hidden truncate sm:inline">{name}</span>
+        <span className="hidden truncate sm:inline lg:max-xl:sr-only">{name}</span>
         <span className="sr-only sm:hidden">Account menu</span>
       </button>
       {open ? (

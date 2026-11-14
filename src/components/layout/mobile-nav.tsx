@@ -68,6 +68,15 @@ export function MobileNav({ items }: { items: NavItem[] }) {
                 </li>
               );
             })}
+            <li>
+              <Link
+                href="/search"
+                aria-current={pathname === "/search" ? "page" : undefined}
+                className="font-display hover:bg-ink/5 border-rule mt-2 block border-t px-4 py-3 text-2xl"
+              >
+                Search
+              </Link>
+            </li>
           </ul>
         </nav>
       </dialog>

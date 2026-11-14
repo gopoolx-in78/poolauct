@@ -3,7 +3,7 @@
 **Project:** Dual marketplace — PoolX (group buying) + Auctions (second-hand assets, mandatory refundable deposits). Parent brand pending (OD-01); interim name "PoolX & Auctions".
 **Current phase:** Phase 10 (Deployment & launch) — part 1 merged (launch gate, error reporting, restore drill, runbooks); part 2: hosting decided (Hostinger KVM VPS + Supabase Cloud Mumbai, TD-73) and `deploy/` server files written. Nothing deployed yet.
 **Last completed milestone:** central notification service — 28 PoolX / auction events raised by database triggers, in-app inbox, preferences, e-mail delivery worker with retries (Mailpit test inbox locally), admin delivery log, auction reminders.
-**Git:** `master` at `08a884b` (Phase 10 parts 1–2, media pipeline, blog covers, unread badge, featured listings); branch `phase-10-body-images` holds images inside articles (may be uncommitted — check `git status`). No remote.
+**Git:** `master` at `c7f7541` (Phase 10 parts 1–2, media pipeline, blog covers, unread badge, featured listings, article images); branch `phase-10-search` holds the combined search page (may be uncommitted — check `git status`). No remote.
 **Database changes:** migrations 0001–0020 (DATABASE_SCHEMA.md "Applied migrations").
 **Tests:** unit 99 · pgTAP 546 · integration 3 · build · e2e (full suite with `--workers=1`, TD-38) — see TESTING_REPORT.
 **Local env:** `.env.local` needs `EMAIL_PROVIDER=mailpit`, `EMAIL_FROM`, `MAILPIT_URL` for e-mail locally (see `.env.example`).
@@ -15,7 +15,7 @@ Read AGENTS.md (Next.js 16 docs in `node_modules/next/dist/docs/`), PROJECT_OVER
 (expect 546/546) → report status.
 
 ## Next exact tasks (ask the owner which first)
-1. **Commit the article images** (branch `phase-10-body-images`) when the owner asks; merge to `master` when asked.
+1. **Commit the combined search** (branch `phase-10-search`) when the owner asks; merge to `master` when asked.
 2. **First staging deploy** once the owner has bought the Hostinger VPS and created the staging Supabase project (Mumbai):
    follow DEPLOYMENT_GUIDE "Hostinger VPS" step by step (the owner does purchases, DNS and anything needing their
    credentials); prove `nginx -t`, the systemd unit, `deploy.sh`, `rollback.sh` and the cron runner on the real server;
@@ -23,8 +23,8 @@ Read AGENTS.md (Next.js 16 docs in `node_modules/next/dist/docs/`), PROJECT_OVER
 3. **Other owner decisions:** domain (OD-01), error tracker (OD-08), analytics + consent, Git remote (1.13b), live payments
    (OD-02/03), e-mail provider (OD-07), deposit values (OD-04). Then `pnpm launch:check` green and the final audit.
 4. **Media follow-ups:** private document uploads after OD-05 / OD-09.
-5. **Optional follow-ups:** a combined cross-module search page (per-module search, filters, sort and pagination already
-   exist, R-H2); notification retention (8.12, needs a retention period from the owner).
+5. **Follow-ups:** notification retention (8.12, needs a retention period from the owner). Everything else open is
+   owner-blocked (see items 2–3).
 
 ## Patterns to follow
 - Media: never let a client write to Storage or choose a path. Uploads go through `POST /api/media` (re-encode with

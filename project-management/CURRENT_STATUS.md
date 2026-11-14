@@ -4,12 +4,16 @@
 **Phase:** 10 — Deployment & launch — **in progress**. Part 1 (launch gate, error reporting, restore drill, runbooks)
 committed and merged to `master` (`265ed70`). Part 2 (Hostinger VPS deploy files) merged (`de2b837`). Media pipeline merged
 (`ddea3aa`); blog / page covers (`15e9038`), header unread badge (`e2ea492`) and homepage featured listings (`08a884b`)
-merged. Images inside articles built on branch `phase-10-body-images` — **uncommitted**. Nothing is deployed; no server
-or Supabase project exists yet.
-**Git:** `master` at `08a884b`; branch `phase-10-body-images` with uncommitted work. No remote.
+and images inside articles (`c7f7541`) merged. Combined search built on branch `phase-10-search` — **uncommitted**.
+Nothing is deployed; no server or Supabase project exists yet.
+**Git:** `master` at `c7f7541`; branch `phase-10-search` with uncommitted work. No remote.
 
 ## What exists and is verified
-### Images inside articles (this session, branch `phase-10-body-images`, uncommitted)
+### Combined search (this session, branch `phase-10-search`, uncommitted)
+- `/search` finds pools and live / upcoming auctions with one query (6 of each, links to the full results). Reached
+  from a header icon on desktop and the menu on phones; not indexed by search engines (TD-78).
+
+### Images inside articles (this session, merged)
 - Content managers upload images to a page or post and paste a short code into the text where each should appear. Only
   that document's own uploaded images are shown, with the alt text given at upload; links to images elsewhere on the web
   are dropped. Up to 30 per page or post (7.8b, TD-77).

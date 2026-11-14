@@ -16,7 +16,8 @@ import { pageMetadata } from "@/lib/seo";
 import { formatIST, requestNow, timeLeft } from "@/lib/time";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getAccount } from "@/modules/core/server/auth";
-import { getAuction, getBidHistory } from "@/modules/auction/server/queries";
+import { Gallery } from "@/components/media/gallery";
+import { getAuction, getAuctionMedia, getBidHistory } from "@/modules/auction/server/queries";
 import {
   AUCTION_STATUS_LABEL,
   CONDITION_LABEL,
@@ -72,7 +73,7 @@ async function Auction({ params, searchParams }: PageProps<"/auctions/[slug]">) 
   const a = await getAuction(slug);
   if (!a) notFound();
   const sp = await searchParams;
-  const history = await getBidHistory(slug);
+  const [history, media] = await Promise.all([getBidHistory(slug), getAuctionMedia(slug)]);
   const url = new URL(`/auctions/${a.slug}`, site.url).toString();
   const chargesTotal = a.charges.reduce((s, c) => s + BigInt(c.amountPaise), 0n);
 
@@ -121,6 +122,7 @@ async function Auction({ params, searchParams }: PageProps<"/auctions/[slug]">) 
             </span>
           </div>
           <h1 className="mt-3 text-4xl md:text-5xl">{a.title}</h1>
+          <Gallery items={media} title={a.title} />
           <p className="mt-6 whitespace-pre-line">{a.description}</p>
 
           {a.vehicle ? (

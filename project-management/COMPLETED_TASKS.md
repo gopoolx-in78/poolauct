@@ -82,3 +82,4 @@
 | 2026-11-14 | 10 | 10.3 Redacted server error reporting (`instrumentation.ts`) | unit 6/6; temporary failing route |
 | 2026-11-14 | 10 | 10.4 Runbooks in DEPLOYMENT_GUIDE | doc |
 - [x] 10.5a Hosting decided (Hostinger KVM VPS + Supabase Cloud Mumbai); `deploy/` server files and VPS runbook (TD-73) — 2026-11-14
+- [x] 4.8 / 3.11 Media pipeline for auction and pool photos (TD-74) — 2026-11-14

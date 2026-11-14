@@ -47,7 +47,7 @@ OD-01 … OD-15 (DECISION_LOG.md). Live payments need OD-02/OD-03; the PoolX con
 - [x] 3.8 `/account/poolx` + menu entry; `/admin/poolx/*` gated by `poolx.*` permissions
 - [x] 3.9 Tests: pgTAP 54 new; unit 18 new; PoolX e2e 8 journeys
 - [ ] 3.10 Seller verification UI (`sellers.manage`) — fold into Phase 6 seller management
-- [ ] 3.11 Product images (Supabase Storage bucket, signed uploads, re-encode) — needed before launch
+- [x] 3.11 Pool photos — done with the media pipeline (4.8, TD-74)
 - [ ] 3.12 Private pools (invite link / allow-list) — schema has `kind`, no flow yet
 - [ ] 3.13 Schedule `/api/cron/poolx` (every 5 min) — in `deploy/cron/poolx.cron`; install on the VPS (10.10)
 
@@ -59,7 +59,8 @@ OD-01 … OD-15 (DECISION_LOG.md). Live payments need OD-02/OD-03; the PoolX con
 - [x] 4.5 `/account/auctions` (My Auction Deposits, invoices + pay, bids, refunds)
 - [x] 4.6 Admin: listings, publish, cancel, close; deposits dashboard + refund retry; deposit policy; default reviews
 - [x] 4.7 Tests: pgTAP 90 (acceptance 1–7, 9–19 + defaults + ledger); integration (acceptance 8, concurrency); Playwright auction journey
-- [ ] 4.8 Media pipeline (Storage buckets, signed uploads, re-encode) — images for auctions and pools (also 3.11)
+- [x] 4.8 Media pipeline for auction and pool photos: `public-media` bucket, server re-encode, staff photo manager, public galleries and card covers (TD-74)
+- [ ] 4.8b Private document uploads (KYC, RC, inspection PDFs) in a private bucket — needs OD-05 and malware scanning (OD-09)
 - [ ] 4.9 Inspection report + RC verification staff UI
 - [ ] 4.10 Seller self-listing flow (needs OD-13 and seller KYC OD-05)
 - [x] 4.11 Acceptance test 20 (theme / CMS changes cannot alter business data) — pgTAP `0007_cms_theme.test.sql`
@@ -89,7 +90,7 @@ See PROJECT_ROADMAP.md phases 7–10.
 - [x] 7.5 Pages (`/info/[slug]`), blog, FAQ, SEO settings for 8 public routes; sitemap
 - [x] 7.6 Tests: pgTAP 71 (incl. acceptance 20), unit theme 12 + Markdown XSS 5, Playwright `cms.spec.ts` 3
 - [ ] 7.7 Featured pools / auctions picker for the homepage (R-B5)
-- [ ] 7.8 Images in CMS content and blog covers — needs media pipeline 4.8
+- [ ] 7.8 Images in CMS content and blog covers — can now reuse `core.media_assets` + `POST /api/media` (add a `cms` target and link table)
 - [ ] 7.9 Optional second approver for theme publishing (owner decision; currently reason + audit)
 - [ ] 7.10 Visual review of the three templates in light/dark at 320/768/1440 (with 1.16; automated overflow/axe checks cover the published theme only)
 

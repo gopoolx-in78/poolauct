@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-14 — Session 1 (Phase 10: media pipeline) — branch `phase-10-media`
+- Migration 0017: `public-media` bucket, `core.media_assets`, `auction.asset_media`, `poolx.pool_media`, staff and public media
+  functions; pgTAP `0011_media.test.sql` (38).
+- `POST /api/media` (re-encode with sharp, two WebP sizes), `src/modules/core/media.ts`, `src/modules/core/server/media.ts`,
+  `src/lib/http.ts` (capped body reader shared with the payment webhook, same-origin check); `sharp` added as a direct dependency.
+- Staff photo manager on the admin auction and pool pages; galleries on public auction / pool pages; card covers.
+- Nginx: `/api/media` accepts up to 11 MB (everything else stays at 2 MB).
+- Tests: `tests/unit/media.test.ts` (8), `tests/e2e/media.spec.ts` (2).
+
 ## 2026-11-14 — Session 1 (Phase 10: deployment & launch, part 2) — branch `phase-10-launch`
 - Hosting decided (OD-06): Hostinger KVM VPS + Supabase Cloud Mumbai (TD-73).
 - `deploy/`: Nginx site (`nginx/poolx.conf`), hardened systemd unit (`systemd/poolx.service`), cron job runner + schedule

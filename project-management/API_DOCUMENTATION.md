@@ -228,6 +228,13 @@ Routes: `GET /api/cron/notifications` (Bearer `CRON_SECRET`, every minute) → `
 ## Phase 10 — launch readiness
 | Function | Who | Returns |
 |---|---|---|
+| `api.auction_admin_media_add(p_auction, p)` / `api.poolx_admin_media_add(p_pool, p)` | staff with `auction.listings.manage` / `poolx.pools.manage` at aal2 | the new photo `{ id, alt, display {path,width,height}, thumb {...} }`; draft listings only, max 12; called by `POST /api/media` after re-encoding |
+| `api.auction_admin_media_update(p_media, p_alt, p_move)` / `api.poolx_admin_media_update(...)` | same | void — new alt text and / or `up` / `down` |
+| `api.auction_admin_media_remove(p_media)` / `api.poolx_admin_media_remove(p_media)` | same | void — unlinks and marks REMOVED; the server then deletes the files |
+| `api.auction_admin_media_list(p_auction)` / `api.poolx_admin_media_list(p_pool)` | same | photos in order (any status) |
+| `api.auction_media(p_slug)` / `api.poolx_pool_media(p_slug)` | anyone | photos of a published auction / publicly visible pool |
+| `api.auction_media_covers(p_slugs)` / `api.poolx_media_covers(p_slugs)` | anyone | `{ slug: firstPhoto }` for list cards (≤ 60 slugs) |
+| `POST /api/media` (route) | staff at aal2, same origin | multipart `target` (auction / pool), `id`, `alt`, `file` (JPEG / PNG / WebP ≤ 10 MB) → 201 `{ media }`; 400 invalid image or details, 403 not allowed / cross-site, 413 too large, 429 over 60 uploads / hour |
 | `api.launch_readiness()` | service_role only | `{ ok, checks: [{ key, ok, detail }] }` — deposit policy set by staff, no `.test` accounts, no sandbox payments, Super Admin with MFA, RLS on all application tables, service-role timeouts. Counts only. |
 
 ## Error codes (initial)

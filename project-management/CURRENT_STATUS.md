@@ -2,11 +2,17 @@
 
 **Date:** 2026-11-14
 **Phase:** 10 — Deployment & launch — **in progress**. Part 1 (launch gate, error reporting, restore drill, runbooks)
-committed and merged to `master` (`265ed70`). Part 2: hosting decided (Hostinger VPS + Supabase Cloud Mumbai) and VPS
-deploy files written — **uncommitted**. Nothing is deployed; no server or Supabase project exists yet.
-**Git:** `master` at `265ed70`; part 2 is uncommitted in the working tree. No remote.
+committed and merged to `master` (`265ed70`). Part 2 (Hostinger VPS deploy files) merged (`de2b837`). Media pipeline built
+on branch `phase-10-media` — **uncommitted**. Nothing is deployed; no server or Supabase project exists yet.
+**Git:** `master` at `de2b837`; branch `phase-10-media` with uncommitted media work. No remote.
 
 ## What exists and is verified
+### Media pipeline (this session, branch `phase-10-media`, uncommitted)
+- Staff with MFA can upload photos to draft auctions and pools (JPEG / PNG / WebP ≤ 10 MB). The server checks the file's
+  real type, re-encodes to WebP in two sizes and strips location / camera metadata; alt text is required; up to 12 photos,
+  re-orderable and removable while the listing is a draft. Public auction and pool pages show a gallery; list cards show
+  the first photo. Private documents (KYC / RC) and malware scanning are still pending (OD-05, OD-09). TD-74.
+
 ### Phase 10 so far (this session)
 - **Launch gate:** `pnpm launch:check` (environment + `api.launch_readiness()` database checks) blocks a production start with
   sandbox payments, test accounts, a demo deposit policy, no Super Admin with MFA, a table without RLS, local / http URLs,

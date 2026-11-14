@@ -146,7 +146,7 @@ Code only — migrations are never rolled back; fix forward.
 ## Production checklist (Phase 10)
 - [ ] Domain + DNS (OD-01), HTTPS auto-renew, HSTS
 - [ ] Supabase prod project, PITR backups enabled, restore drill completed and recorded (local drill passed 2026-11-14)
-- [ ] Storage buckets: `public-media`, `private-docs` (RLS), backups of storage
+- [ ] Storage buckets: `public-media` is created by migration 0017 (check it exists, is public and WebP-only after `db push`); `private-docs` waits for OD-05; back up Storage objects
 - [ ] Secrets only in `/etc/poolx/poolx.env` (root:poolx 0640) on the VPS; `APP_ENV=production` (sandbox payments refused)
 - [ ] Payment provider live keys + webhook URL + secret; legal fund-flow approval (OD-02/03)
 - [ ] pg_cron jobs and host cron jobs enabled; `CRON_SECRET` set

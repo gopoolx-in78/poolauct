@@ -15,6 +15,16 @@ Last updated: 2026-11-14
 
 ## Run log
 
+### 2026-11-14 — Phase 10 media pipeline
+| Command | Result |
+|---|---|
+| `pnpm lint` / `tsc --noEmit` / `prettier --check . --end-of-line auto` / `pnpm build` | ✔ |
+| `pnpm test` | ✔ 96/96 — new `media.test.ts` (8: magic-byte sniffing refuses SVG / GIF / HTML; two WebP sizes; EXIF orientation applied and metadata stripped; no enlargement; tiny / corrupt / non-image refused; generated paths only; same-origin check) |
+| `pnpm test:db` | ✔ 11 files, 495 assertions — new `0011_media.test.sql` (38: bucket public / WebP-only / 2 MB, no client storage write policies, RLS, customer and non-MFA staff refused, alt text required, out-of-range and duplicate media refused, re-order, remove keeps a REMOVED row, audit, draft-only, 12-photo cap, public reads only for published listings, covers) |
+| `playwright test tests/e2e/media.spec.ts --project=desktop-chromium` | ✔ 2/2 — fake JPEG refused; two uploads, re-order, remove; axe clean on the admin pool page; public gallery image loads (1200×900 WebP, no EXIF); card cover; cross-site, anonymous and direct anon-key Storage uploads refused |
+| Visual check (in-app browser) | pool page gallery and list card cover at desktop and 375 px |
+| Full e2e suite | running at commit time — result recorded in the next entry |
+
 ### 2026-11-14 — Phase 10 part 2 (Hostinger VPS files)
 | Command | Result |
 |---|---|

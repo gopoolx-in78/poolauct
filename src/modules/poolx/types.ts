@@ -1,3 +1,5 @@
+import type { Media } from "@/modules/core/media";
+
 /** Shapes returned by the api.poolx_* functions (money arrives as strings — convert with `paise()`). */
 
 export type PoolStatus =
@@ -5,6 +7,8 @@ export type PoolStatus =
 
 export type PoolSummary = {
   id: string;
+  /** First pool photo, attached by the query layer (TD-74). */
+  cover?: Media | null;
   slug: string;
   title: string;
   summary: string;

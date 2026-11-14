@@ -1,5 +1,6 @@
 import { BadgeCheck } from "lucide-react";
 import Link from "next/link";
+import { CoverImage } from "@/components/media/gallery";
 import { Badge } from "@/components/ui/primitives";
 import { formatINR, paise } from "@/lib/money";
 import { formatIST, timeLeft } from "@/lib/time";
@@ -25,7 +26,8 @@ export function AuctionCard({ a, now }: { a: AuctionSummary; now: number }) {
         ? timeLeft(a.endsAt, now)
         : AUCTION_STATUS_LABEL[a.status];
   return (
-    <article className="bg-surface border-rule flex flex-col border p-5" data-module="auction">
+    <article className="bg-surface border-rule flex flex-col overflow-hidden border p-5" data-module="auction">
+      {a.cover ? <CoverImage media={a.cover} /> : null}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-ink-muted font-mono text-xs tracking-[0.15em] uppercase">{a.category?.name}</span>
         <Badge tone={a.status === "LIVE" ? "accent" : "neutral"}>{AUCTION_STATUS_LABEL[a.status]}</Badge>

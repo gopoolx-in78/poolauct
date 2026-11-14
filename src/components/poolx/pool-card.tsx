@@ -5,6 +5,7 @@ import { formatINR, paise } from "@/lib/money";
 import { timeLeft } from "@/lib/time";
 import { formatBps } from "@/modules/poolx/pricing";
 import { POOL_STATUS_LABEL, type PoolSummary } from "@/modules/poolx/types";
+import { CoverImage } from "@/components/media/gallery";
 
 export function PoolPrice({ pool, size = "md" }: { pool: PoolSummary; size?: "md" | "lg" }) {
   const current = paise(pool.currentUnitPricePaise);
@@ -54,7 +55,8 @@ export function MemberProgress({ pool }: { pool: PoolSummary }) {
 
 export function PoolCard({ pool, now }: { pool: PoolSummary; now: number }) {
   return (
-    <article className="bg-surface border-rule flex flex-col border p-5" data-module="poolx">
+    <article className="bg-surface border-rule flex flex-col overflow-hidden border p-5" data-module="poolx">
+      {pool.cover ? <CoverImage media={pool.cover} /> : null}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-ink-muted font-mono text-xs tracking-[0.15em] uppercase">{pool.category?.name}</span>
         <Badge tone={pool.status === "ACTIVE" ? "success" : "neutral"}>{POOL_STATUS_LABEL[pool.status]}</Badge>

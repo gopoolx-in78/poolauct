@@ -6,10 +6,12 @@ import { Badge, Skeleton } from "@/components/ui/primitives";
 import { formatINR, paise } from "@/lib/money";
 import { formatIST } from "@/lib/time";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { Media } from "@/modules/core/media";
 import { requireStaff } from "@/modules/core/server/auth";
 import { POOL_STATUS_LABEL, type PoolDetail } from "@/modules/poolx/types";
 import { publishPoolAction } from "../actions";
 import { loadFormOptions, poolToValues } from "../form-data";
+import { MediaManager } from "../../media-manager";
 import { PoolForm } from "../pool-form";
 import { CancelPoolForm, SellerForm, TiersForm } from "./forms";
 import { LifecycleSection } from "./lifecycle";
@@ -21,6 +23,9 @@ const NOTICES: Record<string, string> = {
   locked: "Pool locked: orders created and price-adjustment refunds queued.",
   shipped: "Order marked as shipped.",
   delivered: "Order marked as delivered.",
+  "photo-saved": "Photo caption saved.",
+  "photo-moved": "Photo order updated.",
+  "photo-removed": "Photo removed.",
 };
 
 type AdminPool = PoolDetail & {
@@ -44,7 +49,10 @@ async function AdminPool({ params, searchParams }: PageProps<"/admin/poolx/[id]"
   const account = await requireStaff(`/admin/poolx/${id}`, "poolx.pools.manage");
   if (!/^[0-9a-f-]{36}$/.test(id)) notFound();
   const supabase = await createSupabaseServerClient();
-  const { data } = await supabase.schema("api").rpc("poolx_admin_get_pool", { p_pool: id });
+  const [{ data }, { data: media }] = await Promise.all([
+    supabase.schema("api").rpc("poolx_admin_get_pool", { p_pool: id }),
+    supabase.schema("api").rpc("poolx_admin_media_list", { p_pool: id }),
+  ]);
   const pool = data as AdminPool | null;
   if (!pool) notFound();
   const sp = await searchParams;
@@ -118,6 +126,8 @@ async function AdminPool({ params, searchParams }: PageProps<"/admin/poolx/[id]"
           </p>
         ) : null}
       </div>
+
+      <MediaManager target="pool" ownerId={id} items={(media ?? []) as Media[]} editable={isDraft} />
 
       {isDraft ? (
         <>

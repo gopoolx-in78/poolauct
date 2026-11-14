@@ -6,12 +6,14 @@ import { Badge, Skeleton } from "@/components/ui/primitives";
 import { formatINR, paise } from "@/lib/money";
 import { formatIST } from "@/lib/time";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { Media } from "@/modules/core/media";
 import { requireStaff } from "@/modules/core/server/auth";
 import { AUCTION_STATUS_LABEL } from "@/modules/auction/types";
 import { cancelAuctionAction, closeAuctionAction, publishAuctionAction } from "../actions";
 import { loadListingOptions } from "../admin-data";
 import { auctionToValues, type AdminAuction } from "../form-data";
 import { ListingForm } from "../listing-form";
+import { MediaManager } from "../../media-manager";
 
 export const metadata = { title: "Auction" };
 
@@ -20,6 +22,9 @@ const NOTICES: Record<string, string> = {
   published: "Published. The deposit amount and terms are now frozen.",
   cancelled: "Auction cancelled. Every paid deposit has been queued for a full refund.",
   closed: "Auction closed. Results, refunds and the winner’s invoice have been created.",
+  "photo-saved": "Photo caption saved.",
+  "photo-moved": "Photo order updated.",
+  "photo-removed": "Photo removed.",
 };
 
 export default function AdminAuctionPage({ params, searchParams }: PageProps<"/admin/auctions/[id]">) {
@@ -38,8 +43,9 @@ async function AdminAuctionView({
   const account = await requireStaff(`/admin/auctions/${id}`, "auction.listings.manage");
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const supabase = await createSupabaseServerClient();
-  const [{ data }, sp] = await Promise.all([
+  const [{ data }, { data: media }, sp] = await Promise.all([
     supabase.schema("api").rpc("auction_admin_get", { p_auction: id }),
+    supabase.schema("api").rpc("auction_admin_media_list", { p_auction: id }),
     searchParams,
   ]);
   const a = data as AdminAuction | null;
@@ -192,6 +198,10 @@ async function AdminAuctionView({
           </form>
         </section>
       ) : null}
+
+      <div className="mt-12">
+        <MediaManager target="auction" ownerId={id} items={(media ?? []) as Media[]} editable={isDraft} />
+      </div>
 
       {isDraft ? (
         <section aria-labelledby="edit-h" className="mt-12">

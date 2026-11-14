@@ -1,5 +1,6 @@
 import "server-only";
 import { createSupabasePublicClient } from "@/lib/supabase/public";
+import type { Media } from "@/modules/core/media";
 import type { Category, PoolDetail, PoolList } from "../types";
 
 export const POOL_SORTS = ["ending", "popular", "newest"] as const;
@@ -22,7 +23,25 @@ export async function listPools(opts: {
       p_offset: opts.offset ?? 0,
     });
   if (error) throw new Error(`poolx_list_pools failed: ${error.code}`);
-  return data as PoolList;
+  const list = data as PoolList;
+  const covers = await getPoolCovers(list.items.map((p) => p.slug));
+  return { ...list, items: list.items.map((p) => ({ ...p, cover: covers[p.slug] ?? null })) };
+}
+
+/** Photos of a publicly visible pool, in order (TD-74). */
+export async function getPoolMedia(slug: string): Promise<Media[]> {
+  const { data, error } = await createSupabasePublicClient().schema("api").rpc("poolx_pool_media", { p_slug: slug });
+  if (error) throw new Error(`poolx_pool_media failed: ${error.code}`);
+  return (data ?? []) as Media[];
+}
+
+async function getPoolCovers(slugs: string[]): Promise<Record<string, Media>> {
+  if (slugs.length === 0) return {};
+  const { data, error } = await createSupabasePublicClient()
+    .schema("api")
+    .rpc("poolx_media_covers", { p_slugs: slugs });
+  if (error) throw new Error(`poolx_media_covers failed: ${error.code}`);
+  return (data ?? {}) as Record<string, Media>;
 }
 
 export async function getPool(slug: string): Promise<PoolDetail | null> {

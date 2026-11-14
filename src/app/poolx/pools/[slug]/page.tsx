@@ -16,7 +16,8 @@ import { formatIST, requestNow, timeLeft } from "@/lib/time";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getAccount } from "@/modules/core/server/auth";
 import { formatBps } from "@/modules/poolx/pricing";
-import { getPool } from "@/modules/poolx/server/queries";
+import { getPool, getPoolMedia } from "@/modules/poolx/server/queries";
+import { Gallery } from "@/components/media/gallery";
 import { POOL_STATUS_LABEL, type PoolDetail } from "@/modules/poolx/types";
 import { JoinForm } from "./join-form";
 
@@ -58,7 +59,7 @@ export default function PoolPage({ params, searchParams }: PageProps<"/poolx/poo
 async function Pool({ params, searchParams }: PageProps<"/poolx/pools/[slug]">) {
   await connection();
   const { slug } = await params;
-  const pool = await getPool(slug);
+  const [pool, media] = await Promise.all([getPool(slug), getPoolMedia(slug)]);
   if (!pool) notFound();
   const sp = await searchParams;
   const now = await requestNow();
@@ -112,6 +113,7 @@ async function Pool({ params, searchParams }: PageProps<"/poolx/pools/[slug]">) 
           </div>
           <h1 className="mt-3 text-4xl md:text-5xl">{pool.title}</h1>
           <p className="text-ink-muted mt-3 text-lg">{pool.summary}</p>
+          <Gallery items={media} title={pool.title} />
 
           <section aria-labelledby="about" className="mt-10">
             <h2 id="about" className="text-2xl">

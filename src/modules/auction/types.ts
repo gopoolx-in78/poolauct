@@ -1,9 +1,12 @@
+import type { Media } from "@/modules/core/media";
 /** Shapes returned by api.auction_* (money as strings — convert with `paise()`). */
 
 export type AuctionStatus = "DRAFT" | "SCHEDULED" | "LIVE" | "ENDED" | "CLOSED" | "CANCELLED";
 
 export type AuctionSummary = {
   id: string;
+  /** First listing photo, attached by the query layer (TD-74). */
+  cover?: Media | null;
   slug: string;
   title: string;
   type: "TIMED_ENGLISH" | "RESERVE";

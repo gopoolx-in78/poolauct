@@ -122,3 +122,61 @@ test("uploads are refused cross-site, without a staff session, and directly agai
   });
   expect(direct.status()).toBeGreaterThanOrEqual(400);
 });
+
+test("content managers set, replace and remove a blog cover; the post and blog list show it", async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  test.setTimeout(180_000);
+  const email = uniqueEmail("cover-staff");
+  await registerAndConfirm(page, baseURL!, email, "Cover Staff");
+  await becomeStaffWithMfa(page, email, "content_manager");
+  const postSlug = `e2e-cover-${suffix}`;
+  const postTitle = `E2E cover post ${suffix}`;
+  const profile = sql(`select id from core.profiles where email = '${email}'`);
+  const docId =
+    sql(`insert into cms.documents (kind, slug, status, latest_revision, published_revision, first_published_at,
+      published_at, created_by, updated_by)
+    values ('POST', '${postSlug}', 'PUBLISHED', 1, 1, now(), now(), '${profile}', '${profile}') returning id`).split(
+      "\n",
+    )[0]!;
+  sql(`insert into cms.document_revisions (document_id, revision, title, summary, body, created_by)
+    values ('${docId}', 1, '${postTitle}', 'A post used by the cover test', 'Body text for the cover test.', '${profile}')`);
+
+  await page.goto(`/admin/content/${docId}`);
+  const section = page.getByRole("region", { name: "Cover image" });
+  const upload = section.getByRole("form", { name: "Add a photo" });
+  await expect(section.getByText("No cover image.")).toBeVisible();
+
+  const setCover = async (alt: string, colour: [number, number, number], button: string) => {
+    await upload
+      .getByLabel(/^Photo/)
+      .setInputFiles({ name: "cover.png", mimeType: "image/png", buffer: await photo(...colour) });
+    await upload.getByLabel(/^Alt text/).fill(alt);
+    await upload.getByRole("button", { name: button }).click();
+    await expect(upload.getByRole("status")).toHaveText("Cover saved.");
+    await expect(section.getByRole("img", { name: alt })).toBeVisible();
+    return (await section.getByRole("img", { name: alt }).getAttribute("src"))!;
+  };
+  const first = await setCover("Green packing table", [40, 160, 60], "Upload cover");
+  const second = await setCover("Stack of delivered boxes", [160, 120, 40], "Replace cover");
+  expect(second).not.toBe(first);
+  // the replaced cover's files are deleted from Storage
+  expect((await page.request.get(first)).status()).toBeGreaterThanOrEqual(400);
+
+  const anon = await (await browser.newContext()).newPage();
+  await anon.goto(`/blog/${postSlug}`);
+  const hero = anon.getByRole("article").getByRole("img", { name: "Stack of delivered boxes" });
+  await expect(hero).toBeVisible();
+  await expect.poll(() => hero.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(1200);
+  await expect(anon.locator('meta[property="og:image"]')).toHaveAttribute("content", /display\.webp$/);
+  await anon.goto("/blog");
+  await expect(anon.getByRole("img", { name: "Stack of delivered boxes" })).toBeVisible();
+
+  await section.getByRole("button", { name: "Remove cover: Stack of delivered boxes" }).click();
+  await expect(page.getByText("Cover image removed.")).toBeVisible();
+  await anon.goto(`/blog/${postSlug}`);
+  await expect(anon.getByRole("heading", { level: 1 })).toHaveText(postTitle);
+  await expect(anon.getByRole("article").getByRole("img")).toHaveCount(0);
+});

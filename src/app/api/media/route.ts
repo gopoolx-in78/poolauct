@@ -1,7 +1,9 @@
+import { revalidateTag } from "next/cache";
 import { connection } from "next/server";
 import { z } from "zod";
 import { isSameOrigin, readBodyCapped } from "@/lib/http";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { CMS_TAGS } from "@/modules/cms/server/queries";
 import { MEDIA_MAX_UPLOAD_BYTES } from "@/modules/core/media";
 import { getAccount } from "@/modules/core/server/auth";
 import { deleteStoredImage, MediaError, processImage, storeImage } from "@/modules/core/server/media";
@@ -13,10 +15,11 @@ const MAX_BODY = MEDIA_MAX_UPLOAD_BYTES + 64 * 1024;
 const TARGETS = {
   auction: { permission: "auction.listings.manage", rpc: "auction_admin_media_add", param: "p_auction" },
   pool: { permission: "poolx.pools.manage", rpc: "poolx_admin_media_add", param: "p_pool" },
+  cms: { permission: "cms.content.manage", rpc: "cms_admin_cover_set", param: "p_document" },
 } as const;
 
 const fieldsSchema = z.object({
-  target: z.enum(["auction", "pool"]),
+  target: z.enum(["auction", "pool", "cms"]),
   id: z.uuid(),
   alt: z.string().trim().min(3, "Describe the photo in at least 3 characters.").max(200),
 });
@@ -25,7 +28,7 @@ const noStore = { "Cache-Control": "no-store" };
 const fail = (status: number, error: string) => Response.json({ error }, { status, headers: noStore });
 
 /**
- * Staff photo upload (TD-74). multipart/form-data with `target` (auction | pool), `id`, `alt` and `file`.
+ * Staff photo upload (TD-74, TD-75). multipart/form-data with `target` (auction | pool | cms), `id`, `alt` and `file`.
  * The image is re-encoded server-side; the database call runs with the staff member's own session, so permissions,
  * MFA and the draft-only rule are enforced in SQL as well as here.
  */
@@ -83,6 +86,13 @@ export async function POST(request: Request) {
       const message = error.message?.includes(":") ? error.message.split(":").slice(1).join(":").trim() : null;
       if (error.code === "42501") return fail(403, "You don’t have permission to do that.");
       return fail(400, message ?? "The photo could not be added.");
+    }
+    if (parsed.data.target === "cms") {
+      // A cover replaces the previous one: delete its files and refresh the cached blog / page data.
+      const { media, replacedId } = data as { media: unknown; replacedId: string | null };
+      if (replacedId) await deleteStoredImage(replacedId);
+      revalidateTag(CMS_TAGS.docs, { expire: 0 });
+      return Response.json({ media }, { status: 201, headers: noStore });
     }
     return Response.json({ media: data }, { status: 201, headers: noStore });
   } catch (error) {

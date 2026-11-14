@@ -234,7 +234,11 @@ Routes: `GET /api/cron/notifications` (Bearer `CRON_SECRET`, every minute) → `
 | `api.auction_admin_media_list(p_auction)` / `api.poolx_admin_media_list(p_pool)` | same | photos in order (any status) |
 | `api.auction_media(p_slug)` / `api.poolx_pool_media(p_slug)` | anyone | photos of a published auction / publicly visible pool |
 | `api.auction_media_covers(p_slugs)` / `api.poolx_media_covers(p_slugs)` | anyone | `{ slug: firstPhoto }` for list cards (≤ 60 slugs) |
-| `POST /api/media` (route) | staff at aal2, same origin | multipart `target` (auction / pool), `id`, `alt`, `file` (JPEG / PNG / WebP ≤ 10 MB) → 201 `{ media }`; 400 invalid image or details, 403 not allowed / cross-site, 413 too large, 429 over 60 uploads / hour |
+| `api.cms_admin_cover_set(p_document, p)` | staff with `cms.content.manage` at aal2 | `{ media, replacedId }` — sets or replaces the cover; called by `POST /api/media` (target `cms`), which then deletes the replaced files |
+| `api.cms_admin_cover_remove(p_document)` | same | removed media id or null; the server action deletes the files |
+| `api.cms_admin_cover_get(p_document)` | same | current cover or null |
+| `api.cms_public_documents(...)` / `api.cms_public_document(...)` | anyone | now also `cover` (photo or null) |
+| `POST /api/media` (route) | staff at aal2, same origin | multipart `target` (auction / pool / cms), `id`, `alt`, `file` (JPEG / PNG / WebP ≤ 10 MB) → 201 `{ media }`; 400 invalid image or details, 403 not allowed / cross-site, 413 too large, 429 over 60 uploads / hour |
 | `api.launch_readiness()` | service_role only | `{ ok, checks: [{ key, ok, detail }] }` — deposit policy set by staff, no `.test` accounts, no sandbox payments, Super Admin with MFA, RLS on all application tables, service-role timeouts. Counts only. |
 
 ## Error codes (initial)

@@ -6,7 +6,7 @@ import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { FormField, Input } from "@/components/ui/form-field";
 import { MEDIA_ACCEPT, MEDIA_MAX_PER_LISTING, mediaSrc, type Media } from "@/modules/core/media";
-import { removeMediaAction, updateMediaAction } from "./media-actions";
+import { removeCoverAction, removeMediaAction, updateMediaAction } from "./media-actions";
 
 type Props = {
   target: "auction" | "pool";
@@ -119,7 +119,17 @@ function Hidden({ target, ownerId, mediaId }: { target: string; ownerId: string;
   );
 }
 
-function UploadForm({ target, ownerId }: { target: "auction" | "pool"; ownerId: string }) {
+export function UploadForm({
+  target,
+  ownerId,
+  label = "Upload photo",
+  done = "Photo added.",
+}: {
+  target: "auction" | "pool" | "cms";
+  ownerId: string;
+  label?: string;
+  done?: string;
+}) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
@@ -139,7 +149,7 @@ function UploadForm({ target, ownerId }: { target: "auction" | "pool"; ownerId: 
         return;
       }
       formRef.current?.reset();
-      setMessage({ tone: "ok", text: "Photo added." });
+      setMessage({ tone: "ok", text: done });
       startTransition(() => router.refresh());
     } catch {
       setMessage({ tone: "error", text: "The upload failed. Check your connection and try again." });
@@ -165,7 +175,7 @@ function UploadForm({ target, ownerId }: { target: "auction" | "pool"; ownerId: 
       </FormField>
       <div>
         <Button type="submit" disabled={busy}>
-          {busy ? "Uploading…" : "Upload photo"}
+          {busy ? "Uploading…" : label}
         </Button>
       </div>
       {message ? (
@@ -174,5 +184,46 @@ function UploadForm({ target, ownerId }: { target: "auction" | "pool"; ownerId: 
         </p>
       ) : null}
     </form>
+  );
+}
+
+/** Cover image of a CMS page or blog post (TD-75): one image, replaceable at any time, alt text required. */
+export function CoverManager({ documentId, cover }: { documentId: string; cover: Media | null }) {
+  return (
+    <section aria-labelledby="cover-h" className="mt-6">
+      <h2 id="cover-h" className="text-2xl">
+        Cover image
+      </h2>
+      <p className="text-ink-muted mt-1 text-sm">
+        Shown above the article and in the blog list. JPEG, PNG or WebP up to 10 MB; converted to WebP with location
+        data removed. Changes apply immediately, also to the published version.
+      </p>
+      {cover ? (
+        <div className="mt-4 flex flex-wrap items-end gap-4">
+          <Image
+            src={mediaSrc(cover.thumb.path)}
+            alt={cover.alt}
+            width={cover.thumb.width}
+            height={cover.thumb.height}
+            unoptimized
+            className="border-rule w-60 border"
+          />
+          <form action={removeCoverAction}>
+            <input type="hidden" name="documentId" value={documentId} />
+            <Button type="submit" variant="danger" aria-label={`Remove cover: ${cover.alt}`}>
+              Remove cover
+            </Button>
+          </form>
+        </div>
+      ) : (
+        <p className="mt-4 text-sm">No cover image.</p>
+      )}
+      <UploadForm
+        target="cms"
+        ownerId={documentId}
+        label={cover ? "Replace cover" : "Upload cover"}
+        done="Cover saved."
+      />
+    </section>
   );
 }

@@ -2,12 +2,18 @@
 
 **Date:** 2026-11-14
 **Phase:** 10 — Deployment & launch — **in progress**. Part 1 (launch gate, error reporting, restore drill, runbooks)
-committed and merged to `master` (`265ed70`). Part 2 (Hostinger VPS deploy files) merged (`de2b837`). Media pipeline built
-on branch `phase-10-media` — **uncommitted**. Nothing is deployed; no server or Supabase project exists yet.
-**Git:** `master` at `de2b837`; branch `phase-10-media` with uncommitted media work. No remote.
+committed and merged to `master` (`265ed70`). Part 2 (Hostinger VPS deploy files) merged (`de2b837`). Media pipeline merged
+(`ddea3aa`). Blog / page covers built on branch `phase-10-cms-covers` — **uncommitted**. Nothing is deployed; no server or
+Supabase project exists yet.
+**Git:** `master` at `ddea3aa`; branch `phase-10-cms-covers` with uncommitted cover work. No remote.
 
 ## What exists and is verified
-### Media pipeline (this session, branch `phase-10-media`, uncommitted)
+### Blog / page covers (this session, branch `phase-10-cms-covers`, uncommitted)
+- Content managers with MFA can upload, replace and remove one cover image per page or blog post (same upload checks and
+  WebP re-encoding as listing photos). Published posts show it as a hero image and in link previews (Open Graph / Twitter);
+  the blog list shows thumbnails. Images inside article text are not supported yet (7.8b). TD-75.
+
+### Media pipeline (this session, merged)
 - Staff with MFA can upload photos to draft auctions and pools (JPEG / PNG / WebP ≤ 10 MB). The server checks the file's
   real type, re-encodes to WebP in two sizes and strips location / camera metadata; alt text is required; up to 12 photos,
   re-orderable and removable while the listing is a draft. Public auction and pool pages show a gallery; list cards show

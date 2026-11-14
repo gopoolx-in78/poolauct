@@ -83,3 +83,4 @@
 | 2026-11-14 | 10 | 10.4 Runbooks in DEPLOYMENT_GUIDE | doc |
 - [x] 10.5a Hosting decided (Hostinger KVM VPS + Supabase Cloud Mumbai); `deploy/` server files and VPS runbook (TD-73) — 2026-11-14
 - [x] 4.8 / 3.11 Media pipeline for auction and pool photos (TD-74) — 2026-11-14
+- [x] 7.8 Cover images for CMS pages and blog posts (TD-75) — pgTAP 0012 (16), media e2e 3/3 — 2026-11-14

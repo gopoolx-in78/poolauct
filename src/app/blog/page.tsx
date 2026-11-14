@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Breadcrumbs, Container, EmptyState } from "@/components/ui/primitives";
@@ -5,6 +6,7 @@ import { site } from "@/config/site";
 import { pageMetadata } from "@/lib/seo";
 import { formatIST } from "@/lib/time";
 import { getPublicDocuments, seoFor } from "@/modules/cms/server/queries";
+import { mediaSrc } from "@/modules/core/media";
 
 const LIMIT = 50;
 
@@ -35,6 +37,16 @@ export default async function BlogPage() {
         <ul className="mt-10 max-w-3xl space-y-10">
           {items.map((p) => (
             <li key={p.slug} className="border-ink border-t pt-4">
+              {p.cover ? (
+                <Image
+                  src={mediaSrc(p.cover.thumb.path)}
+                  alt={p.cover.alt}
+                  width={p.cover.thumb.width}
+                  height={p.cover.thumb.height}
+                  unoptimized
+                  className="bg-ink/5 mb-4 aspect-[16/9] w-full max-w-md object-cover"
+                />
+              ) : null}
               <h2 className="text-3xl">
                 <Link href={`/blog/${p.slug}`} className="underline-offset-4 hover:underline">
                   {p.title}

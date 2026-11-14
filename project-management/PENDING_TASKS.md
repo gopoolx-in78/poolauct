@@ -90,7 +90,8 @@ See PROJECT_ROADMAP.md phases 7–10.
 - [x] 7.5 Pages (`/info/[slug]`), blog, FAQ, SEO settings for 8 public routes; sitemap
 - [x] 7.6 Tests: pgTAP 71 (incl. acceptance 20), unit theme 12 + Markdown XSS 5, Playwright `cms.spec.ts` 3
 - [ ] 7.7 Featured pools / auctions picker for the homepage (R-B5)
-- [ ] 7.8 Images in CMS content and blog covers — can now reuse `core.media_assets` + `POST /api/media` (add a `cms` target and link table)
+- [x] 7.8 Cover images for pages and blog posts (TD-75) — 2026-11-14
+- [ ] 7.8b Images inside article bodies (Markdown image syntax limited to the `public-media` bucket)
 - [ ] 7.9 Optional second approver for theme publishing (owner decision; currently reason + audit)
 - [ ] 7.10 Visual review of the three templates in light/dark at 320/768/1440 (with 1.16; automated overflow/axe checks cover the published theme only)
 

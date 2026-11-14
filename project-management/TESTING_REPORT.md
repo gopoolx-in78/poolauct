@@ -15,6 +15,16 @@ Last updated: 2026-11-14
 
 ## Run log
 
+### 2026-11-14 — Phase 10 blog covers
+| Command | Result |
+|---|---|
+| `pnpm lint` / `tsc --noEmit` / `prettier --check . --end-of-line auto` / `pnpm build` | ✔ |
+| `pnpm test` | ✔ 96/96 |
+| `pnpm test:db` | ✔ 12 files, 511 assertions — new `0012_cms_covers.test.sql` (16: RLS, anon / customer / other staff / non-MFA refused, alt text required, replace returns the old id and marks it REMOVED, unknown document, drafts not public, published post and blog index include the cover, remove, audit) |
+| `playwright test tests/e2e/media.spec.ts --project=desktop-chromium` | ✔ 3/3 — new cover journey: upload, replace (old file returns ≥ 400), post hero loads at 1200 px, `og:image` is the cover, blog list thumbnail, remove |
+| `playwright test cms, a11y-private, foundation specs --workers=1` | ✔ 35 passed · 5 skipped (mobile by design) |
+| Full e2e suite | not rerun for this change |
+
 ### 2026-11-14 — Phase 10 media pipeline
 | Command | Result |
 |---|---|

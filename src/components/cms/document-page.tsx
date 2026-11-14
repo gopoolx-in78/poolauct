@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Breadcrumbs, Container, JsonLd } from "@/components/ui/primitives";
@@ -5,6 +6,7 @@ import { site } from "@/config/site";
 import { pageMetadata } from "@/lib/seo";
 import { formatIST } from "@/lib/time";
 import { getPublicDocument, type DocumentKind } from "@/modules/cms/server/queries";
+import { mediaSrc } from "@/modules/core/media";
 import { Markdown } from "./markdown";
 
 const BASE: Record<DocumentKind, { path: string; label: string }> = {
@@ -19,6 +21,14 @@ export async function documentMetadata(kind: DocumentKind, slug: string): Promis
     title: doc.seoTitle ?? doc.title,
     description: doc.seoDescription ?? (doc.summary || `${doc.title} — ${site.name}`),
     path: `${BASE[kind].path}/${slug}`,
+    image: doc.cover
+      ? {
+          url: mediaSrc(doc.cover.display.path),
+          width: doc.cover.display.width,
+          height: doc.cover.display.height,
+          alt: doc.cover.alt,
+        }
+      : undefined,
   });
 }
 
@@ -50,6 +60,7 @@ export async function DocumentView({ kind, slug }: { kind: DocumentKind; slug: s
             datePublished: doc.firstPublishedAt,
             dateModified: doc.publishedAt,
             url: `${site.url}${path}`,
+            ...(doc.cover ? { image: mediaSrc(doc.cover.display.path) } : {}),
           }}
         />
       )}
@@ -64,6 +75,19 @@ export async function DocumentView({ kind, slug }: { kind: DocumentKind; slug: s
           </p>
         )}
         {doc.summary && <p className="text-ink-muted mt-4 text-xl">{doc.summary}</p>}
+        {doc.cover ? (
+          <Image
+            src={mediaSrc(doc.cover.display.path)}
+            alt={doc.cover.alt}
+            width={doc.cover.display.width}
+            height={doc.cover.display.height}
+            unoptimized
+            loading="eager"
+            fetchPriority="high"
+            sizes="(min-width: 768px) 48rem, 100vw"
+            className="bg-ink/5 mt-6 w-full"
+          />
+        ) : null}
         <Markdown source={doc.body} className="mt-6 text-lg" />
       </article>
     </Container>

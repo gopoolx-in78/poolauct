@@ -1,6 +1,7 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { createSupabasePublicClient } from "@/lib/supabase/public";
+import type { Media } from "@/modules/core/media";
 import { DEFAULT_THEME, parseThemeConfig, type ThemeConfig } from "@/modules/theme/schema";
 
 /** Cache tags invalidated by the CMS admin actions (updateTag) so publishes show immediately. */
@@ -49,6 +50,8 @@ export type DocumentSummary = {
   summary: string;
   firstPublishedAt: string;
   publishedAt: string;
+  /** Cover image (TD-75), null when the document has none. */
+  cover: Media | null;
 };
 export type PublicDocument = DocumentSummary & {
   body: string;

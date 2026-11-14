@@ -7,7 +7,9 @@ import { Badge, Skeleton } from "@/components/ui/primitives";
 import { formatIST } from "@/lib/time";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireStaff } from "@/modules/core/server/auth";
+import type { Media } from "@/modules/core/media";
 import { AdminCrumbs, Flash, qp } from "../../admin-kit";
+import { CoverManager } from "../../media-manager";
 import { documentStatusAction } from "../actions";
 import { KIND_LABEL, type AdminDocument } from "../content-types";
 import { DocumentForm } from "../document-form";
@@ -19,6 +21,7 @@ const NOTICES: Record<string, string> = {
   publish: "Published. Visitors now see this revision.",
   unpublish: "Unpublished. It is no longer visible to visitors.",
   restore: "Earlier revision copied as the newest revision. Publish it to make it live.",
+  "cover-removed": "Cover image removed.",
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -38,7 +41,10 @@ async function Edit({ params, searchParams }: PageProps<"/admin/content/[id]">) 
   if (!UUID.test(id)) notFound();
   const sp = await searchParams;
   const supabase = await createSupabaseServerClient();
-  const { data } = await supabase.schema("api").rpc("cms_admin_get_document", { p_id: id });
+  const [{ data }, { data: cover }] = await Promise.all([
+    supabase.schema("api").rpc("cms_admin_get_document", { p_id: id }),
+    supabase.schema("api").rpc("cms_admin_cover_get", { p_document: id }),
+  ]);
   const d = data as AdminDocument | null;
   if (!d || !d.latest) notFound();
   const path = `${d.kind === "POST" ? "/blog/" : "/info/"}${d.slug}`;
@@ -69,6 +75,7 @@ async function Edit({ params, searchParams }: PageProps<"/admin/content/[id]">) 
         ) : null}
       </p>
       <Flash notice={NOTICES[qp(sp, "notice") ?? ""]} error={qp(sp, "error")} />
+      <CoverManager documentId={d.id} cover={(cover ?? null) as Media | null} />
 
       <section aria-labelledby="publish-h" className="border-rule mt-6 grid gap-4 border p-5 md:grid-cols-2">
         <div>

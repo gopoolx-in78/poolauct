@@ -1,8 +1,10 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { CMS_TAGS } from "@/modules/cms/server/queries";
 import { requireStaff } from "@/modules/core/server/auth";
 import { deleteStoredImage } from "@/modules/core/server/media";
 import { outcome, str } from "./action-kit";
@@ -43,4 +45,17 @@ export async function removeMediaAction(formData: FormData) {
   const { error } = await supabase.schema("api").rpc(`${target.prefix}_admin_media_remove`, { p_media: mediaId });
   if (!error) await deleteStoredImage(mediaId);
   redirect(outcome(`${target.path}${ownerId}`, error, "photo-removed"));
+}
+
+/** Removes a page / post cover (TD-75): SQL unlinks it and marks it REMOVED, then the files are deleted. */
+export async function removeCoverAction(formData: FormData) {
+  const id = z.uuid().parse(str(formData, "documentId"));
+  await requireStaff(`/admin/content/${id}`, "cms.content.manage");
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.schema("api").rpc("cms_admin_cover_remove", { p_document: id });
+  if (!error) {
+    if (typeof data === "string") await deleteStoredImage(data);
+    updateTag(CMS_TAGS.docs);
+  }
+  redirect(outcome(`/admin/content/${id}`, error, "cover-removed"));
 }

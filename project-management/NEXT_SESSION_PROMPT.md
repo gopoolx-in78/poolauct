@@ -3,32 +3,33 @@
 **Project:** Dual marketplace — PoolX (group buying) + Auctions (second-hand assets, mandatory refundable deposits). Parent brand pending (OD-01); interim name "PoolX & Auctions".
 **Current phase:** Phase 10 (Deployment & launch) — part 1 merged (launch gate, error reporting, restore drill, runbooks); part 2: hosting decided (Hostinger KVM VPS + Supabase Cloud Mumbai, TD-73) and `deploy/` server files written. Nothing deployed yet.
 **Last completed milestone:** central notification service — 28 PoolX / auction events raised by database triggers, in-app inbox, preferences, e-mail delivery worker with retries (Mailpit test inbox locally), admin delivery log, auction reminders.
-**Git:** `master` at `de2b837` (Phase 10 parts 1–2); branch `phase-10-media` holds the media pipeline (may be uncommitted — check `git status`). No remote.
-**Database changes:** migrations 0001–0017 (DATABASE_SCHEMA.md "Applied migrations").
-**Tests:** unit 96 · pgTAP 495 · integration 3 · build · e2e (full suite with `--workers=1`, TD-38) — see TESTING_REPORT.
+**Git:** `master` at `ddea3aa` (Phase 10 parts 1–2 + media pipeline); branch `phase-10-cms-covers` holds blog / page covers (may be uncommitted — check `git status`). No remote.
+**Database changes:** migrations 0001–0018 (DATABASE_SCHEMA.md "Applied migrations").
+**Tests:** unit 96 · pgTAP 511 · integration 3 · build · e2e (full suite with `--workers=1`, TD-38) — see TESTING_REPORT.
 **Local env:** `.env.local` needs `EMAIL_PROVIDER=mailpit`, `EMAIL_FROM`, `MAILPIT_URL` for e-mail locally (see `.env.example`).
-**Known gaps:** real e-mail provider / SMS / WhatsApp (OD-07); cron schedules (files ready in `deploy/cron`, install on the VPS); header unread badge (8.11); notification retention (8.12); featured picker (7.7); CMS / blog images (7.8, reuse the media pipeline); private KYC documents (4.8b, OD-05 / OD-09); inspection/RC staff UI; seller self-listing; seller settlements (OD-03); Razorpay (OD-02) — no live payments; deposit values OD-04, bidder KYC OD-05, forfeiture policy OD-11.
+**Known gaps:** real e-mail provider / SMS / WhatsApp (OD-07); cron schedules (files ready in `deploy/cron`, install on the VPS); header unread badge (8.11); notification retention (8.12); featured picker (7.7); images inside article bodies (7.8b); private KYC documents (4.8b, OD-05 / OD-09); inspection/RC staff UI; seller self-listing; seller settlements (OD-03); Razorpay (OD-02) — no live payments; deposit values OD-04, bidder KYC OD-05, forfeiture policy OD-11.
 
 ## Start-of-session protocol
 Read AGENTS.md (Next.js 16 docs in `node_modules/next/dist/docs/`), PROJECT_OVERVIEW, CURRENT_STATUS, PENDING_TASKS, this file →
 `git status` → `pnpm exec supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,realtime` → `pnpm test:db`
-(expect 495/495) → report status.
+(expect 511/511) → report status.
 
 ## Next exact tasks (ask the owner which first)
-1. **Commit the media pipeline** (branch `phase-10-media`) when the owner asks; merge to `master` when asked.
+1. **Commit the blog covers** (branch `phase-10-cms-covers`) when the owner asks; merge to `master` when asked.
 2. **First staging deploy** once the owner has bought the Hostinger VPS and created the staging Supabase project (Mumbai):
    follow DEPLOYMENT_GUIDE "Hostinger VPS" step by step (the owner does purchases, DNS and anything needing their
    credentials); prove `nginx -t`, the systemd unit, `deploy.sh`, `rollback.sh` and the cron runner on the real server;
    then hosted restore drill (10.13) and uptime monitor (10.9).
 3. **Other owner decisions:** domain (OD-01), error tracker (OD-08), analytics + consent, Git remote (1.13b), live payments
    (OD-02/03), e-mail provider (OD-07), deposit values (OD-04). Then `pnpm launch:check` green and the final audit.
-4. **Media follow-ups:** blog covers / CMS images (7.8) on the same pipeline; private document uploads after OD-05 / OD-09.
+4. **Media follow-ups:** images inside article bodies (7.8b); private document uploads after OD-05 / OD-09.
 5. **Search (R-H2, §16)** and small follow-ups: header unread badge (8.11); featured picker (7.7).
 
 ## Patterns to follow
 - Media: never let a client write to Storage or choose a path. Uploads go through `POST /api/media` (re-encode with
   `processImage`, `storeImage`, then the module's `*_admin_media_add` with the user's session; delete files if SQL fails).
-  Show images with `mediaSrc()` + `next/image` `unoptimized` and the stored width / height.
+  Show images with `mediaSrc()` + `next/image` `unoptimized` and the stored width / height. CMS covers: target `cms`;
+  the route deletes replaced files and calls `revalidateTag(CMS_TAGS.docs, { expire: 0 })` (server actions use `updateTag`).
 - VPS: production settings live only in `/etc/poolx/poolx.env`; the app listens on 127.0.0.1:3000 behind Nginx, which
   overwrites X-Forwarded-For (keep it that way — rate limits trust the first hop). Shell files in `deploy/` must stay LF.
 - Launch gate: add a production requirement to `checkLaunchEnv` (unit test) or to `api.launch_readiness()` (new migration + pgTAP 0010).

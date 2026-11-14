@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-14 — Session 1 (Phase 10: blog covers) — branch `phase-10-cms-covers`
+- Migration 0018: `cms.document_covers`, `api.cms_admin_cover_{set,remove,get}`, public document functions return `cover`;
+  pgTAP `0012_cms_covers.test.sql` (16).
+- `POST /api/media` target `cms`; `removeCoverAction`; `CoverManager` on the admin content page (reusable `UploadForm`).
+- Post / page hero image, JSON-LD `image`, Open Graph + Twitter large image (`pageMetadata` `image`); blog list thumbnails.
+- Tests: third `media.spec.ts` journey (set, replace, remove cover; old files gone; post, og:image and blog list).
+
 ## 2026-11-14 — Session 1 (Phase 10: media pipeline) — branch `phase-10-media`
 - Migration 0017: `public-media` bucket, `core.media_assets`, `auction.asset_media`, `poolx.pool_media`, staff and public media
   functions; pgTAP `0011_media.test.sql` (38).

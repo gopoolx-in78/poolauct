@@ -61,3 +61,15 @@ export async function getPublicStats(): Promise<{ openPools: number; activeMembe
   if (error) throw new Error(`poolx_public_stats failed: ${error.code}`);
   return data as { openPools: number; activeMembers: number };
 }
+
+/** Open public pools for the given slugs, in that order (homepage featured, TD-76). */
+export async function getOpenPoolsBySlugs(slugs: string[]): Promise<PoolList["items"]> {
+  if (slugs.length === 0) return [];
+  const { data, error } = await createSupabasePublicClient()
+    .schema("api")
+    .rpc("poolx_pools_by_slugs", { p_slugs: slugs.slice(0, 12) });
+  if (error) throw new Error(`poolx_pools_by_slugs failed: ${error.code}`);
+  const items = (data ?? []) as PoolList["items"];
+  const covers = await getPoolCovers(items.map((p) => p.slug));
+  return items.map((p) => ({ ...p, cover: covers[p.slug] ?? null }));
+}

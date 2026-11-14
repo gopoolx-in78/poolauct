@@ -54,6 +54,9 @@ async function Content({ searchParams }: Pick<PageProps<"/admin/content">, "sear
         <Link href="/admin/content/faqs" className="underline-offset-4 hover:underline">
           FAQs
         </Link>
+        <Link href="/admin/content/featured" className="underline-offset-4 hover:underline">
+          Featured
+        </Link>
       </nav>
       {docs.length === 0 ? (
         <EmptyState className="mt-8" title={kind === "POST" ? "No blog posts yet" : "No pages yet"} />

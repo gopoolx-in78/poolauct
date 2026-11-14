@@ -44,6 +44,7 @@ const adminPages = [
   "/admin/content?kind=POST",
   "/admin/content/new",
   "/admin/content/faqs",
+  "/admin/content/featured",
   "/admin/seo",
   "/admin/finance",
   "/admin/finance/payments",

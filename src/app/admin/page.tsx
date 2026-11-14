@@ -99,6 +99,7 @@ async function AdminHome() {
         { href: "/admin/content?kind=PAGE", label: "Pages", show: has("cms.content.manage") },
         { href: "/admin/content?kind=POST", label: "Blog posts", show: has("cms.content.manage") },
         { href: "/admin/content/faqs", label: "FAQs", show: has("cms.content.manage") },
+        { href: "/admin/content/featured", label: "Featured listings", show: has("cms.content.manage") },
         { href: "/admin/seo", label: "SEO", show: has("seo.manage") },
       ],
     },

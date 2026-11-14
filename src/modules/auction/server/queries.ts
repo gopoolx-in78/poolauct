@@ -67,3 +67,15 @@ export async function getAuctionStats() {
   if (error) throw new Error(`auction_public_stats failed: ${error.code}`);
   return data as { live: number; upcoming: number };
 }
+
+/** Live or scheduled auctions for the given slugs, in that order (homepage featured, TD-76). */
+export async function getOpenAuctionsBySlugs(slugs: string[]): Promise<AuctionList["items"]> {
+  if (slugs.length === 0) return [];
+  const { data, error } = await createSupabasePublicClient()
+    .schema("api")
+    .rpc("auction_by_slugs", { p_slugs: slugs.slice(0, 12) });
+  if (error) throw new Error(`auction_by_slugs failed: ${error.code}`);
+  const items = (data ?? []) as AuctionList["items"];
+  const covers = await getAuctionCovers(items.map((a) => a.slug));
+  return items.map((a) => ({ ...a, cover: covers[a.slug] ?? null }));
+}

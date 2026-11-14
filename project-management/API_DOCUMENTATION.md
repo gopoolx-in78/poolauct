@@ -234,6 +234,9 @@ Routes: `GET /api/cron/notifications` (Bearer `CRON_SECRET`, every minute) → `
 | `api.auction_admin_media_list(p_auction)` / `api.poolx_admin_media_list(p_pool)` | same | photos in order (any status) |
 | `api.auction_media(p_slug)` / `api.poolx_pool_media(p_slug)` | anyone | photos of a published auction / publicly visible pool |
 | `api.auction_media_covers(p_slugs)` / `api.poolx_media_covers(p_slugs)` | anyone | `{ slug: firstPhoto }` for list cards (≤ 60 slugs) |
+| `api.cms_admin_featured_list()` / `api.cms_admin_featured_add(p_module, p_slug)` / `api.cms_admin_featured_move(p_id, p_move)` / `api.cms_admin_featured_remove(p_id)` | staff with `cms.content.manage` at aal2 | list `[{ id, module, slug, position }]`; add returns the row (ALREADY_FEATURED, TOO_MANY_FEATURED at 6, INVALID_MODULE, INVALID_SLUG); move `up` / `down`; remove (NOT_FOUND) |
+| `api.cms_featured()` | anyone | `{ poolx: [slug], auction: [slug] }` in order |
+| `api.poolx_pools_by_slugs(p_slugs)` / `api.auction_by_slugs(p_slugs)` | anyone | list-card JSON for the slugs that are open now (pool ACTIVE before its deadline; auction LIVE / SCHEDULED), in the given order, ≤ 12 |
 | `api.cms_admin_cover_set(p_document, p)` | staff with `cms.content.manage` at aal2 | `{ media, replacedId }` — sets or replaces the cover; called by `POST /api/media` (target `cms`), which then deletes the replaced files |
 | `api.cms_admin_cover_remove(p_document)` | same | removed media id or null; the server action deletes the files |
 | `api.cms_admin_cover_get(p_document)` | same | current cover or null |

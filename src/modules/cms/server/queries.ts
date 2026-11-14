@@ -10,6 +10,7 @@ export const CMS_TAGS = {
   faqs: "cms-faqs",
   docs: "cms-docs",
   seo: "cms-seo",
+  featured: "cms-featured",
 } as const;
 
 export type SiteDesign = { config: ThemeConfig; version: number | null; publishedAt: string | null };
@@ -111,4 +112,19 @@ export async function getSeoOverrides(): Promise<Partial<Record<SeoRoute, SeoOve
 export async function seoFor(route: SeoRoute, defaults: { title: string; description: string }) {
   const o = (await getSeoOverrides())[route];
   return { title: o?.title ?? defaults.title, description: o?.description ?? defaults.description };
+}
+
+export type FeaturedSlugs = { poolx: string[]; auction: string[] };
+
+/** Homepage featured listings (TD-76): slugs only, in order. Each module decides which of them are open right now. */
+export async function getFeaturedSlugs(): Promise<FeaturedSlugs> {
+  "use cache";
+  cacheTag(CMS_TAGS.featured);
+  const { data, error } = await createSupabasePublicClient().schema("api").rpc("cms_featured");
+  if (error) {
+    cacheLife("minutes");
+    return { poolx: [], auction: [] };
+  }
+  cacheLife("hours");
+  return (data ?? { poolx: [], auction: [] }) as FeaturedSlugs;
 }

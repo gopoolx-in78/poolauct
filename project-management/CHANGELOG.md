@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-14 — Session 1 (Phase 10: featured listings) — branch `phase-10-featured`
+- Migration 0019: `cms.featured_listings`, staff `api.cms_admin_featured_*`, public `api.cms_featured`,
+  `api.poolx_pools_by_slugs`, `api.auction_by_slugs`; pgTAP `0013_featured_listings.test.sql` (20).
+- Admin page `/admin/content/featured` (add by slug, shown / not-shown status, re-order, remove); links from the admin
+  home and the content pages.
+- Homepage "Open now" section with live pool / auction cards (`getFeaturedSlugs`, `getOpenPoolsBySlugs`,
+  `getOpenAuctionsBySlugs`).
+- Tests: `tests/e2e/featured.spec.ts`; `/admin/content/featured` added to the signed-in a11y sweep.
+
 ## 2026-11-14 — Session 1 (Phase 10: header unread badge) — branch `phase-10-unread-badge`
 - Header bell link to the inbox with an unread badge (8.11): `NotificationsLink` (client) gets the first count from the
   server (`api.notifications_unread_count`) and re-reads `GET /api/notifications/unread` on navigation and tab focus,

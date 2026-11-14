@@ -89,7 +89,7 @@ See PROJECT_ROADMAP.md phases 7–10.
 - [x] 7.4 Homepage section order + visibility, hero text, banners, menu and footer links, module visibility and hero style
 - [x] 7.5 Pages (`/info/[slug]`), blog, FAQ, SEO settings for 8 public routes; sitemap
 - [x] 7.6 Tests: pgTAP 71 (incl. acceptance 20), unit theme 12 + Markdown XSS 5, Playwright `cms.spec.ts` 3
-- [ ] 7.7 Featured pools / auctions picker for the homepage (R-B5)
+- [x] 7.7 Featured pools / auctions picker for the homepage (R-B5, TD-76) — 2026-11-14
 - [x] 7.8 Cover images for pages and blog posts (TD-75) — 2026-11-14
 - [ ] 7.8b Images inside article bodies (Markdown image syntax limited to the `public-media` bucket)
 - [ ] 7.9 Optional second approver for theme publishing (owner decision; currently reason + audit)

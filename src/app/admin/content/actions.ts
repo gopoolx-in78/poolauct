@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CMS_TAGS } from "@/modules/cms/server/queries";
 import { DOCUMENT_FIELDS, documentSchema, faqSchema } from "@/modules/cms/validation";
+import { requireStaff } from "@/modules/core/server/auth";
 import { fieldErrors, type FormState } from "@/modules/core/validation";
 import { outcome, sqlMessage, str } from "../action-kit";
 
@@ -76,4 +77,38 @@ export async function saveFaqAction(formData: FormData) {
   });
   if (!error) updateTag(CMS_TAGS.faqs);
   redirect(outcome("/admin/content/faqs", error, "faq-saved"));
+}
+
+const FEATURED_PATH = "/admin/content/featured";
+const featuredModule = (formData: FormData) => (str(formData, "module") === "auction" ? "auction" : "poolx");
+
+/** Features a pool or auction on the homepage (TD-76). Takes effect immediately; the change is audited. */
+export async function addFeaturedAction(formData: FormData) {
+  await requireStaff(FEATURED_PATH, "cms.content.manage");
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.schema("api").rpc("cms_admin_featured_add", {
+    p_module: featuredModule(formData),
+    p_slug: str(formData, "slug").slice(0, 120),
+  });
+  if (!error) updateTag(CMS_TAGS.featured);
+  redirect(outcome(FEATURED_PATH, error, "featured-added"));
+}
+
+export async function moveFeaturedAction(formData: FormData) {
+  await requireStaff(FEATURED_PATH, "cms.content.manage");
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.schema("api").rpc("cms_admin_featured_move", {
+    p_id: str(formData, "id"),
+    p_move: str(formData, "move") === "down" ? "down" : "up",
+  });
+  if (!error) updateTag(CMS_TAGS.featured);
+  redirect(outcome(FEATURED_PATH, error, "featured-moved"));
+}
+
+export async function removeFeaturedAction(formData: FormData) {
+  await requireStaff(FEATURED_PATH, "cms.content.manage");
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.schema("api").rpc("cms_admin_featured_remove", { p_id: str(formData, "id") });
+  if (!error) updateTag(CMS_TAGS.featured);
+  redirect(outcome(FEATURED_PATH, error, "featured-removed"));
 }

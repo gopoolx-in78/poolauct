@@ -3,12 +3,17 @@
 **Date:** 2026-11-14
 **Phase:** 10 — Deployment & launch — **in progress**. Part 1 (launch gate, error reporting, restore drill, runbooks)
 committed and merged to `master` (`265ed70`). Part 2 (Hostinger VPS deploy files) merged (`de2b837`). Media pipeline merged
-(`ddea3aa`); blog / page covers merged (`15e9038`). Header unread badge built on branch `phase-10-unread-badge` —
-**uncommitted**. Nothing is deployed; no server or Supabase project exists yet.
-**Git:** `master` at `15e9038`; branch `phase-10-unread-badge` with uncommitted work. No remote.
+(`ddea3aa`); blog / page covers (`15e9038`) and header unread badge (`e2ea492`) merged. Homepage featured listings built
+on branch `phase-10-featured` — **uncommitted**. Nothing is deployed; no server or Supabase project exists yet.
+**Git:** `master` at `e2ea492`; branch `phase-10-featured` with uncommitted work. No remote.
 
 ## What exists and is verified
-### Header unread badge (this session, branch `phase-10-unread-badge`, uncommitted)
+### Homepage featured listings (this session, branch `phase-10-featured`, uncommitted)
+- Content managers with MFA pick up to 6 pools and 6 auctions at /admin/content/featured. The homepage shows an
+  "Open now" section with their live cards, but only for listings that are open right now; ended or unpublished ones
+  drop off by themselves and the section disappears when none are open. Every change is audited (7.7, TD-76).
+
+### Header unread badge (this session, merged)
 - Signed-in users see a bell next to their name; it shows the number of unread in-app notifications ("99+" above 99),
   is announced as "Notifications, N unread" and links to the inbox. The count refreshes on every page change and when
   the tab is shown again (8.11).

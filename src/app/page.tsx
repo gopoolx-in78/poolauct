@@ -1,11 +1,23 @@
 import { ArrowRight, Gavel, Users } from "lucide-react";
 import type { Metadata } from "next";
+import { Fragment } from "react";
 import Link from "next/link";
+import { Suspense } from "react";
+import { AuctionCard } from "@/components/auction/auction-card";
+import { PoolCard } from "@/components/poolx/pool-card";
 import { ButtonLink } from "@/components/ui/button";
 import { Container, JsonLd, SectionHeading } from "@/components/ui/primitives";
 import { site } from "@/config/site";
-import { formatIST } from "@/lib/time";
-import { getPublicDocuments, getPublicFaqs, getSiteDesign, seoFor } from "@/modules/cms/server/queries";
+import { formatIST, requestNow } from "@/lib/time";
+import { getOpenAuctionsBySlugs } from "@/modules/auction/server/queries";
+import {
+  getFeaturedSlugs,
+  getPublicDocuments,
+  getPublicFaqs,
+  getSiteDesign,
+  seoFor,
+} from "@/modules/cms/server/queries";
+import { getOpenPoolsBySlugs } from "@/modules/poolx/server/queries";
 import type { HomeSection, ThemeConfig } from "@/modules/theme/schema";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -45,6 +57,8 @@ const modules = [
 export default async function HomePage() {
   const { config } = await getSiteDesign();
   const sections = config.home.sections.filter((x) => x.enabled).map((x) => x.type);
+  // Featured listings (TD-76) follow the marketplaces section, or the hero when that section is off.
+  const featuredAfter = sections.includes("marketplaces") ? "marketplaces" : "hero";
   return (
     <>
       <JsonLd
@@ -56,7 +70,14 @@ export default async function HomePage() {
         }}
       />
       {sections.map((type) => (
-        <HomeSectionView key={type} type={type} config={config} />
+        <Fragment key={type}>
+          <HomeSectionView type={type} config={config} />
+          {type === featuredAfter ? (
+            <Suspense fallback={null}>
+              <Featured visible={config.modules} />
+            </Suspense>
+          ) : null}
+        </Fragment>
       ))}
     </>
   );
@@ -234,6 +255,36 @@ async function BlogTeaser() {
               </h3>
               <p className="text-ink-muted mt-1 text-sm">{formatIST(p.firstPublishedAt, { withTime: false })}</p>
               {p.summary && <p className="text-ink-muted mt-2">{p.summary}</p>}
+            </li>
+          ))}
+        </ul>
+      </Container>
+    </section>
+  );
+}
+
+/** Staff-picked pools and auctions (TD-76) with live data; only open listings, and nothing when none are open. */
+async function Featured({ visible }: { visible: ThemeConfig["modules"] }) {
+  const slugs = await getFeaturedSlugs();
+  const now = await requestNow();
+  const [pools, auctions] = await Promise.all([
+    visible.poolx.visible ? getOpenPoolsBySlugs(slugs.poolx) : [],
+    visible.auction.visible ? getOpenAuctionsBySlugs(slugs.auction) : [],
+  ]);
+  if (pools.length + auctions.length === 0) return null;
+  return (
+    <section aria-labelledby="featured-title" className="mt-20">
+      <Container>
+        <SectionHeading eyebrow="Featured" title="Open now" id="featured-title" />
+        <ul className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {pools.map((p) => (
+            <li key={`pool-${p.slug}`} className="grid">
+              <PoolCard pool={p} now={now} />
+            </li>
+          ))}
+          {auctions.map((a) => (
+            <li key={`auction-${a.slug}`} className="grid">
+              <AuctionCard a={a} now={now} />
             </li>
           ))}
         </ul>

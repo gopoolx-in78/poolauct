@@ -1,0 +1,8 @@
+# Scheduled jobs for PoolX (OD-06, TD-73). Install: copy to /etc/cron.d/poolx (root-owned, mode 0644, no dots in the name).
+# Schedules from PENDING_TASKS 3.13 / 4.13 / 8.10. Output goes to syslog (tag poolx-cron): journalctl -t poolx-cron
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+*/5 * * * * poolx /srv/poolx/current/deploy/cron/poolx-cron.sh poolx
+* * * * *   poolx /srv/poolx/current/deploy/cron/poolx-cron.sh auctions
+* * * * *   poolx /srv/poolx/current/deploy/cron/poolx-cron.sh notifications

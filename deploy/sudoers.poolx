@@ -1,0 +1,3 @@
+# Lets the poolx deploy user restart only its own service (OD-06, TD-73).
+# Install with: visudo -cf deploy/sudoers.poolx && install -m 0440 deploy/sudoers.poolx /etc/sudoers.d/poolx
+poolx ALL=(root) NOPASSWD: /usr/bin/systemctl restart poolx

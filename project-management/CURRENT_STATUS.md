@@ -1,9 +1,10 @@
 # Current Status
 
 **Date:** 2026-11-14
-**Phase:** 10 — Deployment & launch — **in progress** (part 1: launch-readiness gate, error reporting, backup / restore
-drill, runbooks). Phase 9 committed and merged to `master` (`0a070b3`). Remaining Phase 10 work needs owner decisions.
-**Git:** branch `phase-10-launch` (from `master` at `0a070b3`). Phase 10 work is **uncommitted**. No remote.
+**Phase:** 10 — Deployment & launch — **in progress**. Part 1 (launch gate, error reporting, restore drill, runbooks)
+committed and merged to `master` (`265ed70`). Part 2: hosting decided (Hostinger VPS + Supabase Cloud Mumbai) and VPS
+deploy files written — **uncommitted**. Nothing is deployed; no server or Supabase project exists yet.
+**Git:** `master` at `265ed70`; part 2 is uncommitted in the working tree. No remote.
 
 ## What exists and is verified
 ### Phase 10 so far (this session)
@@ -13,7 +14,11 @@ drill, runbooks). Phase 9 committed and merged to `master` (`0a070b3`). Remainin
 - **Error reporting:** `src/instrumentation.ts` logs one redacted JSON line per server error (TD-72).
 - **Backups:** local dump / restore drill passed (82 tables identical, ledger balanced); runbooks for backups, deploy /
   rollback and incidents in DEPLOYMENT_GUIDE.
-- **Blocked on owner decisions:** hosting + Supabase projects (OD-06), domain (OD-01), error tracker (OD-08), analytics +
+- **Hosting (OD-06, TD-73):** Hostinger KVM VPS + Supabase Cloud Mumbai. `deploy/` has the Nginx site, hardened systemd
+  unit, cron runner + schedule, deploy script (health-checked switch, automatic rollback) and rollback script. The cron
+  runner was tested against the local app (job ran with the right secret, 401 with a wrong one); Nginx, systemd and the
+  deploy / rollback scripts have only been syntax-checked — they will be proven on the first staging deploy.
+- **Blocked on owner:** buying the VPS + creating Supabase projects (plan / budget), domain (OD-01), error tracker (OD-08), analytics +
   consent, Git remote for CI, live payments (OD-02/03), e-mail (OD-07), deposit values (OD-04).
 
 ### Phase 9 so far (this session)

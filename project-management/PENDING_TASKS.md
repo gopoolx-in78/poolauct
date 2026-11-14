@@ -49,7 +49,7 @@ OD-01 … OD-15 (DECISION_LOG.md). Live payments need OD-02/OD-03; the PoolX con
 - [ ] 3.10 Seller verification UI (`sellers.manage`) — fold into Phase 6 seller management
 - [ ] 3.11 Product images (Supabase Storage bucket, signed uploads, re-encode) — needed before launch
 - [ ] 3.12 Private pools (invite link / allow-list) — schema has `kind`, no flow yet
-- [ ] 3.13 Schedule `/api/cron/poolx` (every 5 min) once hosting is chosen (OD-06)
+- [ ] 3.13 Schedule `/api/cron/poolx` (every 5 min) — in `deploy/cron/poolx.cron`; install on the VPS (10.10)
 
 ## Phases 4–5 — Auctions + deposit & refund engine
 - [x] 4.1 Migration 0010: settings/deposit policy, catalogue, auctions, participants, deposits + state machine, bids, results, invoices, adjustments, refunds, default reviews; RLS
@@ -64,7 +64,7 @@ OD-01 … OD-15 (DECISION_LOG.md). Live payments need OD-02/OD-03; the PoolX con
 - [ ] 4.10 Seller self-listing flow (needs OD-13 and seller KYC OD-05)
 - [x] 4.11 Acceptance test 20 (theme / CMS changes cannot alter business data) — pgTAP `0007_cms_theme.test.sql`
 - [x] 4.12 Outbid / won / lost / refund / deposit / overdue notifications — Phase 8
-- [ ] 4.13 Schedule `/api/cron/auctions` every minute once hosting is chosen (OD-06)
+- [ ] 4.13 Schedule `/api/cron/auctions` every minute — in `deploy/cron/poolx.cron`; install on the VPS (10.10)
 
 ## Phase 6 — Central admin
 - [x] 6.1 Migration 0012: suspension, role/permission management, sellers, finance lists, ledger overview, exports, audit list
@@ -103,7 +103,7 @@ See PROJECT_ROADMAP.md phases 7–10.
 - [x] 8.7 Tests: pgTAP 0008 (80, every event from its real source), unit (9), Playwright `notifications.spec.ts` (2)
 - [ ] 8.8 Real e-mail provider adapter — **blocked on OD-07** (provider, sender domain, SPF/DKIM)
 - [ ] 8.9 SMS / WhatsApp adapters — **blocked on OD-07** and phone verification (2.6)
-- [ ] 8.10 Schedule `/api/cron/notifications` every minute (OD-06)
+- [ ] 8.10 Schedule `/api/cron/notifications` every minute — in `deploy/cron/poolx.cron`; install on the VPS (10.10)
 - [ ] 8.11 Unread badge in the site header (request-time fetch inside Suspense)
 - [ ] 8.12 Retention policy for old notifications / deliveries (owner decision with the DPDP review)
 - [ ] 8.13 Notify sellers about PoolX pool events once PoolX sellers have accounts (sellers are records only today)
@@ -128,13 +128,14 @@ See PROJECT_ROADMAP.md phases 7–10.
 - [x] 10.2 Backup / restore drill (local): 82/82 tables identical, ledger balanced; procedure in DEPLOYMENT_GUIDE
 - [x] 10.3 Server error reporting via `src/instrumentation.ts` `onRequestError` — structured, redacted JSON lines (TD-72); verified with a temporary failing route
 - [x] 10.4 Runbooks: launch check, backups/restore, deploy/rollback, incidents (DEPLOYMENT_GUIDE)
-- [ ] 10.5 Hosting + staging and production Supabase projects (Mumbai) — **OD-06** (paid tiers need owner approval)
+- [x] 10.5a Hosting decided (OD-06): Hostinger KVM VPS + Supabase Cloud Mumbai; server files in `deploy/` (Nginx, systemd, cron, deploy / rollback scripts) and setup runbook (TD-73)
+- [ ] 10.5b Buy the VPS(s) and create the staging / production Supabase projects — owner (plan size and paid tiers need approval); then follow DEPLOYMENT_GUIDE "Hostinger VPS" and do a first staging deploy
 - [ ] 10.6 Domain, DNS, HTTPS, HSTS preload — **OD-01**
-- [ ] 10.7 Git remote so CI runs (1.13b); deploy job + preview deployments once the host is chosen
+- [ ] 10.7 Git remote so CI runs (1.13b); optional CI deploy job calling `deploy/deploy.sh` over SSH (no preview deployments on a VPS)
 - [ ] 10.8 Error tracker account (Sentry or similar) — **OD-08**; forward the `request_error` record from `instrumentation.ts`
 - [ ] 10.9 Uptime monitor on `/api/health`, alert routing — needs host / owner contact
-- [ ] 10.10 Cron schedules for `/api/cron/poolx` (5 min), `/api/cron/auctions` and `/api/cron/notifications` (1 min) — OD-06
+- [ ] 10.10 Cron schedules for `/api/cron/poolx` (5 min), `/api/cron/auctions` and `/api/cron/notifications` (1 min) — `deploy/cron/poolx.cron` ready; install on the VPS
 - [ ] 10.11 GA4 + consent banner and Search Console — owner decision (analytics account, consent text); CSP must allow it
-- [ ] 10.12 WAF / CDN rules — with hosting (OD-06)
+- [ ] 10.12 WAF / CDN — Nginx per-IP request / connection limits and body / timeout limits are in `deploy/nginx/poolx.conf`; a CDN/WAF (e.g. Cloudflare) is optional and needs `real_ip` set up first
 - [ ] 10.13 Restore drill on the hosted project; RPO / RTO agreed with the owner
 - [ ] 10.14 Live providers before launch: payments (OD-02/03), e-mail (OD-07); deposit policy (OD-04); legal pages (OD-01)

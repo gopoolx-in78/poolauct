@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-14 — Session 1 (Phase 10: deployment & launch, part 2) — branch `phase-10-launch`
+- Hosting decided (OD-06): Hostinger KVM VPS + Supabase Cloud Mumbai (TD-73).
+- `deploy/`: Nginx site (`nginx/poolx.conf`), hardened systemd unit (`systemd/poolx.service`), cron job runner + schedule
+  (`cron/poolx-cron.sh`, `cron/poolx.cron`), `deploy.sh` (release dirs, build, launch check, health-checked switch with
+  automatic rollback), `rollback.sh`, `sudoers.poolx`; `.gitattributes` keeps these files LF.
+- DEPLOYMENT_GUIDE: Hostinger VPS setup, deploy and rollback runbook; Vercel references replaced.
+
 ## 2026-11-14 — Session 1 (Phase 10: deployment & launch, part 1) — branch `phase-10-launch`
 - Migration 0016: `api.launch_readiness()`; pgTAP `0010_launch_readiness.test.sql` (10).
 - `scripts/launch-check.mts` + `pnpm launch:check`; `src/modules/core/launch-checks.ts` (+ unit tests, 5);

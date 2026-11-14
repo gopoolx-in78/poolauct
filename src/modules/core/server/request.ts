@@ -4,8 +4,9 @@ import { headers } from "next/headers";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 /**
- * Best-effort client IP. Uses the first X-Forwarded-For hop, which is trustworthy only behind a proxy that sets it
- * (Vercel/Cloudflare). Used for rate limiting only, never for authorisation.
+ * Best-effort client IP. Uses the first X-Forwarded-For hop, which is trustworthy only behind a proxy that overwrites it
+ * (the VPS Nginx in deploy/nginx/poolx.conf sets it to the client address, TD-73). Used for rate limiting only, never
+ * for authorisation.
  */
 export async function clientIp(): Promise<string> {
   const h = await headers();

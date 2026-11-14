@@ -15,6 +15,13 @@ Last updated: 2026-11-14
 
 ## Run log
 
+### 2026-11-14 — Phase 10 part 2 (Hostinger VPS files)
+| Command | Result |
+|---|---|
+| `bash -n deploy/deploy.sh deploy/rollback.sh`, `sh -n deploy/cron/poolx-cron.sh` | ✔ syntax |
+| `poolx-cron.sh notifications` against `pnpm start` on 127.0.0.1:3000 (flock / logger stubbed on Windows) | ✔ correct secret → job ran (`sent 19` to the local Mailpit inbox); wrong secret → 401, exit 1; unknown job name → usage, exit 2 |
+| Not run | `nginx -t`, systemd unit, `deploy.sh` / `rollback.sh` end to end — need a Linux server; to be proven on the first staging deploy |
+
 ### 2026-11-14 — Phase 10 part 1 (launch readiness)
 | Command | Result |
 |---|---|

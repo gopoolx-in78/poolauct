@@ -1,9 +1,10 @@
 # Deployment Guide
 
-> Status: **runbooks ready — nothing deployed.** Hosting choice pending (OD-06). Last updated: 2026-11-13.
+> Status: **runbooks and server files ready — nothing deployed.** Hosting decided (OD-06): Hostinger KVM VPS + Supabase
+> Cloud Mumbai; nothing bought or created yet. Last updated: 2026-11-14.
 
 ## Environments
-local (Supabase CLI + Docker, sandbox payments) → staging (separate Supabase project, provider test keys) → production (Supabase Cloud Mumbai, live keys only after legal & provider approval).
+local (Supabase CLI + Docker, sandbox payments) → staging (Hostinger VPS + separate Supabase project, provider test keys) → production (Hostinger VPS + Supabase Cloud Mumbai, live keys only after legal & provider approval).
 
 ## Local setup
 1. Install Node 24+, pnpm 9+, Docker Desktop.
@@ -38,7 +39,8 @@ custom SMTP provider (OD-07) with sensible send limits.
   `/payments/sandbox/[attemptId]` and is refused when `APP_ENV=production`.
 - Webhook URL to register with a real provider: `https://<domain>/api/webhooks/payments/<provider>` (Razorpay adapter pending OD-02).
 - Schedule `GET /api/cron/poolx` with header `Authorization: Bearer $CRON_SECRET` every 5 minutes (closes pools past their
-  deadline and processes PoolX refunds). Locally you can run it with curl.
+  deadline and processes PoolX refunds). Locally you can run it with curl. On the VPS all three jobs run from
+  `/etc/cron.d/poolx` via `deploy/cron/poolx-cron.sh` against `127.0.0.1:3000`; Nginx returns 404 for `/api/cron/*`.
 - Schedule `GET /api/cron/auctions` every minute (LIVE flip, closing, overdue invoices, deposit refunds, reminders) and
   `GET /api/cron/notifications` every minute (sends queued e-mails), both with `Authorization: Bearer $CRON_SECRET`.
 - E-mail: `EMAIL_PROVIDER=none` (default — deliveries are recorded as SKIPPED) or, locally only, `EMAIL_PROVIDER=mailpit` with
@@ -75,18 +77,67 @@ service-role timeouts. Details are counts only — never e-mails, ids or secrets
   per-schema dump must include the extensions (`-e citext …`) or `core.profiles` fails to restore.
 - **RPO / RTO:** to be agreed with the owner (proposal: RPO ≤ 5 min with PITR, RTO ≤ 4 h). Not decided — do not publish.
 
+## Hostinger VPS (OD-06, TD-73)
+Decided 2026-11-14: the app runs on a **Hostinger KVM VPS** (Ubuntu LTS); the database, auth and storage stay on
+**Supabase Cloud, Mumbai (`ap-south-1`)** — one project for staging, one for production. Plan size, price and the Supabase
+paid tier still need the owner's approval; nothing has been bought or created yet. Files live in `deploy/`.
+
+Layout on the server: user `poolx` · bare repo `/srv/poolx/repo.git` · releases `/srv/poolx/releases/<time>-<sha>` ·
+active release symlink `/srv/poolx/current` · settings `/etc/poolx/poolx.env` (root:poolx, 0640) · app on `127.0.0.1:3000`
+behind Nginx.
+
+**One-time server setup** (as root; staging first, then production on its own VPS or at least its own env file and user):
+1. Updates and firewall: `apt update && apt upgrade`; `ufw allow OpenSSH && ufw allow 'Nginx Full' && ufw enable`
+   (port 3000 is never opened — the app only listens on 127.0.0.1). SSH keys only (`PasswordAuthentication no`),
+   `unattended-upgrades` on.
+2. Packages: Node.js 24 LTS (NodeSource or `nvm` system-wide), `corepack enable` (pnpm 9 from `packageManager`), `git`,
+   `nginx`, `certbot python3-certbot-nginx`, `curl`.
+3. User and folders: `adduser --system --group --home /srv/poolx --shell /bin/bash poolx`;
+   `git init --bare /srv/poolx/repo.git`; `mkdir -p /srv/poolx/releases /etc/poolx`; `chown -R poolx:poolx /srv/poolx`.
+   Add the deployer's SSH public key to `/srv/poolx/.ssh/authorized_keys`.
+4. Settings: create `/etc/poolx/poolx.env` from `.env.example` with production values (`APP_ENV=production`, Supabase
+   URL / anon / service-role keys of the Mumbai project, `CRON_SECRET` and webhook secrets from `openssl rand -hex 32`,
+   payment and e-mail provider settings, `NEXT_PUBLIC_SITE_URL=https://<domain>`). Plain `KEY=value` lines, no quotes
+   (read by systemd, Node `--env-file` and Next.js). `chown root:poolx` and `chmod 0640`.
+5. Service: `cp deploy/systemd/poolx.service /etc/systemd/system/`; `systemctl daemon-reload`; `systemctl enable poolx`.
+   Restart permission for deploys: `visudo -cf deploy/sudoers.poolx && install -m 0440 deploy/sudoers.poolx /etc/sudoers.d/poolx`.
+6. Nginx + HTTPS: copy `deploy/nginx/poolx.conf` to `/etc/nginx/sites-available/poolx`, replace `__DOMAIN__` (OD-01),
+   first get a certificate (`certbot certonly --webroot -w /var/www/certbot -d <domain> -d www.<domain>` with a temporary
+   port-80 server, or `certbot certonly --standalone` before Nginx starts), enable the site, `nginx -t`,
+   `systemctl reload nginx`. Certbot's timer renews automatically; check with `certbot renew --dry-run`.
+7. Cron: `cp deploy/cron/poolx.cron /etc/cron.d/poolx` (root, 0644) after the first successful deploy. Logs:
+   `journalctl -t poolx-cron`.
+
+**Each deploy** (from your machine, after CI is green):
+1. Database first: `pnpm exec supabase link --project-ref <ref>` then `pnpm exec supabase db push` (staging, test, then
+   production). Migrations must work with the release that is still running.
+2. Push the code: `git push vps <branch-or-tag>` (remote `vps` = `poolx@<server>:/srv/poolx/repo.git`).
+3. Build and switch: `ssh poolx@<server> /srv/poolx/current/deploy/deploy.sh <ref>` (first deploy:
+   `git --git-dir=/srv/poolx/repo.git show <ref>:deploy/deploy.sh | bash -s <ref>`). The script exports the commit into a
+   new release, installs with the lockfile, builds with `NEXT_DEPLOYMENT_ID=<sha>` (open tabs reload instead of calling
+   stale Server Actions), runs `pnpm launch:check` (staging only may pass `--skip-launch-check`), switches the symlink,
+   restarts, waits for `/api/health`, and **rolls back automatically** if the new release is unhealthy. It keeps 5
+   releases and appends to `/srv/poolx/deployments.log`.
+4. A restart drops connections for a few seconds (single server, no blue/green). Deploy outside busy hours and never
+   while an auction is about to close.
+
+**Rollback:** `ssh poolx@<server> /srv/poolx/current/deploy/rollback.sh` (previous release) or `rollback.sh <release-dir>`.
+Code only — migrations are never rolled back; fix forward.
+
 ## Deploy and rollback
 1. CI green on the commit (lint, types, format, unit, pgTAP, integration, e2e, audit, gitleaks).
 2. Apply new migrations to **staging**, run `pnpm test:db` against it, smoke-test, then run the launch check.
 3. Migrations are forward-only and additive; never edit an applied migration. Apply to production before the app deploy.
-4. Deploy the app; check `/api/health` = `ok`; watch error logs (`"event":"request_error"`) for 15 minutes.
-5. **Rollback:** redeploy the previous app build (host's instant rollback). Database changes are not rolled back — fix forward
+4. Deploy the app (`deploy/deploy.sh`, see above); it checks `/api/health`; watch error logs
+   (`journalctl -u poolx | grep request_error`) for 15 minutes.
+5. **Rollback:** `deploy/rollback.sh` switches to the previous release. Database changes are not rolled back — fix forward
    with a new migration. Financial rows are never edited or deleted (use reversals).
 
 ## Incidents
-- Payments or refunds misbehaving: stop the cron jobs (remove the schedule), keep webhooks running (they are idempotent),
+- Payments or refunds misbehaving: stop the cron jobs (`mv /etc/cron.d/poolx /root/poolx.cron.disabled`), keep webhooks running (they are idempotent),
   check `/admin/finance/payments` and `/admin/finance/refunds`, then fix forward. Never mark a refund REFUNDED by hand.
-- Suspected key leak: rotate the key at the provider / Supabase, update host secrets, redeploy, review `core.audit_logs` and
+- Suspected key leak: rotate the key at the provider / Supabase, update `/etc/poolx/poolx.env`, `systemctl restart poolx`
+  (rebuild with `deploy.sh` if a `NEXT_PUBLIC_` value changed), review `core.audit_logs` and
   `core.security_events`.
 - Server errors: each one is a JSON line `{"event":"request_error", digest, route, routeType, error, message}` with the
   message redacted (TD-72). The digest matches the reference shown on the user's error page. Next.js also prints its own
@@ -96,7 +147,7 @@ service-role timeouts. Details are counts only — never e-mails, ids or secrets
 - [ ] Domain + DNS (OD-01), HTTPS auto-renew, HSTS
 - [ ] Supabase prod project, PITR backups enabled, restore drill completed and recorded (local drill passed 2026-11-14)
 - [ ] Storage buckets: `public-media`, `private-docs` (RLS), backups of storage
-- [ ] Secrets in host secret manager; `APP_ENV=production` (sandbox payments refused)
+- [ ] Secrets only in `/etc/poolx/poolx.env` (root:poolx 0640) on the VPS; `APP_ENV=production` (sandbox payments refused)
 - [ ] Payment provider live keys + webhook URL + secret; legal fund-flow approval (OD-02/03)
 - [ ] pg_cron jobs and host cron jobs enabled; `CRON_SECRET` set
 - [ ] Error tracker (OD-08; structured `request_error` logs exist today), uptime monitor on `/api/health`, alert routing

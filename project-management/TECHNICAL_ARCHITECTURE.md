@@ -77,9 +77,9 @@
 | SMS / WhatsApp | Provider abstraction, disabled until configured | OD-07 |
 | Rate limiting | Postgres-backed token bucket (no extra infra) → Upstash Redis optional later | |
 | Monitoring | Sentry (errors) + structured JSON logs (pino) + health endpoint | OD-08 |
-| Hosting | Vercel (app) + Supabase Cloud (Mumbai `ap-south-1`) proposed | OD-06 |
-| CDN/WAF | Vercel edge network; Cloudflare optional | |
-| Scheduling | `pg_cron` calling SQL functions; Vercel Cron for jobs that need provider API calls | |
+| Hosting | Hostinger KVM VPS (Node 24, `next start` under systemd, Nginx + certbot) + Supabase Cloud (Mumbai `ap-south-1`) — decided | OD-06, TD-73 |
+| CDN/WAF | Nginx limits on the VPS; Cloudflare optional (configure `real_ip` first) | TD-73 |
+| Scheduling | `pg_cron` calling SQL functions; VPS system cron (`deploy/cron`) calling `/api/cron/*` on 127.0.0.1 for jobs that need provider API calls | TD-73 |
 
 ## 4. Repository layout (planned)
 
@@ -156,8 +156,8 @@ to exactly one module handler. A PoolX handler cannot receive an auction attempt
 `auction.close_auction(id)` (idempotent; unique `auction_results(auction_id)`):
 determine winner (highest amount, earliest `accepted_at`, then lowest bid id), check reserve,
 set winner deposit `WINNER_ADJUSTMENT_PENDING`, all other `PAID` deposits `REFUND_ELIGIBLE`,
-create invoice, enqueue refund jobs + notifications. The refund worker (Vercel Cron →
-`/api/cron/refunds`) calls the provider (needs network) and records results.
+create invoice, enqueue refund jobs + notifications. The refund worker (VPS cron →
+`/api/cron/auctions`) calls the provider (needs network) and records results.
 
 ### 6.3 PoolX join
 `poolx.join_pool(pool_id, quantity, idem_key)` → unique `(pool_id,user_id)` membership in

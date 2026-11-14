@@ -28,4 +28,4 @@ typescript, tailwindcss, @tailwindcss/postcss, eslint (+ next config, security p
 @playwright/test, @axe-core/playwright, supabase (CLI), lighthouse-ci, gitleaks (CI), fast-check (property tests).
 
 ## External services (owner accounts required)
-Supabase · Vercel (or alt) · Payment provider · Email provider · SMS/WhatsApp provider (optional) · Sentry · Uptime monitor · Google Analytics 4 · Google Search Console.
+Supabase (Cloud, Mumbai) · Hostinger KVM VPS (Ubuntu, Node 24, Nginx, certbot) · Payment provider · Email provider · SMS/WhatsApp provider (optional) · Sentry · Uptime monitor · Google Analytics 4 · Google Search Console.

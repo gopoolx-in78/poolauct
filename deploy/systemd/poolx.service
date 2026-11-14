@@ -1,0 +1,43 @@
+# systemd unit for the PoolX Next.js server on the Hostinger VPS (OD-06, TD-73).
+# Install: copy to /etc/systemd/system/poolx.service, `systemctl daemon-reload`, `systemctl enable --now poolx`.
+# /srv/poolx/current is a symlink to the active release (deploy/deploy.sh switches it, then restarts this unit).
+
+[Unit]
+Description=PoolX web app (Next.js)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=poolx
+Group=poolx
+WorkingDirectory=/srv/poolx/current
+# Production settings live in this file (root:poolx, mode 0640). The release also links it as .env.production.local.
+EnvironmentFile=/etc/poolx/poolx.env
+Environment=NODE_ENV=production
+Environment=NEXT_TELEMETRY_DISABLED=1
+ExecStart=/srv/poolx/current/node_modules/.bin/next start --hostname 127.0.0.1 --port 3000
+Restart=on-failure
+RestartSec=5
+
+# Graceful shutdown: Next finishes in-flight requests and after() callbacks on SIGTERM.
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# Hardening. The server may only write its own release (.next/cache).
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/poolx
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

@@ -76,6 +76,7 @@
 | TD-70 | 2026-11-14 | Keep `script-src 'unsafe-inline'` (TD-16) after testing Next.js experimental SRI: SRI only covers script files; the inline RSC payload scripts of PPR pages are blocked without 'unsafe-inline' (54 violations, no hydration). | Measured, not assumed |
 | TD-71 | 2026-11-14 | A launch-readiness gate (`pnpm launch:check` = env checks + `api.launch_readiness()`) must pass before any production start. A real e-mail provider is required to pass (no adapter yet — OD-07), so it fails today by design. | Turns the production checklist's "remove demo data / no sandbox / MFA / RLS" items into an automatic, repeatable check |
 | TD-72 | 2026-11-14 | Server errors are reported through `instrumentation.ts` `onRequestError` as one JSON line with route, digest, error class and a redacted message (e-mails, JWTs, long tokens, long digit runs masked; no headers, cookies or query strings). Next.js's own raw error line remains, so code must not put personal data in error messages. | Error visibility without an external account (OD-08); privacy by default |
+| TD-73 | 2026-11-14 | App hosting on a single Hostinger KVM VPS (owner choice, OD-06): `next start` on 127.0.0.1:3000 under systemd (hardened unit), Nginx in front (TLS via certbot, X-Forwarded-For overwritten with the client address, body / timeout / per-IP limits, `proxy_buffering off` for streaming and PPR, `/api/cron/*` not exposed), system cron calling the job routes locally with the secret passed on stdin, release directories + symlink switch with health-checked automatic rollback. Supersedes the Vercel Cron part of TD-10. `next start` rather than `output: standalone` so production runs the same server the e2e suite tests | Owner chose Hostinger; Next 16 self-hosting guide; one server keeps cost and moving parts low. Trade-off: a few seconds of downtime per deploy and no multi-instance failover |
 
 ## Approvals
 | Date | Item | By |
@@ -94,7 +95,7 @@
 | OD-03 | Legal fund-flow structure for holding pool contributions and auction deposits (PA marketplace / split settlement / escrow via regulated partner) | No live collection | Live payments |
 | OD-04 | Default auction deposit values (global default, min, max) | Seed values only in dev, marked DEMO | Auction launch |
 | OD-05 | Bidder verification level (phone OTP + PAN? Aadhaar-offline-KYC? manual doc review?) and seller KYC | Phone + email verified + manual document review workflow | Auction launch |
-| OD-06 | Hosting (Vercel + Supabase Cloud Mumbai proposed) and budget for paid tiers | Local dev only | Staging |
+| OD-06 | Hosting — **decided 2026-11-14:** Hostinger KVM VPS for the app + Supabase Cloud Mumbai (staging and production projects). Still open: VPS plan size and budget, Supabase paid tier for production | Local dev only | Staging (until servers / projects are bought and created) |
 | OD-07 | Email / SMS / WhatsApp providers | In-app + email adapter interface; SMS/WhatsApp disabled | Notifications phase |
 | OD-08 | Monitoring (Sentry) account | Structured logs only | Launch |
 | OD-09 | Malware scanning for uploads (e.g. ClamAV service / provider) | Strict MIME allowlist, re-encode images, PDFs only in private bucket | Launch |

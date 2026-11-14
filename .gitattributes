@@ -1,0 +1,3 @@
+# Files that run or are read on the Linux VPS must keep LF line endings (core.autocrlf would otherwise write CRLF).
+*.sh text eol=lf
+deploy/** text eol=lf

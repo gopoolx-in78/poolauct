@@ -1,6 +1,6 @@
 # Deployment Guide
 
-> Status: **planned — nothing deployed.** Hosting choice pending (OD-06). Last updated: 2026-11-13.
+> Status: **runbooks ready — nothing deployed.** Hosting choice pending (OD-06). Last updated: 2026-11-13.
 
 ## Environments
 local (Supabase CLI + Docker, sandbox payments) → staging (separate Supabase project, provider test keys) → production (Supabase Cloud Mumbai, live keys only after legal & provider approval).
@@ -49,16 +49,59 @@ custom SMTP provider (OD-07) with sensible send limits.
 `/admin/poolx/new` → fill details (prices in rupees; times in IST) → **Create draft** → set tiers → **Publish**. Drafts are
 editable; tiers and prices freeze on publish. Cancelling refunds every confirmed member in full (reason required, audited).
 
+## Launch-readiness check (Phase 10)
+Run against the exact environment a production deploy will use (never commit that file):
+
+```bash
+node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file=.env.production scripts/launch-check.mts
+```
+
+(`pnpm launch:check` runs the same script with whatever environment the shell has.) Exit code 1 blocks the deploy.
+Environment checks: server settings valid, `APP_ENV=production`, live payment provider (OD-02), real e-mail provider (OD-07),
+service-role key and `CRON_SECRET` set, site and Supabase URLs on https public hosts, brand name set (OD-01). Database checks
+(`api.launch_readiness()`, service role only): deposit policy set by staff through `/admin/auctions/policy` (OD-04), no
+`.test` accounts, no sandbox payments, an active Super Admin with a verified authenticator, RLS on every application table,
+service-role timeouts. Details are counts only — never e-mails, ids or secrets.
+
+## Backups and restore
+- **Hosted (to set up with OD-06):** enable Point-in-Time Recovery on the production Supabase project; keep daily logical
+  dumps (`pg_dump -Fc` of `extensions`, `core`, `poolx`, `auction`, `ledger`, `cms`, `api`, `auth` with
+  `-e citext -e pgcrypto -e uuid-ossp`) in separate, encrypted storage; back up Storage buckets once media exists (4.8).
+- **Restore drill (do before launch and then quarterly):** restore the latest dump into a new, empty project or database;
+  compare per-table row counts with the source; check the ledger balances (`sum(debit_paise) = sum(credit_paise)` overall
+  and per journal); run `pnpm test:db` against a restored staging copy; record date, duration and result in TESTING_REPORT.
+- **Local drill 2026-11-14:** dump → scratch database → 82/82 tables with identical row counts (1,386 rows), ledger net 0
+  across 34 journals with 0 unbalanced; only 6 harmless default-privilege errors for Supabase-managed roles. Lesson: a
+  per-schema dump must include the extensions (`-e citext …`) or `core.profiles` fails to restore.
+- **RPO / RTO:** to be agreed with the owner (proposal: RPO ≤ 5 min with PITR, RTO ≤ 4 h). Not decided — do not publish.
+
+## Deploy and rollback
+1. CI green on the commit (lint, types, format, unit, pgTAP, integration, e2e, audit, gitleaks).
+2. Apply new migrations to **staging**, run `pnpm test:db` against it, smoke-test, then run the launch check.
+3. Migrations are forward-only and additive; never edit an applied migration. Apply to production before the app deploy.
+4. Deploy the app; check `/api/health` = `ok`; watch error logs (`"event":"request_error"`) for 15 minutes.
+5. **Rollback:** redeploy the previous app build (host's instant rollback). Database changes are not rolled back — fix forward
+   with a new migration. Financial rows are never edited or deleted (use reversals).
+
+## Incidents
+- Payments or refunds misbehaving: stop the cron jobs (remove the schedule), keep webhooks running (they are idempotent),
+  check `/admin/finance/payments` and `/admin/finance/refunds`, then fix forward. Never mark a refund REFUNDED by hand.
+- Suspected key leak: rotate the key at the provider / Supabase, update host secrets, redeploy, review `core.audit_logs` and
+  `core.security_events`.
+- Server errors: each one is a JSON line `{"event":"request_error", digest, route, routeType, error, message}` with the
+  message redacted (TD-72). The digest matches the reference shown on the user's error page. Next.js also prints its own
+  raw error line, so code must never put personal data into error messages (current code throws codes only).
+
 ## Production checklist (Phase 10)
 - [ ] Domain + DNS (OD-01), HTTPS auto-renew, HSTS
-- [ ] Supabase prod project, PITR backups enabled, restore drill completed and recorded
+- [ ] Supabase prod project, PITR backups enabled, restore drill completed and recorded (local drill passed 2026-11-14)
 - [ ] Storage buckets: `public-media`, `private-docs` (RLS), backups of storage
 - [ ] Secrets in host secret manager; `APP_ENV=production` (sandbox payments refused)
 - [ ] Payment provider live keys + webhook URL + secret; legal fund-flow approval (OD-02/03)
 - [ ] pg_cron jobs and host cron jobs enabled; `CRON_SECRET` set
-- [ ] Sentry DSN, uptime monitor, alert routing
+- [ ] Error tracker (OD-08; structured `request_error` logs exist today), uptime monitor on `/api/health`, alert routing
 - [ ] WAF/CDN rules, rate limits
 - [ ] GA4 + consent mode, Search Console verified, sitemap submitted
 - [ ] CI: lint, typecheck, unit, db, e2e, audit, gitleaks must pass before deploy; preview deployments; one-click rollback documented
-- [ ] Remove demo data, test accounts
+- [ ] Remove demo data, test accounts — `launch:check` must pass
 - [ ] RPO/RTO agreed with owner and documented

@@ -74,6 +74,8 @@
 | TD-68 | 2026-11-14 | Send `Cross-Origin-Resource-Policy: same-origin` on every response; do **not** send `Cross-Origin-Embedder-Policy`. ZAP's anti-CSRF warning on auth forms is a false positive (Server Actions check Origin). | COEP would block the payment provider's checkout window (OD-02); CORP costs nothing for a same-origin app |
 | TD-69 | 2026-11-14 | `service_role` gets explicit `statement_timeout = 30s` and `lock_timeout = 10s` (migration 0015). anon 3 s / authenticated 8 s unchanged. | Jobs and webhooks had only the authenticator's 8 s by accident; batch jobs need a known, slightly higher bound |
 | TD-70 | 2026-11-14 | Keep `script-src 'unsafe-inline'` (TD-16) after testing Next.js experimental SRI: SRI only covers script files; the inline RSC payload scripts of PPR pages are blocked without 'unsafe-inline' (54 violations, no hydration). | Measured, not assumed |
+| TD-71 | 2026-11-14 | A launch-readiness gate (`pnpm launch:check` = env checks + `api.launch_readiness()`) must pass before any production start. A real e-mail provider is required to pass (no adapter yet — OD-07), so it fails today by design. | Turns the production checklist's "remove demo data / no sandbox / MFA / RLS" items into an automatic, repeatable check |
+| TD-72 | 2026-11-14 | Server errors are reported through `instrumentation.ts` `onRequestError` as one JSON line with route, digest, error class and a redacted message (e-mails, JWTs, long tokens, long digit runs masked; no headers, cookies or query strings). Next.js's own raw error line remains, so code must not put personal data in error messages. | Error visibility without an external account (OD-08); privacy by default |
 
 ## Approvals
 | Date | Item | By |

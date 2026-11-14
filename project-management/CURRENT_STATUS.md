@@ -1,13 +1,21 @@
 # Current Status
 
 **Date:** 2026-11-14
-**Phase:** 9 — Testing & hardening — **in progress** (part 1 done: signed-in accessibility / responsive sweep,
-two mobile layout fixes, webhook body limit, Supabase request timeouts, log and dependency review; part 2: DB role timeouts,
-dark-mode accessibility checks + fix, CSP and performance investigations, full regression green). Phase 8 committed
-(`c0a18fd`) and merged to `master`; Phase 9 part 1 committed (`a6e9c24`).
-**Git:** branch `phase-9-hardening` (from `master` at `c0a18fd`). Part 1 committed (`a6e9c24`); part 2 **uncommitted**. No remote.
+**Phase:** 10 — Deployment & launch — **in progress** (part 1: launch-readiness gate, error reporting, backup / restore
+drill, runbooks). Phase 9 committed and merged to `master` (`0a070b3`). Remaining Phase 10 work needs owner decisions.
+**Git:** branch `phase-10-launch` (from `master` at `0a070b3`). Phase 10 work is **uncommitted**. No remote.
 
 ## What exists and is verified
+### Phase 10 so far (this session)
+- **Launch gate:** `pnpm launch:check` (environment + `api.launch_readiness()` database checks) blocks a production start with
+  sandbox payments, test accounts, a demo deposit policy, no Super Admin with MFA, a table without RLS, local / http URLs,
+  no brand name or no real e-mail provider. It fails on this local setup, as it should (TD-71).
+- **Error reporting:** `src/instrumentation.ts` logs one redacted JSON line per server error (TD-72).
+- **Backups:** local dump / restore drill passed (82 tables identical, ledger balanced); runbooks for backups, deploy /
+  rollback and incidents in DEPLOYMENT_GUIDE.
+- **Blocked on owner decisions:** hosting + Supabase projects (OD-06), domain (OD-01), error tracker (OD-08), analytics +
+  consent, Git remote for CI, live payments (OD-02/03), e-mail (OD-07), deposit values (OD-04).
+
 ### Phase 9 so far (this session)
 - **Signed-in sweep:** `tests/e2e/a11y-private.spec.ts` checks 9 account and 27 admin pages at 320 / 768 / 1440 for one h1, no
   horizontal scrolling and no serious/critical axe (WCAG 2.2 AA) violations. Found and fixed `/admin/sellers` and
@@ -99,6 +107,9 @@ Foundation (1), accounts/RBAC/staff MFA (2), payments core + ledger + full PoolX
 - **Admin:** `/admin/auctions` list, create/edit draft (item, vehicle, bidding, mandatory deposit), publish, cancel (platform /
   seller withdrew, refunds all), close-now for ended auctions; `/admin/auctions/deposits` dashboard (liability, by-state counts,
   failed-refund retry); `/admin/auctions/defaults` (extend / refund / forfeit proposal); `/admin/auctions/policy` (min/max with reason).
+
+## Verification (local, 2026-11-14, Phase 10 part 1)
+lint ✔ · typecheck ✔ · format ✔ · unit ✔ 88/88 · pgTAP ✔ 457/457 · build ✔ · launch check behaves as designed (fails locally) · error hook verified · restore drill ✔. Full e2e not rerun (no UI change).
 
 ## Verification (local, 2026-11-14, Phase 9 part 2)
 lint ✔ · typecheck ✔ · format ✔ · unit ✔ 77/77 · pgTAP ✔ 447/447 · integration ✔ 3/3 · build ✔ · full e2e (`--workers=1`) ✔ 62 passed, 0 failed, 32 skipped by design. Fresh `supabase db reset` (owner approved): migrations 0001–0015 ✔ · pgTAP ✔ 447/447 · integration ✔ 3/3 · full e2e ✔ 62 passed, 0 failed.

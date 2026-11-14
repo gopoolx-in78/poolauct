@@ -122,3 +122,19 @@ See PROJECT_ROADMAP.md phases 7–10.
 - [x] 9.11 Full regression ✔ on the existing DB and again after a fresh `supabase db reset` (owner approved): migrations 0001–0015 apply cleanly; pgTAP 447, integration 3, e2e 62 passed / 0 failed / 32 skipped by design
 - [x] 9.12 Light/dark review: axe now runs in dark mode on 6 public + 36 signed-in pages; fixed danger-button contrast in dark (BUG-005); screenshots at 375 / 768 / 1440 checked
 - [ ] 9.13 Performance: reduce first-load JS and main-thread work (TBT ~0.7–1.4 s, LCP 2.4–3.7 s under mobile throttling); re-measure on staging and set Lighthouse budgets. Investigated: unused `zod` on `/` is only a link prefetch of `/login`; dropping Fraunces' opsz axis saved 30 KB but no measurable change (reverted); remaining cost is React/Next runtime + hydration. Local noise ±15 points — needs stable staging
+
+## Phase 10 — Deployment & launch (in progress; most items need owner decisions)
+- [x] 10.1 Launch-readiness gate: `api.launch_readiness()` (migration 0016, pgTAP 0010) + `scripts/launch-check.mts` / `pnpm launch:check` (env + DB checks, exit 1 on failure; unit tests) (TD-71)
+- [x] 10.2 Backup / restore drill (local): 82/82 tables identical, ledger balanced; procedure in DEPLOYMENT_GUIDE
+- [x] 10.3 Server error reporting via `src/instrumentation.ts` `onRequestError` — structured, redacted JSON lines (TD-72); verified with a temporary failing route
+- [x] 10.4 Runbooks: launch check, backups/restore, deploy/rollback, incidents (DEPLOYMENT_GUIDE)
+- [ ] 10.5 Hosting + staging and production Supabase projects (Mumbai) — **OD-06** (paid tiers need owner approval)
+- [ ] 10.6 Domain, DNS, HTTPS, HSTS preload — **OD-01**
+- [ ] 10.7 Git remote so CI runs (1.13b); deploy job + preview deployments once the host is chosen
+- [ ] 10.8 Error tracker account (Sentry or similar) — **OD-08**; forward the `request_error` record from `instrumentation.ts`
+- [ ] 10.9 Uptime monitor on `/api/health`, alert routing — needs host / owner contact
+- [ ] 10.10 Cron schedules for `/api/cron/poolx` (5 min), `/api/cron/auctions` and `/api/cron/notifications` (1 min) — OD-06
+- [ ] 10.11 GA4 + consent banner and Search Console — owner decision (analytics account, consent text); CSP must allow it
+- [ ] 10.12 WAF / CDN rules — with hosting (OD-06)
+- [ ] 10.13 Restore drill on the hosted project; RPO / RTO agreed with the owner
+- [ ] 10.14 Live providers before launch: payments (OD-02/03), e-mail (OD-07); deposit policy (OD-04); legal pages (OD-01)

@@ -5,7 +5,7 @@ One website, two independent business modules, one central Super Admin:
 - **PoolX** — community group buying. _Power of People. Power of Pooling._
 - **Auctions** — online auctions of second-hand cars and other approved assets, with a **mandatory refundable participation deposit** per auction.
 
-> **Status:** Phase 9 (Testing & hardening, in progress) after Phase 8 (Notifications) — accounts, RBAC, staff MFA, the full PoolX lifecycle, auctions with the mandatory
+> **Status:** Phase 10 (Deployment & launch, in progress; waits for hosting / domain / provider decisions) — accounts, RBAC, staff MFA, the full PoolX lifecycle, auctions with the mandatory
 > refundable deposit, central admin, a versioned, validated theme + CMS, and notifications (in-app + e-mail worker) are
 > built and verified locally. No live
 > payments: the sandbox adapter is dev/test only (Razorpay pending owner decision OD-02). Not deployed.

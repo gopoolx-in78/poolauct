@@ -76,3 +76,8 @@
 | 2026-11-14 | 9 | Full regression (existing DB) | e2e 62 passed / 0 failed |
 | 2026-11-14 | 9 | 9.11 Fresh `supabase db reset` + regression (owner approved) | migrations 0001–0015 clean; pgTAP 447; integration 3; e2e 62 passed / 0 failed |
 | 2026-11-14 | 9 | 9.7 OWASP ZAP baseline: FAIL 0 / WARN 7 triaged; CORP header added | ZAP report; `foundation.spec.ts` 28/28 |
+| 2026-11-14 | 9 | Phase 9 committed (`a6e9c24`, `0a070b3`) and merged to `master` | git log |
+| 2026-11-14 | 10 | 10.1 Launch-readiness gate (migration 0016, script, unit + pgTAP) | pgTAP 0010 10/10; unit 5/5; local run fails as designed |
+| 2026-11-14 | 10 | 10.2 Local backup / restore drill | 82/82 tables identical; ledger balanced |
+| 2026-11-14 | 10 | 10.3 Redacted server error reporting (`instrumentation.ts`) | unit 6/6; temporary failing route |
+| 2026-11-14 | 10 | 10.4 Runbooks in DEPLOYMENT_GUIDE | doc |

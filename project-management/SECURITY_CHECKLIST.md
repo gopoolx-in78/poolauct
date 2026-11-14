@@ -65,7 +65,7 @@ X-Frame-Options DENY ☑ · X-Content-Type-Options ☑ · Referrer-Policy ☑ ·
 `pnpm audit`: 1 moderate — `minimatch` <11.0.1 ReDoS via `eslint-config-next` (dev tooling only, not shipped). Accept until upstream bumps; CI fails on high/critical.
 
 ## Ops
-Dependency audit (`pnpm audit`, Dependabot) ☐ · separate envs ☐ · debug off in prod ☐ · demo data removed in prod ☐ · WAF ⚑ · backups + restore test ⚑ · MFA on Supabase/Vercel/provider dashboards ⚑
+Dependency audit (`pnpm audit`, Dependabot) ☐ · separate envs ☐ · debug off in prod ☐ · demo data removed in prod ◐ (`pnpm launch:check` detects test accounts, sandbox payments, demo deposit policy — TD-71) · WAF ⚑ · backups + restore test ◐ (local drill passed; hosted PITR + drill need OD-06) · server error logs structured + redacted ☑ (TD-72) · MFA on Supabase/Vercel/provider dashboards ⚑
 
 ## Release gates
 SECURITY GATE ☐ · QUALITY GATE ☐ · LAUNCH GATE ☐

@@ -225,6 +225,11 @@ Routes: `GET /api/cron/notifications` (Bearer `CRON_SECRET`, every minute) → `
 | POST | `/api/admin/auction-default-reviews/[id]/decide` | `auction.default.review` (+ `.forfeit` & 2nd approver) | |
 | GET | `/api/admin/reports/[kind].csv` | `finance.reports.export` | CSV-injection-safe |
 
+## Phase 10 — launch readiness
+| Function | Who | Returns |
+|---|---|---|
+| `api.launch_readiness()` | service_role only | `{ ok, checks: [{ key, ok, detail }] }` — deposit policy set by staff, no `.test` accounts, no sandbox payments, Super Admin with MFA, RLS on all application tables, service-role timeouts. Counts only. |
+
 ## Error codes (initial)
 `UNAUTHENTICATED`, `FORBIDDEN`, `MFA_REQUIRED`, `VALIDATION_FAILED`, `NOT_FOUND`, `RATE_LIMITED`, `IDEMPOTENCY_CONFLICT`,
 `DEPOSIT_REQUIRED`, `DEPOSIT_PENDING`, `VERIFICATION_REQUIRED`, `AUCTION_NOT_LIVE`, `BID_TOO_LOW`, `SELLER_CANNOT_BID`,

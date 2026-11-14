@@ -15,6 +15,18 @@ Last updated: 2026-11-14
 
 ## Run log
 
+### 2026-11-14 — Phase 10 part 1 (launch readiness)
+| Command | Result |
+|---|---|
+| `pnpm lint` / `tsc --noEmit` / `prettier --check . --end-of-line auto` | ✔ |
+| `pnpm test` | ✔ 88/88 — new `launch-checks.test.ts` (5: local env fails every launch item; sandbox + mailpit refused in production; http / localhost / `.test` URLs rejected; secret values never echoed; a fully configured env still fails only because no production e-mail adapter exists — OD-07) and `redact.test.ts` (6) |
+| `pnpm test:db` | ✔ 10 files, 457 assertions — new `0010_launch_readiness.test.sql` (10: anon / authenticated denied, service_role allowed, six checks reported, seed deposit policy fails / staff-authored passes, `.test` account detected, RLS and timeouts pass, overall fails while any check fails) |
+| `pnpm build` | ✔ |
+| `node --env-file=.env.local scripts/launch-check.mts` (local) | exit 1 as expected: 9 of 15 fail (APP_ENV local, sandbox payments, mailpit, http URLs, no brand name, demo deposit policy, 40 test accounts, 19 sandbox payments); passes: env valid, keys set, Super Admin with MFA, RLS everywhere, timeouts |
+| Error hook (temporary throwing route, removed) | 500; one `request_error` line with path without query, `[email]` and `[token]` masked, no cookie. Next.js's own raw error line still printed the original message (documented, TD-72) |
+| Backup / restore drill (local) | `pg_dump -Fc` of app schemas (+ extensions) → scratch database: 82/82 tables identical row counts (1,386 rows); ledger net 0, 34 journals, 0 unbalanced; 6 default-privilege errors for Supabase roles (harmless). First attempts failed until extensions were included — procedure updated. Scratch DB and dump deleted |
+| Not run in this part | full e2e (no UI change) |
+
 ### 2026-11-14 — Phase 9 part 2 (regression)
 | Command | Result |
 |---|---|

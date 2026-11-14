@@ -1,11 +1,11 @@
 # Next Session Prompt
 
 **Project:** Dual marketplace — PoolX (group buying) + Auctions (second-hand assets, mandatory refundable deposits). Parent brand pending (OD-01); interim name "PoolX & Auctions".
-**Current phase:** Phase 9 (Testing & hardening) — part 1 done (signed-in a11y/responsive sweep, 2 mobile fixes, webhook body cap, Supabase timeouts, log + dependency review).
+**Current phase:** Phase 10 (Deployment & launch) — part 1 done locally (launch gate, error reporting, restore drill, runbooks); the rest needs owner decisions.
 **Last completed milestone:** central notification service — 28 PoolX / auction events raised by database triggers, in-app inbox, preferences, e-mail delivery worker with retries (Mailpit test inbox locally), admin delivery log, auction reminders.
-**Git:** branch `phase-9-hardening` (from `master` at `c0a18fd`, which includes Phase 8) — Phase 9 work may be uncommitted; check `git status`. No remote.
-**Database changes:** migrations 0001–0015 (DATABASE_SCHEMA.md "Applied migrations").
-**Tests:** unit 77 · pgTAP 447 · integration 3 · build · e2e (full suite with `--workers=1`, TD-38) — see TESTING_REPORT.
+**Git:** branch `phase-10-launch` (from `master` at `0a070b3`, which includes Phase 9) — Phase 10 work may be uncommitted; check `git status`. No remote.
+**Database changes:** migrations 0001–0016 (DATABASE_SCHEMA.md "Applied migrations").
+**Tests:** unit 88 · pgTAP 457 · integration 3 · build · e2e (full suite with `--workers=1`, TD-38) — see TESTING_REPORT.
 **Local env:** `.env.local` needs `EMAIL_PROVIDER=mailpit`, `EMAIL_FROM`, `MAILPIT_URL` for e-mail locally (see `.env.example`).
 **Known gaps:** real e-mail provider / SMS / WhatsApp (OD-07); cron schedules (OD-06); header unread badge (8.11); notification retention (8.12); featured picker (7.7); images (media pipeline 4.8); inspection/RC staff UI; seller self-listing; seller settlements (OD-03); Razorpay (OD-02) — no live payments; deposit values OD-04, bidder KYC OD-05, forfeiture policy OD-11.
 
@@ -15,15 +15,17 @@ Read AGENTS.md (Next.js 16 docs in `node_modules/next/dist/docs/`), PROJECT_OVER
 (expect 443/443) → report status.
 
 ## Next exact tasks (ask the owner which first)
-1. **Commit Phase 9 part 2** when the owner asks; merge `phase-9-hardening` to `master` when asked.
-2. **Phase 9 is complete locally** except performance (9.13), which needs a stable staging host to measure (owner to provide).
-   Fresh `db reset` + full regression passed. No open critical/high findings. Next: Phase 10 (launch readiness) or media pipeline.
-3. **Media pipeline (shared, 4.8 / 3.11 / 7.8):** Storage buckets with RLS, signed uploads with magic-byte check, WebP re-encode,
-   alt text; galleries on auctions and pools; blog covers. Unblocks KYC queue (6.10) and inspection/RC UI (4.9).
-4. **Search (R-H2, §16):** PoolX and auction filters (price, discount, progress, location, brand, model, year, ending time, seller).
-5. Small follow-ups: header unread badge (8.11); featured pools / auctions picker (7.7).
+1. **Commit Phase 10 part 1** when the owner asks; merge to `master` when asked.
+2. **Owner decisions that unblock launch:** hosting + Supabase staging/production (OD-06), domain (OD-01), error tracker
+   (OD-08), analytics + consent, Git remote (1.13b), live payments (OD-02/03), e-mail provider (OD-07), deposit values (OD-04).
+   Then: staging deploy, cron schedules, uptime monitor, hosted restore drill, `pnpm launch:check` green, final audit.
+3. **Media pipeline (shared, 4.8 / 3.11 / 7.8)** — needed before launch: Storage buckets with RLS, signed uploads with
+   magic-byte check, WebP re-encode, alt text; galleries on auctions and pools; blog covers.
+4. **Search (R-H2, §16)** and small follow-ups: header unread badge (8.11); featured picker (7.7).
 
 ## Patterns to follow
+- Launch gate: add a production requirement to `checkLaunchEnv` (unit test) or to `api.launch_readiness()` (new migration + pgTAP 0010).
+- Errors: never put e-mails, tokens or personal data in thrown messages — Next.js logs raw error messages (TD-72).
 - ZAP (keep it memory-capped — Docker here is shared by six projects and fell over once): `docker run --rm --memory 1g -v <dir>:/zap/wrk:rw -v <dir>/jvm/.ZAP_JVM.properties:/home/zap/.ZAP/.ZAP_JVM.properties:ro ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://host.docker.internal:3100 -m 3 -J zap.json -r zap.html -I` against `pnpm start -p 3100`.
 - Lighthouse: Chrome launcher fails here (`spawn UNKNOWN`); start Playwright's Chromium with `--remote-debugging-port=9222` and run `lighthouse <url> --port=9222`.
 - Notifications: add an event by inserting it into `core.notification_events` (new migration), raising it from a trigger in the

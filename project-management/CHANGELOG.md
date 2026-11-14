@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-14 — Session 1 (Phase 10: deployment & launch, part 1) — branch `phase-10-launch`
+- Migration 0016: `api.launch_readiness()`; pgTAP `0010_launch_readiness.test.sql` (10).
+- `scripts/launch-check.mts` + `pnpm launch:check`; `src/modules/core/launch-checks.ts` (+ unit tests, 5);
+  `tsconfig` `allowImportingTsExtensions` so the script runs under plain Node.
+- `src/instrumentation.ts` (`onRequestError` → structured, redacted JSON) and `src/lib/redact.ts` (+ unit tests, 6).
+- Local backup / restore drill; DEPLOYMENT_GUIDE runbooks (launch check, backups, deploy / rollback, incidents).
+
 ## 2026-11-14 — Session 1 (Phase 9: testing & hardening, part 2) — branch `phase-9-hardening`
 - Migration 0015: explicit service_role statement / lock timeouts (TD-69); pgTAP `0009_hardening.test.sql` (4).
 - Dark-mode axe checks in `foundation.spec.ts` and `a11y-private.spec.ts`; fixed danger-button contrast in dark mode with a

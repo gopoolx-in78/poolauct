@@ -57,6 +57,9 @@ type Finding = { path: string; width: number; problem: string };
 
 async function sweep(page: Page, paths: string[]) {
   const findings: Finding[] = [];
+  // Switching light → dark on a loaded page starts the buttons' colour transitions; with reduced motion the site sets
+  // them to ~0 ms, so axe measures the final colours instead of a mid-fade frame (seen once on /admin/theme).
+  await page.emulateMedia({ reducedMotion: "reduce" });
   for (const width of WIDTHS) {
     await page.setViewportSize({ width, height: 900 });
     for (const path of paths) {

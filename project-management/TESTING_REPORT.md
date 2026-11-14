@@ -23,7 +23,8 @@ Last updated: 2026-11-14
 | `pnpm test:db` | ✔ 11 files, 495 assertions — new `0011_media.test.sql` (38: bucket public / WebP-only / 2 MB, no client storage write policies, RLS, customer and non-MFA staff refused, alt text required, out-of-range and duplicate media refused, re-order, remove keeps a REMOVED row, audit, draft-only, 12-photo cap, public reads only for published listings, covers) |
 | `playwright test tests/e2e/media.spec.ts --project=desktop-chromium` | ✔ 2/2 — fake JPEG refused; two uploads, re-order, remove; axe clean on the admin pool page; public gallery image loads (1200×900 WebP, no EXIF); card cover; cross-site, anonymous and direct anon-key Storage uploads refused |
 | Visual check (in-app browser) | pool page gallery and list card cover at desktop and 375 px |
-| Full e2e suite | running at commit time — result recorded in the next entry |
+| Full e2e suite (`--workers=1`, after the commit) | 54 passed · 3 failed · 34 skipped · 7 not run (serial follow-ons). Failures: (1) `a11y-private` admin sweep — dark-mode colour contrast on the theme page's "Restore version" buttons, measured mid-transition after switching light → dark on a loaded page (re-measured: light text on near-black, passes); fixed in the test by emulating `reducedMotion: "reduce"`, which the site honours by zeroing transitions. (2) `auth` password reset and (3) `cms` theme restore — caused by a diagnostic Playwright run I started in parallel (it clears `test-results/`, deleting the running suite's trace files, and loaded the auth server at the same moment). |
+| Rerun of `a11y-private`, `auth`, `cms` specs | ✔ 17 passed · 17 skipped (mobile by design) — together with the full run all 64 runnable tests pass. Lesson: never start a second Playwright run while one is in progress |
 
 ### 2026-11-14 — Phase 10 part 2 (Hostinger VPS files)
 | Command | Result |
